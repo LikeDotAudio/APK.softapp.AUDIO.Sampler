@@ -1,13 +1,13 @@
 {
   "id": "Sampler",
   "name": "Sampler",
-  "icon": "🥁",
+  "icon": "\ud83e\udd41",
   "group": "Utilities",
   "subGroup": "Sound",
   "kind": "web",
   "class": "execution",
-  "description": "SAMPLER.LIKE.AUDIO — a drum sampler and 16-step sequencer that runs entirely in the browser. Sixteen velocity pads over a loaded sample folder, chop and pitch, a sequencer, a channel-strip mixer with effects, and a sound browser. One bundle compiled from 100 sources by build.mjs; the plugin tests run before the compile and a red test leaves the last good bundle in place. Publishes pad assignments on APK.audio/Gui/DrumKit/<pad>/sample and runs standalone against a mock when no broker is there.",
+  "description": "SAMPLER.LIKE.AUDIO \u2014 a drum sampler and 16-step sequencer that runs entirely in the browser. Sixteen velocity pads over a loaded sample folder, chop and pitch, a sequencer, a channel-strip mixer with effects, and a sound browser. One bundle compiled from 100 sources by build.mjs; the plugin tests run before the compile and a red test leaves the last good bundle in place. Publishes pad assignments on APK.audio/Gui/DrumKit/<pad>/sample and runs standalone against a mock when no broker is there.",
   "topic": "APK.audio/Gui/Display/Sampler",
   "autostart": false,
-  "app": "index.html"
+  "app": "APK:Softapps/AUDIO.Sampler/index.html"
 }
