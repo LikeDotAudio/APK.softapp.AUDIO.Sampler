@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -35,18 +36,10 @@ import assert from 'node:assert/strict';
 import { createWarmWorld } from './harness.mjs';
 import { makeReact, countNodes } from './fakeReact.mjs';
 
-/** Every source, in order — the display layer needs the whole app loaded. */
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
-
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-
-// Everything except the mount point. App.jsx calls ReactDOM.render on load —
-// it is the file that puts the app on a page, and there is no page here. Every
-// component it would mount is loaded; only the mounting is skipped.
-const ALL_SOURCES = JSON.parse(readFileSync(join(ROOT, 'sources.json'), 'utf8'))
-    .filter((f) => f !== 'libControl/App/App.jsx');
+// The display layer needs the whole app loaded. Both lists come from
+// `bundleSources.mjs`, which owns the one answer to "which files, in which
+// order"; ALL_SOURCES is everything except the mount point.
+import { ALL_SOURCES, BUNDLE_SOURCES } from './bundleSources.mjs';
 
 /** The panels, and the props each is opened with. */
 const PANELS = [
@@ -57,6 +50,12 @@ const PANELS = [
     { name: 'ChorusEditor', props: { u: 0, onClose() {} } },
     { name: 'DrumSynthEditor', props: { idx: 0, name: 'Kick', onClose() {} } },
     { name: 'VarcRemote', props: { onClose() {} } },
+    // The two panels drawn by the generic console surface. They were left off
+    // this list while it named only the hand-built faceplates, which is how
+    // EqEditor's blank curve survived: nothing rendered it. Both call
+    // useOaFrame, and calling it wrongly is a hook that never attaches.
+    { name: 'EqEditor', props: { idx: 0, name: 'Kick', onClose() {} } },
+    { name: 'GateEditor', props: { idx: 0, name: 'Kick', onClose() {} } },
 ];
 
 const openWorld = async () => {
@@ -242,11 +241,10 @@ describe('effect panels', () => {
             },
         };
 
-        const allSources = JSON.parse(readFileSync(join(ROOT, 'sources.json'), 'utf8'));
         let w;
         await assert.doesNotReject(
             async () => {
-                w = await createWarmWorld({ sources: allSources, React: r.React, ReactDOM });
+                w = await createWarmWorld({ sources: BUNDLE_SOURCES, React: r.React, ReactDOM });
             },
             'the bundle threw while loading',
         );

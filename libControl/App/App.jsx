@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -57,7 +58,7 @@
 
                     const files = e.dataTransfer ? Array.from(e.dataTransfer.files) : [];
                     const peakFiles = files.filter(f => /\.(peak|json)$/i.test(f.name));
-                    const audioFiles = files.filter(f => f.type.startsWith('audio/') || /\.(wav|mp3|m4a|aac|flac|aif|aiff|ogg|mp4|mov|mkv|webm)$/i.test(f.name));
+                    const audioFiles = files.filter(f => window.oaIsDroppableAudio(f));
 
                     let peakData = null;
                     if (peakFiles.length > 0) {
@@ -82,6 +83,15 @@
                             // 1. If no sidecar was dropped, automatically scanalyze the media file!
                             if (!peakData && window.oaDeepScanAudio) {
                                 console.log(`[+] Auto-scanalyzing dropped media: ${file.name}`);
+                                // NO PROGRESS CALLBACK HERE, and that is a
+                                // decision rather than an omission. The scan
+                                // takes an optional one (PLAN-801.03) and this
+                                // handler has nowhere to draw it: a global drop
+                                // owns no element, and logging forty-five times
+                                // a scan would fill the one surface an operator
+                                // debugs with. The panels that DO have a line —
+                                // LensesView and MusicChartOverlay — are what
+                                // the visitor is looking at while this runs.
                                 peakData = await window.oaDeepScanAudio(buffer);
                             }
 
@@ -93,11 +103,11 @@
                             // 3. Load into Pad 0 for primary editor inspection
                             if (window.oaLoadSampleToPad) {
                                 await window.oaLoadSampleToPad(0, file);
-                                if (peakData && window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[0]) {
-                                    window.OA_DRUM_SAMPLES[0].noteMap = peakData.note_root_key_beat_marker_map || peakData.musicality;
-                                    window.OA_DRUM_SAMPLES[0].beatMarkers = peakData.beat_markers;
-                                    window.OA_DRUM_SAMPLES[0].chartData = peakData;
-                                }
+                                // `peakData` here is EITHER a dropped sidecar or the
+                                // scan run above, and those spell their measurements
+                                // differently — the normaliser owns the difference and
+                                // its header names all three formats.
+                                if (peakData && window.oaApplyPeakToPad) window.oaApplyPeakToPad(0, peakData);
                                 window.dispatchEvent(new CustomEvent('oa-sample-changed', { detail: { idx: 0 } }));
                             }
 
@@ -108,9 +118,7 @@
                         }
                     } else if (peakData && window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[0]) {
                         // Sidecar dropped alone: attach to active pad 0
-                        window.OA_DRUM_SAMPLES[0].noteMap = peakData.note_root_key_beat_marker_map || peakData.musicality;
-                        window.OA_DRUM_SAMPLES[0].beatMarkers = peakData.beat_markers;
-                        window.OA_DRUM_SAMPLES[0].chartData = peakData;
+                        if (window.oaApplyPeakToPad) window.oaApplyPeakToPad(0, peakData);
                         window.dispatchEvent(new CustomEvent('oa-sample-changed', { detail: { idx: 0 } }));
                         setActiveTabs(['PADS', 'MIXER']);
                     }
@@ -257,9 +265,29 @@
 
         // Everything above is already in this bundle, in order — nothing to wait
         // for. (This used to sleep 500ms for Babel to compile the .jsx files.)
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+        //
+        // ONLY WHERE THERE IS A PAGE TO BE. This bundle has a second host:
+        // APK:OS loads it into a Midi window and mounts the components it wants
+        // itself — the Pads, the Sequencer — into a stage of its own. That
+        // window has no #root, so `createRoot(null)` THREW on every open, and
+        // because this is the last file in the bundle everything below the
+        // throw was skipped with it: the bus below never connected there, and
+        // the only sign was a minified React 299 in the console.
+        const root = document.getElementById('root');
+        if (root) ReactDOM.createRoot(root).render(<App />);
 
-        if ('serviceWorker' in navigator) {
+        // AFTER the first render, never before it. The bus is a second writer
+        // into a store the widgets are already reading — it does not decide
+        // what the app shows on load, and blocking the paint on a socket that
+        // may not answer would make a bench-only feature everybody's problem.
+        // On a non-local origin `oaConnectBus` returns without fetching a byte.
+        if (window.oaConnectBus) window.oaConnectBus();
+
+        // The worker is this page's own — it precaches `./sw.js`, `./index.html`
+        // and the bundle, which are paths on the Sampler's origin. A host that
+        // borrowed the components has its own shell to cache and must not have
+        // this one registered underneath it.
+        if (root && 'serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').then(reg => {
                     console.log('ServiceWorker registration successful');

@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -185,7 +186,7 @@ window.oaRegisterPlugin({
     // One button, five positions. Declared as a parameter so a generic panel can
     // render it without a special case for "this plugin has no knobs".
     params: [{
-        key: 'chorus', label: 'Mode', min: 0, max: window.OA_CHORUS_COUNT - 1, def: 0, step: 1,
+        key: 'chorus', kind: 'discrete', label: 'Mode', min: 0, max: window.OA_CHORUS_COUNT - 1, def: 0, step: 1,
         fmt: function (v) { return window.oaChorusMode(v).label; },
         ticks: window.OA_CHORUS_MODES.map(function (m) { return m.name; }),
         hint: 'Off, then four fixed widths. There were never any knobs on this box.',

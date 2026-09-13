@@ -1,0 +1,6 @@
+{
+  "_comment": "Case-count floor for SAMPLER.LIKE.AUDIO, PLAN-571.01. `node --test` runs whatever test/*.test.mjs happens to be on disk, so a deleted or renamed test file shrinks the suite and every lane stays green on the smaller number. These are the counts the suite may not fall below. `tests` and `suites` may rise without an edit here; a risen `files` FAILS until it is recorded, because one file of slack is one whole file of deletion that stays green (PLAN-785.01). Lower any of them only by deleting a test on purpose, with --set-baseline and a reason in the commit.",
+  "tests": 293,
+  "suites": 50,
+  "files": 20
+}

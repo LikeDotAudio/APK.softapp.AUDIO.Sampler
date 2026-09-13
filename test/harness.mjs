@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -41,42 +42,20 @@ import {
     FakeOfflineAudioContext,
     FakeWorkletNode,
 } from './fakeAudio.mjs';
+import { BACKEND_SOURCES, BUNDLE_SOURCES, HARNESS_EXCLUDES } from './bundleSources.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 /**
- * Every backend module, in dependency order. This is the subset of sources.json
- * that has no React in it — the audio layer on its own, which is exactly what
- * the plugin tests want to load.
+ * The audio layer, DERIVED from `sources.json` rather than listed here.
+ *
+ * It was a literal array until 2026-09-07, and it had drifted to 28 of the 57
+ * `.js` entries — so the window these tests drove was half the one the browser
+ * builds, and a global could resolve to a twin `build.mjs` overwrites. See
+ * `bundleSources.mjs`, which owns the rule and the exclusions; `globals.test.mjs`
+ * holds the gap at zero.
  */
-export const BACKEND_SOURCES = [
-    'libControl/SoundSynth/oaAudioRate.js',
-    // Before the reverb: the room cache is built at load time from
-    // window.oaBufferCache, and without this it would quietly go uncached.
-    'libControl/SoundSynth/oaResident.js',
-    'libControl/SoundSynth/oaPadGrid.js',
-    'libControl/Effects/PluginHost/oaPlugin.js',
-    'libControl/Effects/DrumSynth/oaDrumSynthEngines.js',
-    'libControl/Effects/DrumSynth/oaDrumSynthPresets.js',
-    'libControl/Effects/DrumSynth/oaDrumSynthPatches.js',
-    'libControl/Effects/Reverb/oaReverbPrograms.js',
-    'libControl/Effects/Reverb/oaReverb.js',
-    'libControl/Effects/Chorus/oaChorusModes.js',
-    'libControl/Effects/Chorus/oaChorus.js',
-    'libControl/Effects/TapeDelay/oaTapeDelayPresets.js',
-    'libControl/Effects/TapeDelay/oaTapeDelay.js',
-    'libControl/Effects/Drive/oaDrivePresets.js',
-    'libControl/Effects/Drive/oaDrive.js',
-    'libControl/Effects/Compressor/oaCompressorPresets.js',
-    'libControl/Effects/Compressor/oaCompressor.js',
-    'libControl/Effects/BussCompressor/oaBussCompPresets.js',
-    'libControl/Effects/BussCompressor/oaBussComp.js',
-    'libControl/Effects/FxBus/oaFxBus.js',
-    'libControl/SoundSynth/oaDrumkitAudio.js',
-    'libControl/SoundSynth/oaDrumkitStorage.js',
-    'libControl/SoundSynth/oaDrumkitSynth.js',
-    'libControl/SoundSynth/SoundSynth.js',
-];
+export { BACKEND_SOURCES, BUNDLE_SOURCES, HARNESS_EXCLUDES };
 
 // ---------------------------------------------------------------------------
 // The bits of a browser these modules actually touch
@@ -140,6 +119,54 @@ const evaluateWorklet = (source, sampleRate) => {
 };
 
 // ---------------------------------------------------------------------------
+// The plain loader — the one that is NOT a browser
+// ---------------------------------------------------------------------------
+
+/**
+ * Evaluate ONE source file with a bare `new Function('window', src)`.
+ *
+ * NAMED FOR WHAT IT IS NOT. This is not `createWorld` and must not be reached
+ * for where `createWorld` was meant: there is no fake DOM, no audio context, no
+ * event log, no `flush()`, and above all no `with (window)`. It exists for one
+ * job — a REAL wall-clock number for a self-contained function — and every other
+ * job in this suite belongs to `createWorld`.
+ *
+ * WHY IT HAD TO BE AN EXPORT. `createWorld`'s own doc comment says to measure a
+ * CPU-bound loop outside it, and until now offered no way to. Three sessions
+ * hand-rolled three private `new Function` calls to obey it — PLAN-801.01 after
+ * losing an hour to a number that disagreed with itself by 16x, PLAN-965.01
+ * twice more while pinning the gap. This is that loader, once. PLAN-1078.01.
+ *
+ * WHAT IT MUST NOT BE USED FOR: any source that reads another file's bare,
+ * `window`-assigned export. `with (window)` is what makes `SvgFader` resolve
+ * across files the way a browser resolves it, and without it that name is simply
+ * not in scope. Such a source throws a plain `ReferenceError` here and passes
+ * under `createWorld`.
+ *
+ * AND THAT IS THE SAFE DIRECTION FOR IT TO FAIL IN, which is the whole reason
+ * this loader is allowed to be narrower than the real one. The failure is loud,
+ * immediate, and names the identifier. The alternative — keeping `with` here so
+ * nothing can throw — reintroduces exactly the tax being measured, and hands
+ * back a number that is 14–16x the truth with nothing on screen to say so. A
+ * test that cannot load is a test somebody fixes; a timing that is quietly wrong
+ * by an order of magnitude is an hour somebody loses.
+ *
+ * `window` is a plain object with nothing on it. A DSP primitive reaches for
+ * `Float32Array` and `Math`, which are realm intrinsics and already in scope —
+ * the same-realm argument that keeps this off `node:vm` applies here too.
+ *
+ * @param {string} rel  Source path, relative to this package root, as
+ *                      `createWorld`'s `sources` are.
+ * @returns {object}    The `window` the source assigned itself onto.
+ */
+export function loadSourcePlain(rel) {
+    const code = readFileSync(join(ROOT, rel), 'utf8');
+    const window = {};
+    new Function('window', `${code}\n//# sourceURL=${rel}`)(window);
+    return window;
+}
+
+// ---------------------------------------------------------------------------
 // The world
 // ---------------------------------------------------------------------------
 
@@ -152,10 +179,35 @@ const evaluateWorklet = (source, sampleRate) => {
  *   events     every CustomEvent dispatched, in order
  *   processors name -> the real worklet class, once addModule has run
  *   flush()    drain pending microtasks and timers
+ *
+ * A TIMING TAKEN THROUGH THIS IS NOT THE BROWSER'S, AND NOT A PLAIN SCRIPT'S,
+ * FOR A FUNCTION WHOSE HOT LOOP READS A GLOBAL. The loader below wraps every
+ * source in `with (window) { … }` so a bare cross-file identifier resolves
+ * the way it does in a real browser, where `window` IS the global object —
+ * that is the point of it, and the fix is not to remove it. The cost is that
+ * `with` forces the engine to treat every name as possibly shadowed by a
+ * `window` property, so a loop that reads `Math.cos`/`Math.sin` (or any other
+ * global) once per iteration pays for that check on every read, while the
+ * long named-parameter list `new Function` also takes here costs nothing
+ * measurable on its own. Bisected and reproduced in
+ * `test/harness-cost.test.mjs`: 14–16x slower through `createWorld` than
+ * under a plain `new Function` on the identical source, for the pre-Goertzel
+ * chromagram that first exposed it; a loop with no global read in its body
+ * shows no such gap. Measure a CPU-bound loop OUTSIDE `createWorld` — the way
+ * PLAN-801.01 ultimately did — and never report a `createWorld` wall-clock
+ * number as a browser or plain-script cost. PLAN-965.01.
  */
 export async function createWorld(opts = {}) {
     const sources = opts.sources || BACKEND_SOURCES;
     const sampleRate = opts.sampleRate || 48000;
+
+    // The `navigator` the sources see. A bare userAgent was enough while nothing
+    // under test asked the browser a question, but a feature guard reads
+    // properties off this object and takes the early return when they are
+    // absent -- and an early return renders as a blank byline rather than as a
+    // throw, so a test that never supplies the API cannot tell a working guard
+    // from a broken one. `opts.navigator` is how a test hands it the API.
+    const navigatorStub = opts.navigator || { userAgent: 'oa-test' };
 
     const events = [];
     const listeners = new Map();
@@ -165,6 +217,10 @@ export async function createWorld(opts = {}) {
     // Blob URL -> source text, so addModule can find the processor it was given.
     const blobs = new Map();
     let blobSeq = 0;
+
+    // Every `<a download>` this world clicked, in order — the file the app meant
+    // to write, and what was in it.
+    const downloads = [];
 
     const FakeURL = {
         createObjectURL(blob) {
@@ -187,6 +243,35 @@ export async function createWorld(opts = {}) {
     window.URL = FakeURL;
     window.AudioWorkletNode = null;   // set below, needs ctx-aware construction
     window.performance = { now: () => 0 };
+    // WebCrypto, because a scan hashes its own decoded samples. Node's global
+    // `crypto` is the same interface a page gets on a secure origin; a test that
+    // left it off would exercise only the `null` arm of oaPcmSha256, which is
+    // the arm an insecure origin takes and not the one anybody ships.
+    window.crypto = globalThis.crypto;
+    // The IMPORT side of a sidecar, which had no world to run in until
+    // PLAN-1067.01. `handleImportFile` in `LensesView.jsx` is
+    // `new FileReader()` + `readAsText` + a bare `alert`, and every source is
+    // evaluated in `with (window) { … }`, so both resolve here. Without them a
+    // round-trip test can only assert what the EXPORT wrote — which is exactly
+    // half of a round trip, and the half that cannot notice a renamed key.
+    //
+    // Synchronous on purpose: a real FileReader fires `onload` on a later task,
+    // and a test awaiting it would be awaiting a timer this world controls
+    // anyway. The callback runs on the same stack so the assertion after
+    // `onChange` reads settled state.
+    window.FileReader = class {
+        constructor() { this.onload = null; this.onerror = null; this.result = null; }
+        readAsText(file) {
+            this.result = (file && file.__text) || '';
+            if (this.onload) this.onload({ target: { result: this.result } });
+        }
+    };
+    // Every `alert()` the app raised, in order — recorded rather than swallowed,
+    // because "Imported metadata sidecar successfully" IS the app's report that
+    // the import path completed, and a test that ignored it could not tell a
+    // successful import from a silently caught parse error.
+    const alerts = [];
+    window.alert = (message) => { alerts.push(String(message)); };
     window.innerWidth = 1280;
     window.innerHeight = 900;
     window.matchMedia = (q) => ({ matches: false, media: q, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {} });
@@ -211,6 +296,28 @@ export async function createWorld(opts = {}) {
         addEventListener() {},
         removeEventListener() {},
         getBoundingClientRect: () => ({ top: 0, left: 0, width: 100, height: 100, right: 100, bottom: 100 }),
+        // A download is `document.createElement('a')`, `.href = blobURL`,
+        // `.download = name`, `.click()`. The click is recorded rather than
+        // ignored so a test can assert the file was written AND what it was
+        // called — PLAN-573.01 set out to assert three download filenames and
+        // could not, because reaching them threw.
+        __clicks: 0,
+        click() {
+            this.__clicks++;
+            if (this.download != null) {
+                // The blob is revoked on the line after the click, so its text is
+                // taken NOW rather than looked up later.
+                downloads.push({ name: this.download, text: blobs.get(this.href) ?? null });
+            }
+        },
+        // Enough of a canvas for a view that draws a timeline. Nothing here
+        // measures anything; it records that the draw ran without throwing.
+        getContext: () => ({
+            fillStyle: '', strokeStyle: '', lineWidth: 1, font: '',
+            fillRect() {}, clearRect() {}, beginPath() {}, moveTo() {}, lineTo() {},
+            stroke() {}, fill() {}, fillText() {}, closePath() {}, arc() {},
+            save() {}, restore() {}, translate() {}, scale() {},
+        }),
     });
     window.document = {
         documentElement: makeElement('html'),
@@ -341,7 +448,7 @@ export async function createWorld(opts = {}) {
                 FakeWorkletNode, TestAudioContext, TestOfflineAudioContext,
                 window.requestAnimationFrame, window.cancelAnimationFrame,
                 setTimeoutShim, clearTimeoutShim, setInterval, clearInterval,
-                console, window.performance, opts.React || null, opts.ReactDOM || null, window.document, { userAgent: 'oa-test' },
+                console, window.performance, opts.React || null, opts.ReactDOM || null, window.document, navigatorStub,
             );
         } catch (e) {
             throw new Error(`${rel}: threw while loading — ${e.stack}`);
@@ -359,6 +466,26 @@ export async function createWorld(opts = {}) {
         await Promise.resolve();
     };
 
+    /**
+     * Wait until `predicate()` is true, or give up after `timeoutMs` and say so.
+     *
+     * NOT A COUNT OF TURNS, and that distinction cost a red suite. `flush()`
+     * drains the microtask queue and returns in microseconds, so a loop of two
+     * hundred of them is not two hundred milliseconds of patience — it is under
+     * one, and a promise resolved off Node's threadpool (a WebCrypto digest of a
+     * megabyte of PCM, say) lands after all of them. Measured 2026-09-07: a scan
+     * that settles in about a millisecond of WALL time settled in ONE of six
+     * runs of a 200-turn flush loop. This waits on the clock instead.
+     */
+    const settle = async (predicate, timeoutMs = 5000) => {
+        const deadline = Date.now() + timeoutMs;
+        while (!predicate()) {
+            if (Date.now() > deadline) return false;
+            await new Promise((r) => setTimeout(r, 1));
+        }
+        return true;
+    };
+
     return {
         window,
         ctx,
@@ -367,7 +494,10 @@ export async function createWorld(opts = {}) {
         processors,
         frames,
         blobs,
+        downloads,
+        alerts,
         flush,
+        settle,
         /** Run every pending rAF callback once, the way a browser frame would. */
         tick() {
             const due = frames.splice(0, frames.length).filter(Boolean);

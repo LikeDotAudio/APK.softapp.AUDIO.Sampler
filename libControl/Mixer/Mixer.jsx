@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -35,6 +36,8 @@ const Mixer = () => {
     // Which channel's SYNTH panel is open, and a re-render when samples change
     // so a channel that just got a sample loses its SYNTH button.
     const [synthPad, setSynthPad] = React.useState(null);
+    const [eqPad, setEqPad] = React.useState(null);
+    const [gatePad, setGatePad] = React.useState(null);
     const [samplerPad, setSamplerPad] = React.useState(null);
     const [drivePad, setDrivePad] = React.useState(null);
     const [compPad, setCompPad] = React.useState(null);
@@ -125,6 +128,11 @@ const Mixer = () => {
     const fxMeterRefs = React.useRef({});
     // The gain-reduction readout on each channel's COMPRESS button.
     const grRefs = React.useRef({});
+    // …and the attenuation readout on each channel's GATE button. Two refs
+    // rather than one keyed map, because the two buttons meter different
+    // plugins and a shared map would make which one silent depend on render
+    // order.
+    const gateRefs = React.useRef({});
 
     // The Mixer used to do this by hand: reach into ctx.__oaReverbs, find the
     // bus, pull 1024 floats out of its analyser into a scratch array, reduce
@@ -138,8 +146,14 @@ const Mixer = () => {
     // same three lines, and a plugin added later is metered without touching
     // this file.
     React.useEffect(() => {
+        // TWO SUBSCRIPTIONS, AND THEY ARE NOT THE SAME THING. `oaPluginAttach`
+        // starts the pump that fills the frames; `oaPluginOnFrame` says redraw
+        // me once it has. This used to run its own requestAnimationFrame, which
+        // meant a 120 Hz panel drove the pump 120 times AND this loop 120 times
+        // for a needle nobody resolves past ~30 (PLAN-18.09). Reading on the
+        // pump's own clock also removes the race: the frames are never half
+        // filled when this runs, because the pass has already returned.
         const detach = window.oaPluginAttach();
-        let raf = 0;
         const S = window.OA_SLOT;
 
         const tick = () => {
@@ -150,6 +164,20 @@ const Mixer = () => {
                 if (!el) return;
                 const frame = window.oaPluginFrame('comp', k | 0);
                 const L = window.oaPluginLayout('comp');
+                const gr = frame && frame[S.ACTIVE] ? frame[L.GR] : 0;
+                const text = gr > 0.15 ? '-' + gr.toFixed(1) : '';
+                if (el.textContent !== text) el.textContent = text;
+            });
+
+            // The gate on the front of the channel, read the same way — one
+            // frame, one slot, no arithmetic. GR is written straight into the
+            // DOM because a number that moves on the meter clock must not
+            // re-render sixteen strips to do it.
+            Object.keys(gateRefs.current).forEach((k) => {
+                const el = gateRefs.current[k];
+                if (!el) return;
+                const frame = window.oaPluginFrame('gate', k | 0);
+                const L = window.oaPluginLayout('gate');
                 const gr = frame && frame[S.ACTIVE] ? frame[L.GR] : 0;
                 const text = gr > 0.15 ? '-' + gr.toFixed(1) : '';
                 if (el.textContent !== text) el.textContent = text;
@@ -198,11 +226,12 @@ const Mixer = () => {
                 });
             });
 
-            raf = requestAnimationFrame(tick);
         };
-        raf = requestAnimationFrame(tick);
+
+        const stop = window.oaPluginOnFrame(tick);
+        tick();                       // paint now rather than a slot from now
         return () => {
-            cancelAnimationFrame(raf);
+            stop();
             detach();
         };
     }, [FX]);
@@ -447,7 +476,7 @@ const Mixer = () => {
                         {/* No sample loaded means this voice is synthesized — let them shape it. */}
                         {!hasSample(i) && (
                             <button
-                                onClick={() => { setDrivePad(null); setCompPad(null); setSamplerPad(null); setSynthPad(synthPad === i ? null : i); }}
+                                onClick={() => { setDrivePad(null); setCompPad(null); setSamplerPad(null); setEqPad(null); setSynthPad(synthPad === i ? null : i); }}
                                 title={`Edit the ${track.name || 'Track'} synth voice`}
                                 style={{
                                     width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
@@ -472,7 +501,7 @@ const Mixer = () => {
                             const sChop = !!e && window.oaTrimmed(window.oaTrimOf(e), e.buffer.duration);
                             return (
                                 <button
-                                    onClick={() => { setSynthPad(null); setDrivePad(null); setCompPad(null); setSamplerPad(sOpen ? null : i); }}
+                                    onClick={() => { setSynthPad(null); setDrivePad(null); setCompPad(null); setEqPad(null); setSamplerPad(sOpen ? null : i); }}
                                     title={sHas
                                         ? `${track.name || 'Track'} — ${e.name || 'sample'}${sChop ? ' (chopped)' : ''}\nEdit, chop or replace it`
                                         : `${track.name || 'Track'} — no sample. Pick one.`}
@@ -499,7 +528,7 @@ const Mixer = () => {
                             const dOpen = drivePad === i;
                             return (
                                 <button
-                                    onClick={() => { setSynthPad(null); setCompPad(null); setSamplerPad(null); setDrivePad(dOpen ? null : i); }}
+                                    onClick={() => { setSynthPad(null); setCompPad(null); setSamplerPad(null); setEqPad(null); setGatePad(null); setDrivePad(dOpen ? null : i); }}
                                     title={`${track.name || 'Track'} — distortion pedal${dOn ? ` (${window.oaDriveMode(dUnit.mode).label}, ${Math.round(dUnit.mix * 100)}% mix)` : ''}`}
                                     style={{
                                         width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
@@ -511,6 +540,62 @@ const Mixer = () => {
                                     }}
                                 >
                                     DRIVE{dOn ? ` ${Math.round(dUnit.mix * 100)}` : ''}
+                                </button>
+                            );
+                        })()}
+
+                        {/* First in the channel, so first on the strip. The
+                            button carries nothing when the gate is out, because
+                            a range of 0 dB is a wire and a number saying 0 would
+                            imply it was doing something. */}
+                        {(() => {
+                            const gOn = window.oaGateActive(i);
+                            const gOpen = gatePad === i;
+                            const gColor = window.OA_GATE_COLOR;
+                            return (
+                                <button
+                                    onClick={() => { setSynthPad(null); setDrivePad(null); setCompPad(null); setSamplerPad(null); setEqPad(null); setGatePad(gOpen ? null : i); }}
+                                    title={`${track.name || 'Track'} — noise gate${gOn ? ` (open at ${window.oaGateUnit(i).thresh.toFixed(0)} dB)` : ' (out)'}`}
+                                    style={{
+                                        width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
+                                        border: `1px solid ${gOpen || gOn ? gColor : '#444b57'}`,
+                                        background: gOpen ? '#213524' : (gOn ? '#1b2a1d' : '#2a2f38'),
+                                        color: gOpen || gOn ? gColor : '#9aa3ae',
+                                        cursor: 'pointer', fontSize: '9px', fontWeight: '700', letterSpacing: '.5px',
+                                        marginBottom: '4px', display: 'flex', alignItems: 'center',
+                                        justifyContent: 'center', gap: '3px', overflow: 'hidden', ...veil
+                                    }}
+                                >
+                                    <span>GATE</span>
+                                    {/* Written straight into the DOM by the meter
+                                        loop above, exactly as COMPRESS is. */}
+                                    <i ref={(el) => { gateRefs.current[i] = el; }}
+                                       style={{ fontStyle: 'normal', fontVariantNumeric: 'tabular-nums', opacity: 0.85 }}></i>
+                                </button>
+                            );
+                        })()}
+
+                        {/* Three bands per pad. The button carries nothing when
+                            the EQ is flat, because a flat EQ is not doing
+                            anything and a number saying 0 would imply it was. */}
+                        {(() => {
+                            const eOn = window.oaEqActive(i);
+                            const eOpen = eqPad === i;
+                            const eColor = '#7fd1ff';
+                            return (
+                                <button
+                                    onClick={() => { setSynthPad(null); setDrivePad(null); setCompPad(null); setSamplerPad(null); setGatePad(null); setEqPad(eOpen ? null : i); }}
+                                    title={`${track.name || 'Track'} — three-band equaliser${eOn ? ' (shaping)' : ' (flat)'}`}
+                                    style={{
+                                        width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
+                                        border: `1px solid ${eOpen || eOn ? eColor : '#444b57'}`,
+                                        background: eOpen ? '#1b3a4a' : (eOn ? '#172c37' : '#2a2f38'),
+                                        color: eOpen || eOn ? eColor : '#9aa3ae',
+                                        cursor: 'pointer', fontSize: '9px', fontWeight: '700', letterSpacing: '.5px',
+                                        marginBottom: '4px', ...veil
+                                    }}
+                                >
+                                    EQ
                                 </button>
                             );
                         })()}
@@ -527,7 +612,7 @@ const Mixer = () => {
                             const cColor = window.OA_COMP_COLOR;
                             return (
                                 <button
-                                    onClick={() => { setSynthPad(null); setDrivePad(null); setSamplerPad(null); setCompPad(cOpen ? null : i); }}
+                                    onClick={() => { setSynthPad(null); setDrivePad(null); setSamplerPad(null); setEqPad(null); setGatePad(null); setCompPad(cOpen ? null : i); }}
                                     title={`${track.name || 'Track'} — limiting amplifier${cOn ? ` (${cRatio.label}${cRatio.key === 'all' ? '' : ':1'})` : ''}`}
                                     style={{
                                         width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
@@ -872,6 +957,24 @@ const Mixer = () => {
                     idx={synthPad}
                     name={(tracks[synthPad] && tracks[synthPad].name) || `Track ${synthPad + 1}`}
                     onClose={() => setSynthPad(null)}
+                />,
+                document.body
+            )}
+
+            {gatePad != null && window.GateEditor && ReactDOM.createPortal(
+                <window.GateEditor
+                    idx={gatePad}
+                    name={(tracks[gatePad] && tracks[gatePad].name) || `Track ${gatePad + 1}`}
+                    onClose={() => setGatePad(null)}
+                />,
+                document.body
+            )}
+
+            {eqPad != null && window.EqEditor && ReactDOM.createPortal(
+                <window.EqEditor
+                    idx={eqPad}
+                    name={(tracks[eqPad] && tracks[eqPad].name) || `Track ${eqPad + 1}`}
+                    onClose={() => setEqPad(null)}
                 />,
                 document.body
             )}

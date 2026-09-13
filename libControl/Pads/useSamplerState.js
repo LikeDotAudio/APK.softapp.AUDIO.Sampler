@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -8,6 +9,23 @@
 // or manufacturers; their layouts appear here only because they are familiar
 // interfaces, and every name they are known by remains the property of its owner.
 // ─────────────────────────────────────────────────────────────────────────────
+//
+// WHAT THIS OWNS: pad-level sampler state -- tone root, per-pad velocities, the
+// browse/assign modes, the MIDI base note -- and the two bus edges that carry a
+// pad's sample assignment off this machine.
+//
+// WHY THE TOPIC IS `APK.audio/Gui/DrumKit/<pad>/sample` AND NOT `APK.audio/Gui/Display/…`
+// The app's display.json declares `APK.audio/Gui/Display/Sampler`, which is the shell's
+// grammar for a window. This is not that: it is a per-pad assignment, and the
+// grammar is DELIBERATE because two things outside this application already
+// speak it and neither is ours to rename from here --
+//   · APK:OS/DataBus/reading/read-bus-event.js  files `Gui/DrumKit/{n}/sample`
+//     as a measurement, so the shell's bus reader would stop classifying it.
+//   · APK:DOCKERS/APK:BareMetal/backend/Core/orchestrator/src/services/spog_bridge.rs maps
+//     console strips onto `APK.audio/Gui/DrumKit/<pad>/eq/<key>` on the same
+//     prefix, so the EQ half would part company with the sample half.
+// Migrating is a three-tree change with retained state on the old prefix, not a
+// rename. The manifest's `topic` names the WINDOW; this names the PADS.
 
 window.useSamplerState = (setSampleNames) => {
     const [toneRoot, setToneRoot] = React.useState(null);
@@ -26,7 +44,7 @@ window.useSamplerState = (setSampleNames) => {
     const kitMeta = React.useMemo(() => {
         const m = {};
         for (let i = 0; i < window.OA_PAD_COUNT; i++) {
-            const raw = mqttMessages[`OpenAir/Gui/DrumKit/${i}/sample`];
+            const raw = mqttMessages[`APK.audio/Gui/DrumKit/${i}/sample`];
             if (raw) { try { const o = JSON.parse(raw); if (o && o.name) m[i] = o; } catch (e) {} }
         }
         return m;
@@ -48,7 +66,7 @@ window.useSamplerState = (setSampleNames) => {
     
     const mqttPublish = window.useMqttPublish ? window.useMqttPublish() : null;
     const publishSample = (idx, name, folder) => {
-        if (mqttPublish) mqttPublish(`OpenAir/Gui/DrumKit/${idx}/sample`, { name, folder: folder || '' });
+        if (mqttPublish) mqttPublish(`APK.audio/Gui/DrumKit/${idx}/sample`, { name, folder: folder || '' });
     };
 
     const handleFile = async (index, file, meta) => {

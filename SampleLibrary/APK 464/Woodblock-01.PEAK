@@ -1,18 +1,18 @@
 {
   "metadata": {
-    "analyzer_version": "20260717.0313-9a2e6ae3aa3c302e",
+    "analyzer_version": "20260904.2022",
     "name": "Woodblock-01.wav",
-    "folder": "APK 464",
-    "sub": "APK 464",
-    "path": "APK 464/Woodblock-01.wav",
+    "folder": "SampleLibrary/APK 464",
+    "sub": "SampleLibrary/APK 464",
+    "path": "APK:DOCKERS/APK:audio:WebPortal/SRC/APK:Softapps/SAMPLE and PLAY/SampleLibrary/APK 464/Woodblock-01.wav",
     "length_seconds": 0.04936507936507936,
     "sample_rate": 44100,
     "bit_depth": 16,
     "channels": 2,
     "source_format": "WAV",
     "lossy_source": false,
-    "dc_offset": -0.000009181907979731282,
-    "trailing_silence_ms": 0,
+    "dc_offset": -9.181907979731282e-6,
+    "trailing_silence_ms": 0.0,
     "analysis_depth": "full"
   },
   "classification": {
@@ -44,7 +44,7 @@
     "attack_seconds": 0.0006122448979591836,
     "sustain_ratio": 0.3333333333333333,
     "sustained": false,
-    "envelope_attack_seconds": 0,
+    "envelope_attack_seconds": 0.0,
     "envelope_decay_seconds": 0.019954648526077097,
     "envelope_sustain_level": 0.14993512268855652,
     "envelope_release_seconds": 0.009977324263038548,
@@ -53,6 +53,23 @@
     "envelope_kurtosis": 0.9107265566001601,
     "envelope_shape": "Plucky",
     "decay_time_seconds_60db": 0.058517993433316574,
+    "slices": [
+      {
+        "index": 0,
+        "start_seconds": 0.0,
+        "end_seconds": 0.04988662131519274,
+        "relative_level": 1.0,
+        "envelope_attack_seconds": 0.0,
+        "envelope_decay_seconds": 0.019954648526077097,
+        "envelope_sustain_level": 0.14993512268855652,
+        "envelope_release_seconds": 0.009977324263038548,
+        "envelope_temporal_centroid": 0.052354257343306385,
+        "envelope_skewness": 1.4453045488142446,
+        "envelope_kurtosis": 0.9107265566001601,
+        "envelope_shape": "Plucky",
+        "decay_time_seconds_60db": 0.058517993433316574
+      }
+    ],
     "onset_periodicity": null,
     "onset_rate_per_second": 20.257234726688104
   },
@@ -60,47 +77,49 @@
     "root_mean_square_level": 0.19168088871693859,
     "crest_factor": 5.216844981862342,
     "zero_crossings_per_second": 5125.08038585209,
-    "complexity": 2982.651723732789,
-    "spectral_centroid_hz": 3637.4754568075336,
+    "complexity": 2982.650636936942,
+    "spectral_centroid_hz": 3637.4749814145725,
     "spectral_rolloff_hz": 4983.279742765273,
-    "spectral_flatness": 0.2140264971166014,
-    "low_band_energy": 0.00949490804728773,
-    "mid_band_energy": 0.09092180781326005,
-    "high_band_energy": 0.8995832841394522,
-    "spectral_flux": 0,
+    "spectral_flatness": 0.2140264190324394,
+    "low_band_energy": 0.00949491133295125,
+    "mid_band_energy": 0.09092180089882147,
+    "high_band_energy": 0.8995832877682273,
+    "spectral_flux": 0.0,
     "harmonicity": 0.9135151901985293,
-    "inharmonicity": 0,
+    "inharmonicity": 0.0,
     "partial_count": 0,
     "mel_frequency_cepstral_coefficients": [
-      -4.260230502708783,
-      3.3577760054762797,
-      -0.7187810145710894,
-      -1.6699939323715816,
-      6.652063922813874,
-      5.442682664670695,
-      -0.811269742112943,
-      -4.50243625688823,
-      -0.6536630139850906,
-      7.058083774427484,
-      0.7772166289484106,
-      -2.6869059484375364,
-      -4.225646742672599
+      -4.260229581314556,
+      3.35777643479846,
+      -0.7187814099321866,
+      -1.6699962155262376,
+      6.652066235111894,
+      5.442680239464368,
+      -0.8112670402773219,
+      -4.502436011268807,
+      -0.6536626479972739,
+      7.058081974941091,
+      0.7772169801067196,
+      -2.686907143929596,
+      -4.22564550803152
     ],
-    "spectral_centroid_mean_hz": 3640.633776826377,
-    "spectral_centroid_deviation_hz": 0,
-    "total_harmonic_distortion": 1.8522634563629334,
-    "clipping_density": 0,
+    "spectral_centroid_mean_hz": 3640.633916500337,
+    "spectral_centroid_deviation_hz": 0.0,
+    "total_harmonic_distortion": 1.852262496719583,
+    "clipping_density": 0.0,
     "distortion": "Clean",
     "stationarity": null,
-    "spectral_entropy": 0.17551263683001164,
-    "spectral_slope_db_per_octave": -4.2665958695310975,
+    "spectral_entropy": 0.17551263604621492,
+    "spectral_slope_db_per_octave": -4.266595877648235,
     "band_limit_high_hz": 15740.771484375,
     "spectral_centroid_slope_hz_per_second": null,
     "syllabic_modulation_energy": null,
-    "voicing_ratio": 1,
+    "voicing_ratio": 1.0,
     "mid_rms": 0.19168088847143627,
     "side_rms": 0.001616421354897247,
-    "lufs": -70
+    "lufs": -70.0,
+    "loudness_range_lu": 0.0,
+    "true_peak_dbtp": 0.05676942072077891
   },
   "musicality": {
     "pitch_hz": 1297.0588235294117,
@@ -108,32 +127,67 @@
     "root_note_name": "G#1",
     "root_frequency_hz": 50.643086816720256,
     "root_cents_offset": -42.87953059191025,
-    "beats_per_minute": 0,
+    "beats_per_minute": 0.0,
     "root_midi_note": -1,
     "chromagram": [
-      0.22032275487089453,
-      0.2584523583329015,
-      0.3610916006941219,
-      1,
-      0.9989838521324188,
-      0.33847200828784985,
-      0.2775276119047055,
-      0.21721264041777966,
-      0.21338435801352157,
-      0.19387133075837687,
-      0.1941319755156907,
-      0.2331005359172689
-    ]
+      0.22032273903691124,
+      0.2584523465093586,
+      0.3610916069446979,
+      1.0,
+      0.9989837900958439,
+      0.33847203531403314,
+      0.2775276208790174,
+      0.2172126429244877,
+      0.2133843353977832,
+      0.19387131424645873,
+      0.19413198803707987,
+      0.2331005580287633
+    ],
+    "note_root_key_beat_marker_map": {
+      "global_root_note": "G#1",
+      "global_midi_note": -1,
+      "global_bpm": 120.0,
+      "total_beats": 1,
+      "beat_markers": [
+        {
+          "index": 0,
+          "timestamp_seconds": 0.0,
+          "sample_index": 0,
+          "is_downbeat": true,
+          "bar": 1,
+          "beat": 1
+        }
+      ],
+      "chunk_maps": [
+        {
+          "chunk_index": 0,
+          "start_seconds": 0.0,
+          "end_seconds": 0.049,
+          "duration_seconds": 0.049,
+          "root_note_name": "G#1",
+          "root_midi_note": -1,
+          "root_frequency_hz": 50.64,
+          "pitch_hz": 1297.06,
+          "cents_offset": -42.9,
+          "peak_amplitude": 1.0,
+          "nearest_beat_index": 0
+        }
+      ]
+    }
   },
   "unsupervised": {
-    "cluster": -1,
-    "principal_components": []
+    "cluster": 0,
+    "principal_components": [
+      -1.157220441684509,
+      -0.9594433892049565,
+      2.3870206640505716
+    ]
   },
   "ucs": {
     "category": "PERCUSSION",
     "subcategory": "WOODBLOCK",
     "id": "PERCWood",
-    "confidence": 1,
+    "confidence": 1.0,
     "alternatives": [],
     "synonyms": [
       "woodblock"
@@ -142,7 +196,7 @@
   },
   "regions": {
     "count": 0,
-    "detection_threshold_decibels": -40,
+    "detection_threshold_decibels": -40.0,
     "minimum_silence_seconds": 0.15,
     "minimum_region_seconds": 0.05,
     "regions": []

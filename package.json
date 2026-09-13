@@ -9,7 +9,7 @@
   "scripts": {
     "build": "node build.mjs",
     "check": "node build.mjs --check",
-    "test": "node --test test/*.test.mjs"
+    "test": "node test/check_case_floor.mjs && node test/padmeta.test.mjs"
   },
   "devDependencies": {
     "@babel/core": "^7.28.4",

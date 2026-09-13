@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -24,6 +25,14 @@ const SvgKnob = ({ value = 0, min = 0, max = 1, defaultVal = 0, bipolar = false,
         return `M ${p0[0]} ${p0[1]} A ${rr} ${rr} 0 ${large} ${sweep} ${p1[0]} ${p1[1]}`;
     };
 
+    // A knob with no writer is a READOUT, and it must refuse the GESTURE, not
+    // merely fail to write — a control that still moves under the hand and is
+    // heard by nothing is the failure this repository's first law names.
+    // PLAN-18.12: guarded here rather than in each faceplate, because SvgKnob
+    // is the shared one and DriveEditor, DrumSynthEditor, UiKnob and Mixer all
+    // draw through it. RackKnob and BussKnob carry the identical three lines.
+    const live = typeof onChange === 'function';
+
     const clampV = v => Math.max(min, Math.min(max, v));
     const cur = clampV(value);
     const angleFor = v => (((v - min) / ((max - min) || 1)) * 2 - 1) * 135;
@@ -39,6 +48,7 @@ const SvgKnob = ({ value = 0, min = 0, max = 1, defaultVal = 0, bipolar = false,
     });
 
     const handlePointerDown = (e) => {
+        if (!live) return;
         if (e.altKey) { onChange(defaultVal); return; }
         readout.begin(e);
         const startY = e.clientY;
@@ -62,6 +72,7 @@ const SvgKnob = ({ value = 0, min = 0, max = 1, defaultVal = 0, bipolar = false,
     };
 
     const handleWheel = (e) => {
+        if (!live) return;
         e.preventDefault();
         const delta = (e.deltaY < 0 ? 1 : -1) * (max - min) / 50;
         onChange(clampV(cur + delta));
@@ -79,7 +90,12 @@ const SvgKnob = ({ value = 0, min = 0, max = 1, defaultVal = 0, bipolar = false,
     return (
         <svg 
             width={size} height={size} viewBox={`0 0 ${size} ${size}`} 
-            style={{ display: 'block', touchAction: 'none', cursor: 'ns-resize', overflow: 'visible' }}
+            style={{
+                display: 'block', touchAction: 'none', overflow: 'visible',
+                cursor: live ? 'ns-resize' : 'default',
+                filter: live ? undefined : 'grayscale(1) brightness(0.6)',
+                opacity: live ? undefined : 0.7,
+            }}
             onPointerDown={handlePointerDown}
             onWheel={handleWheel}
         >

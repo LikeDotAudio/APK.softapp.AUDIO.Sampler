@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -10,7 +11,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 window.gatherAll = async (handle, prefix, files, names, builder, onEmit, depth) => {
-    const AUDIO_RE = /\.(mp3|wav|wave|aif|aiff|aac|m4a|mp4|mov|mkv|webm|avi|m4v|3gp|flv|ogg|oga|flac|opus)$/i;
     const MAX_FILES = 4000;
     const NAME_MAX = 60000;
     if (depth > 12 || names.length >= NAME_MAX) return;
@@ -18,7 +18,7 @@ window.gatherAll = async (handle, prefix, files, names, builder, onEmit, depth) 
     for await (const [n, h] of handle.entries()) {
         if (names.length >= NAME_MAX) break;
         if (h.kind === 'directory') subdirs.push([n, h]);
-        else if (AUDIO_RE.test(n)) {
+        else if (window.oaIsFindableAudio(n)) {
             names.push({ name: n, sub: prefix });
             builder.add(n, prefix);
             if (files.length < MAX_FILES) files.push({ name: n, handle: h, sub: prefix });

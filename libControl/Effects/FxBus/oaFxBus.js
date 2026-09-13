@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -267,7 +268,20 @@ window.oaVoiceOut = function (ctx, idx, pan) {
     // …and on to the MASTER BUS, which is where every audible path in the app
     // now ends up. Guarded, because a test that loads a subset of the backend
     // still has to be able to make a sound.
-    node.connect(compIn || (window.oaMasterInput ? window.oaMasterInput(ctx) : ctx.destination));
+    const chanOut = compIn || (window.oaMasterInput ? window.oaMasterInput(ctx) : ctx.destination);
+
+    // The GATE goes in front of the compressor, and that order is the router's
+    // business rather than either unit's: gate then compress is the console
+    // order, because a compressor in front of a gate spends its time lifting
+    // the noise floor the gate was about to remove and then the gate is chasing
+    // a threshold that moves with the programme.
+    //
+    // Like the compressor it is ONE STRIP PER CHANNEL, shared by every voice —
+    // so unlike the pedal and the EQ it is not built into `chain` and not
+    // retired with the voice. Its destination is therefore fixed at build time
+    // and passed here, which is why oaGateInput takes one.
+    const gateIn = (!bypass && window.oaGateInput) ? window.oaGateInput(ctx, idx, chanOut) : null;
+    node.connect(gateIn || chanOut);
 
     const tap = function (amount, target, from) {
         if (!(amount > window.OA_FX_SEND_EPSILON)) return;
@@ -307,7 +321,17 @@ window.oaVoiceOut = function (ctx, idx, pan) {
     // Returns null on a clean channel, and the voice connects straight to the
     // pan the way it always did — bit for bit, not "distortion turned down".
     const drive = (!bypass && window.oaDriveNode) ? window.oaDriveNode(ctx, idx, preTap, chain) : null;
-    const head = drive || preTap;
+
+    // The EQ sits AHEAD of the pedal, which is the console order and not an
+    // accident: an equaliser in front of a distortion decides what gets
+    // distorted, and the pedal already carries its own post-shaper `tone`
+    // lowpass for taming what comes out. Putting the EQ after the drive would
+    // give the channel two tone controls doing the same job and none doing the
+    // one a channel strip is for. Same all-or-nothing contract as the pedal:
+    // flat builds nothing and this is the pedal's input, or the pan, unchanged.
+    const eqDest = drive || preTap;
+    const eq = (!bypass && window.oaEqNode) ? window.oaEqNode(ctx, idx, eqDest, chain) : null;
+    const head = eq || eqDest;
     head.__oaChain = chain;
     return head;
 };
@@ -331,6 +355,15 @@ window.oaWarmFx = async function (ctx) {
     // as it is built.
     if (window.oaMasterWarm) window.oaMasterWarm(ctx);
     if (window.oaCompWarm) window.oaCompWarm(ctx);
+    // The gate AFTER the compressor, because it connects INTO the compressor's
+    // input port and a strip built before that port exists would wire itself
+    // straight to the master and stay there for the session.
+    if (window.oaGateWarm) {
+        window.oaGateWarm(ctx, function (i) {
+            return (window.oaCompInput && window.oaCompInput(ctx, i))
+                || (window.oaMasterInput ? window.oaMasterInput(ctx) : ctx.destination);
+        });
+    }
     if (window.oaReverbWarm) window.oaReverbWarm(ctx);
     if (window.oaDelayWarm) window.oaDelayWarm(ctx);
 };

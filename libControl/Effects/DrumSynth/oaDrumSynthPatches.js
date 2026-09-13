@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -223,6 +224,12 @@ window.oaRegisterPlugin({
      * The running engine's schema, translated into the shared param shape. An
      * engine declares either a numeric range or a list of options; both come
      * back here in the one form a panel knows how to draw.
+     *
+     * That branch IS the `kind` distinction, and until 2026-08-28 it was thrown
+     * away here: both arms produced the same shape and a reader downstream had
+     * to guess which it was holding. The engines knew all along — an engine
+     * param is `{ label, options, def }` or `{ label, min, max, step, def }` —
+     * so `kind` costs nothing to carry and is exact rather than inferred.
      */
     paramsFor: function (i) {
         const patch = window.oaSynthPatch(window.OA_DRUM_SYNTH[i] || window.oaFactoryPatch(i));
@@ -232,13 +239,13 @@ window.oaRegisterPlugin({
             const p = engine.params[key];
             if (p.options) {
                 return {
-                    key: key, label: p.label, def: p.def, options: p.options,
+                    key: key, kind: 'discrete', label: p.label, def: p.def, options: p.options,
                     min: 0, max: p.options.length - 1, step: 1,
                     fmt: function (v) { return String(v); },
                 };
             }
             return {
-                key: key, label: p.label, min: p.min, max: p.max,
+                key: key, kind: 'continuous', label: p.label, min: p.min, max: p.max,
                 step: p.step, def: p.def, unit: p.unit || '',
                 fmt: function (v) {
                     return p.unit ? Math.round(v) + ' ' + p.unit : String(Math.round(v * 1000) / 1000);

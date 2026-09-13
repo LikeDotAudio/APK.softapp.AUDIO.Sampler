@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -14,9 +15,9 @@
 // that pad. Held by reference: changing the pad grid resizes this same array, so
 // the track list follows without this module reloading.
 const TRACKS = window.OA_DRUM_KIT || [];
-const STEP_OPTIONS = [4, 8, 16, 32, 64];   // selectable pattern lengths
-const DEFAULT_STEPS = 16;
+const DEFAULT_STEPS = 16;   // lengths to choose from: window.OA_STEP_OPTIONS
 const LIBRARY_KEY = 'oaSequencerLibrary';
+const NOTATION_KEY = 'oaSequencerNotation';
 
 // A step cell holds a VELOCITY: 0 = off, 1-100 = on at that intensity.
 // velOf tolerates legacy boolean grids (true -> 100).
@@ -67,6 +68,19 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
     );
 
     const [activeFader, setActiveFader] = React.useState(null);
+
+    // The staff under the grid, and whether it is showing. On unless it has
+    // been turned off — a read-out nobody knows is there is a read-out nobody
+    // reads. Persisted per browser rather than in the pattern: it is how this
+    // person reads, not part of the music, so loading somebody else's pattern
+    // must not change it.
+    const [notation, setNotation] = React.useState(() => {
+        try { return window.localStorage.getItem(NOTATION_KEY) !== '0'; } catch (e) { return true; }
+    });
+    const toggleNotation = () => setNotation((on) => {
+        try { window.localStorage.setItem(NOTATION_KEY, on ? '0' : '1'); } catch (e) {}
+        return !on;
+    });
 
     const { savePattern, loadPattern, deletePattern, playSong, applySongEntry } = window.useSeqLibrary(
         library, setLibraryItems, pattern, bpm, steps, toneTrack, toneRoot, 
@@ -226,9 +240,6 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
                     deletePattern={deletePattern}
                     setSongItems={setSongItems}
                     song={song}
-                    steps={steps}
-                    setSteps={setSteps}
-                    doubleTo={doubleTo}
                     rendering={rendering}
                     renderLoop={renderLoop}
                     renderStems={renderStems}
@@ -265,6 +276,40 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
                   );
                 })}
             </div>
+
+            {/* The same pattern, read as music. Under the grid because the
+                grid is the instrument and this is what it says — a staff you
+                could hand to a drummer without explaining the machine. */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+                <SeqButton
+                    label={'\u266b Notation'}
+                    active={notation}
+                    onClick={toggleNotation}
+                    title={notation ? 'Hide the drum staff' : 'Show this pattern in drum notation'}
+                />
+                {/* WHERE THE TRANSPORT GOES WHEN THERE IS NO FOOTER TO GO IN.
+
+                    On the Sampler's own page, Play / Rec / Tap / Save and the ⚙
+                    are portalled into the footer, and this bar stays empty and
+                    therefore invisible. A host that mounts <Sequencer> alone has
+                    no footer — APK:OS's Midi window is one — and SeqControls
+                    found nothing to portal into, so the ⚙ was drawn nowhere and
+                    the drop-up it is the only opener for could not be opened:
+                    no transport, no tempo, no pattern length, in a panel whose
+                    grid was perfectly editable. It falls back to this id. */}
+                <div id="seq-standalone-bar" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}></div>
+            </div>
+            {notation && window.SeqNotation && (
+                <window.SeqNotation
+                    tracks={TRACKS}
+                    pattern={pattern}
+                    steps={steps}
+                    mutes={mutes}
+                    solos={solos}
+                    isPlaying={isPlaying}
+                    currentStep={currentStep}
+                />
+            )}
 
             {toneRoot !== null && (
                 <window.SeqToneTrack

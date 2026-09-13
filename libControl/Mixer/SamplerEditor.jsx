@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -122,7 +123,7 @@ window.SamplerEditor = ({ idx, name, onClose, oaPopped }) => {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                <span style={{ fontSize: '11px', color: buffer ? '#ccc' : '#777', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                <span title={buffer ? (entry.name || 'sample') : 'No sample on this channel — it plays the synth voice'} style={{ fontSize: '11px', color: buffer ? '#ccc' : '#777', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                     {buffer ? (entry.name || 'sample') : 'No sample on this channel — it plays the synth voice'}
                 </span>
                 {buffer && <span style={{ fontSize: '10px', color: '#666', fontVariantNumeric: 'tabular-nums' }}>{secs(dur)}s</span>}
@@ -209,6 +210,12 @@ window.SamplerEditor = ({ idx, name, onClose, oaPopped }) => {
             {window.MusicChartOverlay && (
                 <window.MusicChartOverlay
                     audioBuffer={buffer}
+                    // The name belongs to the buffer, so it travels with it —
+                    // Chop to 16 Pads labels all sixteen pads from this. Empty
+                    // rather than a stand-in when the pad is bare: the chopper
+                    // says `Track` for that, and a plausible-looking filename
+                    // is the defect PLAN-437.01 removed.
+                    filename={entry && entry.name ? entry.name : ''}
                     trim={trim}
                     setTrimPoint={setTrimPoint}
                     headPos={head}
@@ -216,12 +223,21 @@ window.SamplerEditor = ({ idx, name, onClose, oaPopped }) => {
                 />
             )}
 
-            {/* Scanalyzer Multi-Lens Inspector & Exporter */}
-            {window.ScanalyzerView && (
+            {/* The Multi-Lens Inspector & Exporter. `window.LensesView` is the
+                component's ONE name. This site rendered it under a second,
+                aliased name until PLAN-647.01, and that second name is what
+                let a 384-line fork of the component hide in the bundle for as
+                long as it did (PLAN-572.01). Do not re-alias it. */}
+            {window.LensesView && (
                 <div style={{ marginTop: '12px' }}>
-                    <window.ScanalyzerView
+                    <window.LensesView
                         audioBuffer={buffer}
-                        filename={entry ? entry.name : "sample.wav"}
+                        // Same rule as the overlay above: empty, never a
+                        // stand-in. This name is EXPORTED — it titles the .lrc
+                        // and names the .PEAK the visitor downloads — so the
+                        // last resort belongs to the view that owns the
+                        // fallback chain, not to the caller that guessed.
+                        filename={entry && entry.name ? entry.name : ''}
                         padIdx={idx}
                     />
                 </div>

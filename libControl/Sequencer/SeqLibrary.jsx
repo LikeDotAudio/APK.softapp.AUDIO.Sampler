@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -9,8 +10,11 @@
 // interfaces, and every name they are known by remains the property of its owner.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// The pattern LENGTH used to be the fourth row here. It is in the ⚙ drop-up now
+// — see SeqControls — because a host that opens SEQ without SONG could not reach
+// this panel at all. `steps`, `setSteps` and `doubleTo` are no longer read.
 window.SeqLibrary = ({ library, loadPattern, deletePattern, setSongItems, song,
-                       steps, setSteps, doubleTo, rendering, renderLoop, renderStems, clearPattern }) => {
+                       rendering, renderLoop, renderStems, clearPattern }) => {
     return (
         <div style={{ marginTop: '10px', borderTop: '1px solid #333', paddingTop: '8px' }}>
             <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
@@ -38,15 +42,6 @@ window.SeqLibrary = ({ library, loadPattern, deletePattern, setSongItems, song,
                     />
                 )}
             </div>
-
-            {window.SeqStepsRow && (
-                <window.SeqStepsRow
-                    steps={steps}
-                    setSteps={setSteps}
-                    doubleTo={doubleTo}
-                    clearPattern={clearPattern}
-                />
-            )}
         </div>
     );
 };

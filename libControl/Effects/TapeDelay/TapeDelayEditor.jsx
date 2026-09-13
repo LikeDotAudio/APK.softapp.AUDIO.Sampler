@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -123,9 +124,9 @@ const LedReadout = ({ label, text }) => (
     </div>
 );
 
-window.TapeDelayEditor = ({ u, bpm, onClose, oaPopped }) => {
+window.TapeDelayEditor = ({ u, bpm, onClose, oaPopped, oaHosted }) => {
     const panel = window.useOaPanel({
-        id: `tape-${u}`, title: `${window.OA_DELAY_UNITS[u].name} — TAPE ECHO`, copy: oaPopped,
+        id: `tape-${u}`, title: `${window.OA_DELAY_UNITS[u].name} — TAPE ECHO`, copy: oaPopped, hosted: oaHosted,
         render: () => <window.TapeDelayEditor u={u} bpm={bpm} onClose={onClose} oaPopped />,
     });
     // Settings and faceplate both through the interface. The one thing this
@@ -134,7 +135,8 @@ window.TapeDelayEditor = ({ u, bpm, onClose, oaPopped }) => {
     // so it stays the tape's own call rather than being forced into the shared
     // shape for the sake of symmetry.
     const unit = window.useOaState('delay', u);
-    const params = window.useOaParams('delay', u);
+    // What controls this machine has, and which may be written. PLAN-18.12.
+    const surface = window.useOaConsoleSurface('delay', u);
     // Armed for a take: nothing is being sent to this tape, so the box greys
     // and stops taking moves that nothing would hear.
     const bypassed = window.useOaFxBypass();
@@ -153,14 +155,16 @@ window.TapeDelayEditor = ({ u, bpm, onClose, oaPopped }) => {
 
     if (!unit) return null;
 
-    const dirty = !!opened.current && params.some((p) => opened.current[p.key] !== unit[p.key]);
+    const dirty = !!opened.current && surface.list.some((d) => opened.current[d.key] !== unit[d.key]);
+    // The undo path writes through the descriptors' own writers, so a control
+    // the adapter will not let the panel move is not moved by ABORT either.
     const abort = () => {
         if (!opened.current) return;
-        params.forEach((p) => window.oaPluginSet('delay', u, p.key, opened.current[p.key]));
+        surface.list.forEach((d) => { if (d.writable) d.set(opened.current[d.key]); });
     };
 
-    const specOf = (key) => params.find((p) => p.key === key);
-    const set = (p, n) => window.oaPluginSet('delay', u, p.key, tapeValue(p, n));
+    const specOf = (key) => surface.by[key];
+    const set = (d, n) => { if (d.writable) d.set(tapeValue(d, n)); };
 
     // The two heads take the big dials; everything else is a knob in the row
     // under them, in the order the signal meets it.
@@ -168,7 +172,7 @@ window.TapeDelayEditor = ({ u, bpm, onClose, oaPopped }) => {
         { side: 'L', spec: specOf('timeL') },
         { side: 'R', spec: specOf('timeR') },
     ];
-    const knobs = params.filter((p) => p.key !== 'timeL' && p.key !== 'timeR');
+    const knobs = surface.list.filter((d) => d.key !== 'timeL' && d.key !== 'timeR');
 
     return panel.frame(
         <div {...panel.frameProps({
@@ -185,9 +189,9 @@ window.TapeDelayEditor = ({ u, bpm, onClose, oaPopped }) => {
                     {bpm} BPM
                 </span>
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
+                    {panel.chrome && <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
                         title={panel.popTitle}
-                        style={{ padding: '4px 10px' }} />
+                        style={{ padding: '4px 10px' }} />}
                     {/* Help is a BUTTON rather than a standing paragraph: it is
                         read once and then in the way for ever. */}
                     <window.SeqButton label="? Help" onClick={() => setShowHelp((v) => !v)}
@@ -199,7 +203,7 @@ window.TapeDelayEditor = ({ u, bpm, onClose, oaPopped }) => {
                         title="Back to how this tape sounded when the panel was opened"
                         style={{ padding: '4px 10px', border: 'none' }} />
                     {bypassed && <window.OaOutOfCircuit />}
-                    <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />
+                    {panel.chrome && <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />}
                 </div>
             </div>
 
@@ -230,13 +234,13 @@ window.TapeDelayEditor = ({ u, bpm, onClose, oaPopped }) => {
                                     <window.GalaxyHeadSelect
                                         key={side}
                                         label={`HEAD ${side}`}
-                                        norm={tapeNorm(spec, unit[spec.key])}
+                                        norm={tapeNorm(spec, spec.value)}
                                         defaultNorm={tapeNorm(spec, factory[spec.key])}
-                                        onNorm={(n) => set(spec, n)}
+                                        onNorm={spec.writable ? (n) => set(spec, n) : undefined}
                                         detents={headDetents(spec, bpm)}
                                         activeSteps={locked}
                                         onDetent={(steps) => window.oaSetDelaySync(u, side, steps, bpm)}
-                                        readout={locked ? window.oaBeatLabel(locked) : spec.fmt(unit[spec.key])}
+                                        readout={locked ? window.oaBeatLabel(locked) : spec.display}
                                         footer={locked ? 'LOCKED' : 'FREE'}
                                     />
                                 );
@@ -246,15 +250,17 @@ window.TapeDelayEditor = ({ u, bpm, onClose, oaPopped }) => {
                         <div style={{ borderTop: '1px solid rgba(0,0,0,0.35)', boxShadow: '0 1px 0 rgba(255,255,255,0.12)', margin: '7px 0 8px' }} />
 
                         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-evenly', gap: '4px 2px' }}>
-                            {knobs.map((p) => (
+                            {knobs.map((d) => (
                                 <window.GalaxyKnob
-                                    key={p.key}
-                                    label={p.label.toUpperCase()}
-                                    norm={tapeNorm(p, unit[p.key])}
-                                    defaultNorm={tapeNorm(p, factory[p.key])}
-                                    onNorm={(n) => set(p, n)}
-                                    readout={p.fmt(unit[p.key])}
-                                    title={`${p.label} — drag up and down, shift for fine, alt-click to reset`}
+                                    key={d.key}
+                                    label={d.label.toUpperCase()}
+                                    norm={tapeNorm(d, d.value)}
+                                    defaultNorm={tapeNorm(d, factory[d.key])}
+                                    onNorm={d.writable ? (n) => set(d, n) : undefined}
+                                    readout={d.display}
+                                    title={d.writable
+                                        ? `${d.label} — drag up and down, shift for fine, alt-click to reset`
+                                        : `${d.label} — read-only`}
                                 />
                             ))}
                         </div>

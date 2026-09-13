@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -197,7 +198,7 @@ window.SoundRecorder = ({ onSaved }) => {
         }
         chunksRef.current = [];
 
-        const blob = window.oaEncodeWav(merged, rate);
+        const blob = window.oaEncodeWavFromChannels(merged, rate);
         let buffer = null;
         try { buffer = await window.oaDecodeAudio(window.oaAudioCtx(), await blob.arrayBuffer()); } catch (e) {}
         const stamp = new Date();

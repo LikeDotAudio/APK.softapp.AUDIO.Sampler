@@ -1,10 +1,10 @@
 {
   "metadata": {
-    "analyzer_version": "20260717.0313-9a2e6ae3aa3c302e",
+    "analyzer_version": "20260904.2022",
     "name": "Clap.wav",
-    "folder": "APK 404",
-    "sub": "APK 404",
-    "path": "APK 404/Clap.wav",
+    "folder": "SampleLibrary/APK 404",
+    "sub": "SampleLibrary/APK 404",
+    "path": "APK:DOCKERS/APK:audio:WebPortal/SRC/APK:Softapps/SAMPLE and PLAY/SampleLibrary/APK 404/Clap.wav",
     "length_seconds": 0.19412698412698412,
     "sample_rate": 44100,
     "bit_depth": 16,
@@ -12,7 +12,7 @@
     "source_format": "WAV",
     "lossy_source": false,
     "dc_offset": -0.000016870043041299206,
-    "trailing_silence_ms": 0,
+    "trailing_silence_ms": 0.0,
     "analysis_depth": "full"
   },
   "classification": {
@@ -51,6 +51,23 @@
     "envelope_kurtosis": -0.7991120281329813,
     "envelope_shape": "Plucky",
     "decay_time_seconds_60db": 0.2280465765391139,
+    "slices": [
+      {
+        "index": 0,
+        "start_seconds": 0.0,
+        "end_seconds": 0.19455782312925168,
+        "relative_level": 1.0,
+        "envelope_attack_seconds": 0.019954648526077097,
+        "envelope_decay_seconds": 0.07981859410430839,
+        "envelope_sustain_level": 0.1310492556570205,
+        "envelope_release_seconds": 0.04988662131519274,
+        "envelope_temporal_centroid": 0.17347521260824436,
+        "envelope_skewness": 0.8448968612800372,
+        "envelope_kurtosis": -0.7991120281329813,
+        "envelope_shape": "Plucky",
+        "decay_time_seconds_60db": 0.2280465765391139
+      }
+    ],
     "onset_periodicity": 0.3006672153904202,
     "onset_rate_per_second": 5.151267375306623
   },
@@ -58,80 +75,117 @@
     "root_mean_square_level": 0.23632955345464643,
     "crest_factor": 4.231250251203886,
     "zero_crossings_per_second": 2704.4153720359773,
-    "complexity": 3028.970979303347,
-    "spectral_centroid_hz": 2351.905000413562,
+    "complexity": 3028.9709976054046,
+    "spectral_centroid_hz": 2351.904998395321,
     "spectral_rolloff_hz": 3389.533932951758,
-    "spectral_flatness": 0.16364415769201604,
-    "low_band_energy": 0.01648099389769833,
-    "mid_band_energy": 0.6428253363819577,
-    "high_band_energy": 0.34069366972034393,
-    "spectral_flux": 0.22082221386391335,
+    "spectral_flatness": 0.16364417305280402,
+    "low_band_energy": 0.016480992542534652,
+    "mid_band_energy": 0.6428253393889222,
+    "high_band_energy": 0.3406936680685432,
+    "spectral_flux": 0.22082222197392706,
     "harmonicity": 0.22391831781046492,
-    "inharmonicity": 0.38482561910513846,
+    "inharmonicity": 0.3848256589305685,
     "partial_count": 10,
     "mel_frequency_cepstral_coefficients": [
-      22.972657104336875,
-      12.989848981584256,
-      -4.025462945186254,
-      -3.842251691892189,
-      -1.7682587087630282,
-      -0.8863331615685219,
-      -0.5984377360430705,
-      -0.9508900749819221,
-      -0.29391993098698643,
-      -0.3147977619845312,
-      -0.8800368712459349,
-      -0.4540978241046243,
-      -0.6735303527904003
+      22.97265701126468,
+      12.989849170976177,
+      -4.02546301126493,
+      -3.842251591619603,
+      -1.7682588168598634,
+      -0.8863331358327516,
+      -0.5984377677679651,
+      -0.9508899952734597,
+      -0.293920093266355,
+      -0.3147975307562226,
+      -0.8800371028691549,
+      -0.4540976475611828,
+      -0.6735305141631841
     ],
-    "spectral_centroid_mean_hz": 2291.4704709474995,
-    "spectral_centroid_deviation_hz": 102.2774193266001,
-    "total_harmonic_distortion": 0,
-    "clipping_density": 0,
+    "spectral_centroid_mean_hz": 2291.470414037901,
+    "spectral_centroid_deviation_hz": 102.27747824670386,
+    "total_harmonic_distortion": 0.0,
+    "clipping_density": 0.0,
     "distortion": "Clean",
-    "stationarity": 0.03897292761382842,
-    "spectral_entropy": 0.6148699551522598,
-    "spectral_slope_db_per_octave": -2.8339262195560377,
+    "stationarity": 0.038972929964265934,
+    "spectral_entropy": 0.6148699523517417,
+    "spectral_slope_db_per_octave": -2.8339262867784893,
     "band_limit_high_hz": 20435.009765625,
-    "spectral_centroid_slope_hz_per_second": -1395.6232711114023,
+    "spectral_centroid_slope_hz_per_second": -1395.624465063806,
     "syllabic_modulation_energy": null,
-    "voicing_ratio": 0,
+    "voicing_ratio": 0.0,
     "mid_rms": 0.23632955340107695,
     "side_rms": 0.005210454659182652,
-    "lufs": -70
+    "lufs": -70.0,
+    "loudness_range_lu": 0.0,
+    "true_peak_dbtp": 0.0032051268921086855
   },
   "musicality": {
     "pitch_hz": 1191.8918918918919,
     "pitch_slope_semitones_per_second": null,
     "root_note_name": "",
-    "root_frequency_hz": 0,
-    "root_cents_offset": 0,
-    "beats_per_minute": 0,
+    "root_frequency_hz": 0.0,
+    "root_cents_offset": 0.0,
+    "beats_per_minute": 0.0,
     "root_midi_note": -1,
     "chromagram": [
-      0.7645207998217203,
-      0.7460530597388737,
-      0.788651616889099,
-      0.8683450251496689,
-      0.8705297613792787,
-      0.6907245826372685,
-      1,
-      0.8033456955279321,
-      0.729700450493028,
-      0.6700021170529634,
-      0.9282842022496619,
-      0.7448374734655879
-    ]
+      0.7645207510715083,
+      0.7460530515815628,
+      0.7886515780156704,
+      0.8683450154987715,
+      0.8705297183545211,
+      0.6907245301569389,
+      1.0,
+      0.8033456834778369,
+      0.7297003716830153,
+      0.6700021117516736,
+      0.9282841526515988,
+      0.7448374715153477
+    ],
+    "note_root_key_beat_marker_map": {
+      "global_root_note": "",
+      "global_midi_note": -1,
+      "global_bpm": 120.0,
+      "total_beats": 1,
+      "beat_markers": [
+        {
+          "index": 0,
+          "timestamp_seconds": 0.0,
+          "sample_index": 0,
+          "is_downbeat": true,
+          "bar": 1,
+          "beat": 1
+        }
+      ],
+      "chunk_maps": [
+        {
+          "chunk_index": 0,
+          "start_seconds": 0.005,
+          "end_seconds": 0.18,
+          "duration_seconds": 0.175,
+          "root_note_name": "G4",
+          "root_midi_note": 67,
+          "root_frequency_hz": 398.1,
+          "pitch_hz": 1225.0,
+          "cents_offset": 26.7,
+          "peak_amplitude": 1.0,
+          "nearest_beat_index": 0
+        }
+      ]
+    }
   },
   "unsupervised": {
-    "cluster": -1,
-    "principal_components": []
+    "cluster": 4,
+    "principal_components": [
+      -0.40050415540854056,
+      -1.275972966951303,
+      1.1471436441502543
+    ]
   },
   "ucs": {
     "category": "CERAMICS",
     "subcategory": "IMPACT",
     "id": "CERMImpt",
-    "confidence": 0.24364030903942924,
+    "confidence": 0.2436403099663971,
     "alternatives": [
       {
         "category": "PLASTIC",
@@ -168,7 +222,7 @@
   },
   "regions": {
     "count": 1,
-    "detection_threshold_decibels": -40,
+    "detection_threshold_decibels": -40.0,
     "minimum_silence_seconds": 0.15,
     "minimum_region_seconds": 0.05,
     "regions": [

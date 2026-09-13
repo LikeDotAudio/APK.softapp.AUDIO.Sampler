@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -54,9 +55,9 @@ const DimButton = ({ label, off, active, color, onPress }) => {
  * The CHORUS panel for one delay return. It writes straight to the live bus, so
  * a button lands on the repeats already circulating in the tape loop.
  */
-window.ChorusEditor = ({ u, onClose, oaPopped }) => {
+window.ChorusEditor = ({ u, onClose, oaPopped, oaHosted }) => {
     const panel = window.useOaPanel({
-        id: `chorus-${u}`, title: `${window.OA_DELAY_UNITS[u].name} — CHORUS`, copy: oaPopped,
+        id: `chorus-${u}`, title: `${window.OA_DELAY_UNITS[u].name} — CHORUS`, copy: oaPopped, hosted: oaHosted,
         render: () => <window.ChorusEditor u={u} onClose={onClose} oaPopped />,
     });
     // The chorus is an insert inside a tape delay, but this panel does not need
@@ -93,16 +94,16 @@ window.ChorusEditor = ({ u, onClose, oaPopped }) => {
                 <span style={{ fontSize: '9px', color: '#666' }}>after the tape</span>
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     {bypassed && <window.OaOutOfCircuit />}
-                    <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
+                    {panel.chrome && <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
                         title={panel.popTitle}
-                        style={{ padding: '4px 10px' }} />
+                        style={{ padding: '4px 10px' }} />}
                     {/* Help is a BUTTON rather than a standing paragraph: it is
                         read once and then in the way for ever. */}
                     <window.SeqButton label="? Help" onClick={() => setShowHelp((v) => !v)}
                         active={showHelp}
                         title="What the buttons do"
                         style={{ padding: '4px 10px' }} />
-                    <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />
+                    {panel.chrome && <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />}
                 </div>
             </div>
 

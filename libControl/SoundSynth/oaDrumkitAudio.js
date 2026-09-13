@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -84,8 +85,16 @@ window.oaDecodeAudio = async function (ctx, arrayBuffer) {
     return await ctx.decodeAudioData(arrayBuffer);
 };
 
-// Encode an AudioBuffer to a 16-bit PCM WAV ArrayBuffer (for RENDER/export).
-window.oaEncodeWav = function (audioBuffer) {
+// Encode a decoded AudioBuffer to a 16-bit PCM WAV **ArrayBuffer** (RENDER/export).
+//
+// THE NAME CARRIES THE ARGUMENT ON PURPOSE. This and oaEncodeWavFromChannels in
+// oaRecordings.js shared ONE global name until PLAN-646.01. They take different
+// first arguments, take a different NUMBER of arguments, and hand back different
+// types — so the later entry in sources.json simply overwrote this one, and the
+// sequencer's two export buttons threw a TypeError into a swallowed catch.
+// Two functions, two names. Do not reintroduce a shared one; test/globals.test.mjs
+// fails if any module-level global is written by two files in the bundle.
+window.oaEncodeWavFromBuffer = function (audioBuffer) {
     const numCh = audioBuffer.numberOfChannels;
     const len = audioBuffer.length;
     const rate = audioBuffer.sampleRate;

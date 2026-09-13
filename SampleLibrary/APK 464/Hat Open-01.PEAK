@@ -1,10 +1,10 @@
 {
   "metadata": {
-    "analyzer_version": "20260717.0313-9a2e6ae3aa3c302e",
+    "analyzer_version": "20260904.2022",
     "name": "Hat Open-01.wav",
-    "folder": "APK 464",
-    "sub": "APK 464",
-    "path": "APK 464/Hat Open-01.wav",
+    "folder": "SampleLibrary/APK 464",
+    "sub": "SampleLibrary/APK 464",
+    "path": "APK:DOCKERS/APK:audio:WebPortal/SRC/APK:Softapps/SAMPLE and PLAY/SampleLibrary/APK 464/Hat Open-01.wav",
     "length_seconds": 0.5400907029478458,
     "sample_rate": 44100,
     "bit_depth": 16,
@@ -12,7 +12,7 @@
     "source_format": "WAV",
     "lossy_source": false,
     "dc_offset": -0.00002117703128936099,
-    "trailing_silence_ms": 10,
+    "trailing_silence_ms": 10.0,
     "analysis_depth": "full"
   },
   "classification": {
@@ -41,7 +41,7 @@
     "attack_seconds": 0.015306122448979591,
     "sustain_ratio": 0.12121212121212122,
     "sustained": false,
-    "envelope_attack_seconds": 0,
+    "envelope_attack_seconds": 0.0,
     "envelope_decay_seconds": 0.26439909297052155,
     "envelope_sustain_level": 0.10909058390784483,
     "envelope_release_seconds": 0.17959183673469387,
@@ -50,6 +50,23 @@
     "envelope_kurtosis": 3.161664925469168,
     "envelope_shape": "Decaying",
     "decay_time_seconds_60db": 0.9692935649881593,
+    "slices": [
+      {
+        "index": 0,
+        "start_seconds": 0.0,
+        "end_seconds": 0.5437641723356009,
+        "relative_level": 1.0,
+        "envelope_attack_seconds": 0.0,
+        "envelope_decay_seconds": 0.26439909297052155,
+        "envelope_sustain_level": 0.10909058390784483,
+        "envelope_release_seconds": 0.17959183673469387,
+        "envelope_temporal_centroid": 0.09008095332146611,
+        "envelope_skewness": 1.8543022945052976,
+        "envelope_kurtosis": 3.161664925469168,
+        "envelope_shape": "Decaying",
+        "decay_time_seconds_60db": 0.9692935649881593
+      }
+    ],
     "onset_periodicity": 0.005209300320585965,
     "onset_rate_per_second": 1.8515408514568814
   },
@@ -57,86 +74,131 @@
     "root_mean_square_level": 0.09417802393394702,
     "crest_factor": 10.617864345117463,
     "zero_crossings_per_second": 15847.338147619448,
-    "complexity": 3965.233360435383,
-    "spectral_centroid_hz": 9656.134695726947,
+    "complexity": 3965.2333643383936,
+    "spectral_centroid_hz": 9656.134710140765,
     "spectral_rolloff_hz": 13849.525568897472,
-    "spectral_flatness": 0.5428862652801253,
-    "low_band_energy": 0.0009633231660501182,
-    "mid_band_energy": 0.02942109178196948,
-    "high_band_energy": 0.9696155850519804,
-    "spectral_flux": 0.22208613810356245,
+    "spectral_flatness": 0.5428862731043406,
+    "low_band_energy": 0.0009633226217192137,
+    "mid_band_energy": 0.02942109249383101,
+    "high_band_energy": 0.9696155848844498,
+    "spectral_flux": 0.22208613900630822,
     "harmonicity": 0.27126293160780907,
-    "inharmonicity": 0,
+    "inharmonicity": 0.0,
     "partial_count": 0,
     "mel_frequency_cepstral_coefficients": [
-      -12.361997668186628,
-      -11.76816019167291,
-      4.280271698773027,
-      6.089689540507441,
-      -2.9134376699138045,
-      1.9465621419882113,
-      -0.6079353668470262,
-      -0.7918534209030187,
-      1.2005913716992274,
-      -0.5073909658788768,
-      -0.21076255966052232,
-      0.6935959701065281,
-      -1.352890708534098
+      -12.361997867993024,
+      -11.768160163556795,
+      4.28027184499681,
+      6.089689643637527,
+      -2.913437758630319,
+      1.9465619983887157,
+      -0.6079353876174668,
+      -0.7918532208910932,
+      1.2005915855713942,
+      -0.5073907906659619,
+      -0.21076254536748815,
+      0.693595881681703,
+      -1.3528908118824556
     ],
-    "spectral_centroid_mean_hz": 9589.203743604407,
-    "spectral_centroid_deviation_hz": 991.9280739904202,
-    "total_harmonic_distortion": 0,
-    "clipping_density": 0,
+    "spectral_centroid_mean_hz": 9589.203740253155,
+    "spectral_centroid_deviation_hz": 991.9280839027972,
+    "total_harmonic_distortion": 0.0,
+    "clipping_density": 0.0,
     "distortion": "Clean",
-    "stationarity": 0,
-    "spectral_entropy": 0.6185636820420201,
-    "spectral_slope_db_per_octave": 2.2630631728578523,
+    "stationarity": 0.0,
+    "spectral_entropy": 0.6185636824020766,
+    "spectral_slope_db_per_octave": 2.2630630359612174,
     "band_limit_high_hz": 22028.466796875,
-    "spectral_centroid_slope_hz_per_second": -4945.732418965128,
+    "spectral_centroid_slope_hz_per_second": -4945.732527845377,
     "syllabic_modulation_energy": null,
-    "voicing_ratio": 0,
+    "voicing_ratio": 0.0,
     "mid_rms": 0.09417802370554147,
     "side_rms": 0.0006850092401246404,
-    "lufs": -15.259628241034354
+    "lufs": -15.259628241034354,
+    "loudness_range_lu": 0.0,
+    "true_peak_dbtp": 0.6861385577941044
   },
   "musicality": {
-    "pitch_hz": 1764,
-    "pitch_slope_semitones_per_second": -45.830420370507774,
+    "pitch_hz": 1764.0,
+    "pitch_slope_semitones_per_second": -45.83042036482103,
     "root_note_name": "",
-    "root_frequency_hz": 0,
-    "root_cents_offset": 0,
-    "beats_per_minute": 0,
+    "root_frequency_hz": 0.0,
+    "root_cents_offset": 0.0,
+    "beats_per_minute": 0.0,
     "root_midi_note": -1,
     "chromagram": [
-      1,
-      0.7700668081303488,
-      0.5007044946256926,
-      0.42063870781604984,
-      0.33765655958979995,
-      0.2829071589299464,
-      0.28098645937237904,
-      0.2867566441618737,
-      0.32720319774554185,
-      0.34522412029371846,
-      0.4852874784953326,
-      0.6391196145763514
-    ]
+      1.0,
+      0.7700668146882796,
+      0.5007044841283312,
+      0.42063872338906877,
+      0.33765655671077766,
+      0.28290716857603837,
+      0.28098644959531516,
+      0.28675665005526374,
+      0.3272032132159075,
+      0.3452241175401095,
+      0.4852874688405394,
+      0.6391196179262937
+    ],
+    "note_root_key_beat_marker_map": {
+      "global_root_note": "",
+      "global_midi_note": -1,
+      "global_bpm": 120.0,
+      "total_beats": 2,
+      "beat_markers": [
+        {
+          "index": 0,
+          "timestamp_seconds": 0.0,
+          "sample_index": 0,
+          "is_downbeat": true,
+          "bar": 1,
+          "beat": 1
+        },
+        {
+          "index": 1,
+          "timestamp_seconds": 0.5,
+          "sample_index": 22050,
+          "is_downbeat": false,
+          "bar": 1,
+          "beat": 2
+        }
+      ],
+      "chunk_maps": [
+        {
+          "chunk_index": 0,
+          "start_seconds": 0.0,
+          "end_seconds": 0.399,
+          "duration_seconds": 0.399,
+          "root_note_name": "A#2",
+          "root_midi_note": 46,
+          "root_frequency_hz": 119.54,
+          "pitch_hz": 1764.0,
+          "cents_offset": 44.0,
+          "peak_amplitude": 1.0,
+          "nearest_beat_index": 0
+        }
+      ]
+    }
   },
   "unsupervised": {
-    "cluster": -1,
-    "principal_components": []
+    "cluster": 6,
+    "principal_components": [
+      3.2051006608279957,
+      0.8625944021193106,
+      0.18288296753864056
+    ]
   },
   "ucs": {
     "category": "OBJECTS",
     "subcategory": "FASHION",
     "id": "OBJFash",
-    "confidence": 0.4918883756881843,
+    "confidence": 0.47263584013397086,
     "alternatives": [
       {
         "category": "MAGIC",
         "subcategory": "POOF",
         "id": "MAGPoof",
-        "probability": 0.35,
+        "probability": 0.336,
         "synonyms": [
           "open"
         ]
@@ -145,7 +207,7 @@
         "category": "VEHICLES",
         "subcategory": "DOOR",
         "id": "VEHDoor",
-        "probability": 0.097,
+        "probability": 0.093,
         "synonyms": [
           "open"
         ]
@@ -154,7 +216,7 @@
         "category": "CYMBALS",
         "subcategory": "HI-HAT",
         "id": "CYMBHat",
-        "probability": 0.06,
+        "probability": 0.057,
         "synonyms": [
           "hat",
           "open"
@@ -164,17 +226,17 @@
     "synonyms": [
       "hat"
     ],
-    "reason": "name matched [hat]; signal 0.55, tier semantic_only, 5 candidates in contention; gate ruled out AIRSuck (envelope_temporal_centroid 0.0901 < min 0.4000)"
+    "reason": "name matched [hat]; signal 0.55, tier semantic_only, 6 candidates in contention; gate ruled out AIRSuck (envelope_temporal_centroid 0.0901 < min 0.4000)"
   },
   "regions": {
     "count": 1,
-    "detection_threshold_decibels": -40,
+    "detection_threshold_decibels": -40.0,
     "minimum_silence_seconds": 0.15,
     "minimum_region_seconds": 0.05,
     "regions": [
       {
         "index": 0,
-        "start_seconds": 0,
+        "start_seconds": 0.0,
         "end_seconds": 0.3990929705215419,
         "duration_seconds": 0.3990929705215419,
         "peak_amplitude": 0.32944698952386,

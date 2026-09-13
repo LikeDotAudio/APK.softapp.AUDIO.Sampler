@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -71,21 +72,26 @@ window.useOaFrame = function (id, idx, onFrame) {
         // all while nothing is attached, so a closed panel costs nothing.
         const detach = window.oaPluginAttach();
 
-        let raf = 0;
+        // ONE CLOCK FOR EVERY PANEL. This used to open its own
+        // requestAnimationFrame per mounted unit, so sixteen open panels meant
+        // sixteen loops plus the pump's, all at display refresh, all redrawing
+        // values the pump had already finished writing (PLAN-18.09). Riding the
+        // pump's own cadence makes the count independent of how many panels are
+        // open, and guarantees a draw never lands mid-pass.
         const tick = () => {
             try {
                 cb.current(frame, layout);
             } catch (e) {
-                // A panel that throws mid-frame would otherwise stop its own
-                // loop for good and freeze at the last value it drew.
+                // A panel that throws must not take the pump's other listeners
+                // with it — the loop swallows it too, but this names which one.
                 console.warn('⚠️ [' + id + '] meter draw failed:', e && e.message);
             }
-            raf = window.requestAnimationFrame(tick);
         };
-        raf = window.requestAnimationFrame(tick);
+        const stop = window.oaPluginOnFrame(tick);
+        tick();                       // paint now rather than a slot from now
 
         return () => {
-            window.cancelAnimationFrame(raf);
+            stop();
             detach();
         };
     }, [id, idx]);

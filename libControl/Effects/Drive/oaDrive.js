@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -127,13 +128,13 @@ const pct = function (v) { return Math.round(v * 100) + '%'; };
 // logarithmically — a drive knob that spends half its travel between 20x and
 // 40x is useless, because the ear hears ratios, not differences.
 window.OA_DRIVE_PARAMS = [
-    { key: 'drive',  label: 'Drive',  min: 1,   max: 40,    def: 1,     log: true,  fmt: function (v) { return v.toFixed(1) + 'x'; } },
-    { key: 'starve', label: 'Starve', min: 0,   max: 1,     def: 0,     log: false, fmt: pct },
-    { key: 'rect',   label: 'Octave', min: 0,   max: 1,     def: 0,     log: false, fmt: pct },
-    { key: 'tone',   label: 'Tone',   min: 800, max: 18000, def: 18000, log: true,
+    { key: 'drive', kind: 'continuous',  label: 'Drive',  min: 1,   max: 40,    def: 1,     log: true,  fmt: function (v) { return v.toFixed(1) + 'x'; } },
+    { key: 'starve', kind: 'continuous', label: 'Starve', min: 0,   max: 1,     def: 0,     log: false, fmt: pct },
+    { key: 'rect', kind: 'continuous',   label: 'Octave', min: 0,   max: 1,     def: 0,     log: false, fmt: pct },
+    { key: 'tone', kind: 'continuous',   label: 'Tone',   min: 800, max: 18000, def: 18000, log: true,
       fmt: function (v) { return v >= 17000 ? 'Open' : (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : Math.round(v) + ' Hz'); } },
-    { key: 'level',  label: 'Level',  min: 0,   max: 2,     def: 1,     log: false, fmt: function (v) { return v.toFixed(2) + 'x'; } },
-    { key: 'mix',    label: 'Mix',    min: 0,   max: 1,     def: 0,     log: false, fmt: pct },
+    { key: 'level', kind: 'continuous',  label: 'Level',  min: 0,   max: 2,     def: 1,     log: false, fmt: function (v) { return v.toFixed(2) + 'x'; } },
+    { key: 'mix', kind: 'continuous',    label: 'Mix',    min: 0,   max: 1,     def: 0,     log: false, fmt: pct },
 ];
 
 // Only these four change the SHAPE of the transfer curve — tone, level and mix

@@ -1,0 +1,20 @@
+[
+ "libControl/App/oaTheme.js",
+ "libControl/App/Mocks.jsx",
+ "libControl/Ui/OaReadout.jsx",
+ "libControl/Ui/OaPanelFrame.jsx",
+ "libControl/Effects/PluginHost/useOaPlugin.js",
+ "libControl/Effects/PluginHost/OaConsoleSurface.jsx",
+ "libControl/Sequencer/SeqButton.jsx",
+ "libControl/Mixer/SvgKnob.jsx",
+ "libControl/Mixer/GalaxyKnob.jsx",
+ "libControl/Effects/PluginHost/OaOutOfCircuit.jsx",
+ "libControl/Effects/TapeDelay/TapeDelayEditor.jsx",
+ "libControl/Effects/Chorus/ChorusEditor.jsx",
+ "libControl/Effects/Drive/DriveEditor.jsx",
+ "libControl/Effects/Compressor/CompressorEditor.jsx",
+ "libControl/Effects/BussCompressor/BussCompEditor.jsx",
+ "libControl/Effects/Equalizer/EqEditor.jsx",
+ "libControl/Effects/Gate/GateEditor.jsx",
+ "libControl/Effects/Reverb/VarcRemote.jsx"
+]

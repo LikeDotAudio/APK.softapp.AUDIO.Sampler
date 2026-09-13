@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -108,14 +109,19 @@ window.oaDownloadRecording = (entry) => {
 };
 
 /**
- * Float channels to a 16-bit PCM WAV Blob.
+ * Float channels to a 16-bit PCM WAV **Blob**.
+ *
+ * Named for its argument since PLAN-646.01: oaDrumkitAudio.js holds
+ * oaEncodeWavFromBuffer, which takes a decoded AudioBuffer and returns an
+ * ArrayBuffer. The two shared one global name, this one won on load order, and
+ * the sequencer's callers were passing the other one's argument.
  *
  * The obvious alternative is MediaRecorder, which hands back WebM/Opus — a
  * lossy container that not every decoder in this app, and not every tool you
  * might drag the file into afterwards, will open. A sample is something you
  * chop and pitch, so it is worth the bytes to keep it uncompressed.
  */
-window.oaEncodeWav = (channels, sampleRate) => {
+window.oaEncodeWavFromChannels = (channels, sampleRate) => {
     const ch = channels.length;
     const frames = ch ? channels[0].length : 0;
     const dataBytes = frames * ch * 2;

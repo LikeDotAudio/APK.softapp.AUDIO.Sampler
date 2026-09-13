@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -13,13 +14,10 @@
  * Header: oaBussComp.js
  * Purpose: THE MASTER BUS — the one node the whole mix sums into — and the
  *   VCA bus compressor sitting across it.
- * Description: Until this file existed there was no master bus. Every channel's
- *   dry path, every compressor strip, every reverb return and every tape return
- *   connected straight to `ctx.destination`, so "the mix" was a thing that only
- *   existed inside the browser's own summing node, where nothing could touch it.
- *   You cannot compress a signal you never hold.
- *
- *   So this file owns one bus. Everything audible goes through it:
+ * Description: This file owns THE ONE MASTER BUS. Everything audible sums into
+ *   it, rather than each path connecting straight to `ctx.destination` — a mix
+ *   that exists only inside the browser's own summing node is a mix nothing can
+ *   compress, meter or fade.
  *
  *       channels ─┐
  *       strips ───┤
@@ -176,23 +174,23 @@ const dbFmt = function (v) { return (v > 0 ? '+' : '') + v.toFixed(1) + ' dB'; }
  */
 window.OA_BUSS_PARAMS = [
     {
-        key: 'thresh', label: 'Threshold', min: -20, max: 20, def: 0, fmt: dbFmt,
+        key: 'thresh', kind: 'continuous', label: 'Threshold', min: -20, max: 20, def: 0, fmt: dbFmt,
         ticks: ['-20', '-10', '0', '+10', '+20'],
         hint: 'Where compression starts. Down is more. 0 sits at -18 dBFS, so a mix peaking near full scale is already well over it.',
     },
     {
-        key: 'makeup', label: 'Make-Up', min: -10, max: 20, def: 0, fmt: dbFmt,
+        key: 'makeup', kind: 'continuous', label: 'Make-Up', min: -10, max: 20, def: 0, fmt: dbFmt,
         ticks: ['-10', '0', '+10', '+20'],
         hint: 'Put back the level the compression took away. Post-VCA — turning this up does not compress harder.',
     },
     {
-        key: 'attack', label: 'Attack', min: 0, max: window.OA_BUSS_ATTACKS.length - 1, def: 5,
+        key: 'attack', kind: 'discrete', label: 'Attack', min: 0, max: window.OA_BUSS_ATTACKS.length - 1, def: 5,
         ticks: ['.1', '1', '6', '15', '30'],
         fmt: function (v) { return pick(window.OA_BUSS_ATTACKS, v) + ' ms'; },
         hint: 'Time to clamp down. Fast softens the transient; slow lets it through and only holds the body — which is how a mix comes out punchier.',
     },
     {
-        key: 'release', label: 'Release', min: 0, max: window.OA_BUSS_RELEASES.length - 1, def: 9,
+        key: 'release', kind: 'discrete', label: 'Release', min: 0, max: window.OA_BUSS_RELEASES.length - 1, def: 9,
         ticks: ['.05', '.2', '.6', '1.2', 'A2'],
         fmt: function (v) {
             const r = pick(window.OA_BUSS_RELEASES, v);
@@ -201,13 +199,13 @@ window.OA_BUSS_PARAMS = [
         hint: 'Time to let go. AUTO is two time constants at once — fast for transients, slow for the bed underneath — and is where most mixes want it.',
     },
     {
-        key: 'ratio', label: 'Ratio', min: 0, max: window.OA_BUSS_RATIOS.length - 1, def: 4,
+        key: 'ratio', kind: 'discrete', label: 'Ratio', min: 0, max: window.OA_BUSS_RATIOS.length - 1, def: 4,
         ticks: ['1.3', '3', '10', '-2.5', '-0.5'],
         fmt: function (v) { return bussRatioLabel(pick(window.OA_BUSS_RATIOS, v)) + ':1'; },
         hint: '4:1 is the classic bus setting. The last three are negative: past the threshold the output goes DOWN as the input goes up.',
     },
     {
-        key: 'sc', label: 'SC Filter', min: 0, max: 300, def: 0,
+        key: 'sc', kind: 'continuous', label: 'SC Filter', min: 0, max: 300, def: 0,
         ticks: ['OUT', '100', '200', '300'],
         fmt: function (v) { return v < 5 ? 'OUT' : Math.round(v / 10) * 10 + ' Hz'; },
         hint: '12 dB/oct high-pass in the DETECTOR only. Stops the kick and the bass from ducking the whole record; the low end itself is untouched.',
@@ -216,24 +214,24 @@ window.OA_BUSS_PARAMS = [
         // DEPRECATED — off the faceplate, and bussSettings() no longer reads it.
         // Kept in the schema so an older saved unit and the presets that carry a
         // blend still load; see the note in bussSettings().
-        key: 'mix', label: 'Mix', min: 0, max: 1, def: 1, deprecated: true,
+        key: 'mix', kind: 'continuous', label: 'Mix', min: 0, max: 1, def: 1, deprecated: true,
         ticks: ['DRY', '25', '50', '75', 'WET'],
         fmt: function (v) { return Math.round(v * 100) + '%'; },
         hint: 'Wet against the untouched mix. Below 100% is parallel compression: peaks held, transients alive underneath.',
     },
     {
-        key: 'trim', label: 'Trim', min: -18, max: 18, def: 0, fmt: dbFmt,
+        key: 'trim', kind: 'continuous', label: 'Trim', min: -18, max: 18, def: 0, fmt: dbFmt,
         ticks: ['-18', '-9', '0', '+9', '+18'],
         hint: 'Gain into the whole unit, so a quiet mix can reach the useful part of the threshold range without moving every fader.',
     },
     {
-        key: 'rate', label: 'Rate-S', min: 1, max: 60, def: 20,
+        key: 'rate', kind: 'continuous', label: 'Rate-S', min: 1, max: 60, def: 20,
         ticks: ['1', '15', '30', '45', '60'],
         fmt: function (v) { return Math.round(v) + ' s'; },
         hint: 'Seconds the FADE button takes to walk the master to silence — and, pressed again, back up.',
     },
     {
-        key: 'dist', label: 'Distortion', min: 1, max: 9, def: 5,
+        key: 'dist', kind: 'continuous', label: 'Distortion', min: 1, max: 9, def: 5,
         ticks: ['1', '3', '5', '7', '9'],
         fmt: function (v) { return Math.round(v) + ' / 9'; },
         hint: 'How much grit 44K MODE adds. There is a sweet spot per mix where the material thickens rather than dirties — hunt for it.',
@@ -836,7 +834,7 @@ window.oaSetMasterBypass = function (on) {
 /** Is the master compressor currently routed around? */
 window.oaMasterBypassed = function () { return !!window.OA_BUSS_BYPASS; };
 
-const masterBus = function (ctx) {
+const masterBus = function (ctx, dest) {
     if (!ctx) return null;
     if (ctx.__oaBuss) return ctx.__oaBuss;
 
@@ -869,7 +867,12 @@ const masterBus = function (ctx) {
     input.connect(bus.engine.input);
     bus.engine.output.connect(fade);
     fade.connect(output);
-    output.connect(ctx.destination);
+    // Where the whole mix lands. `ctx.destination` unless a HOST says otherwise
+    // — APK:OS's Mixer sums the app's mix into its own master so the shell's
+    // master fader and limiter ride it, rather than having two mixes arrive at
+    // the speakers past each other. Fixed at build time like every other
+    // destination in this rack, and for the same reason: there is one bus.
+    output.connect(dest || ctx.destination);
 
     // Two analysers, split, because this is the one meter in the app that has a
     // genuine left and a genuine right to show: the detector is linked but the
@@ -908,13 +911,13 @@ const masterBus = function (ctx) {
  * own destination only if the bus cannot be built at all, so a failure here
  * costs the compressor rather than the sound.
  */
-window.oaMasterInput = function (ctx) {
-    const bus = masterBus(ctx);
+window.oaMasterInput = function (ctx, dest) {
+    const bus = masterBus(ctx, dest);
     return (bus && bus.input) || (ctx && ctx.destination) || null;
 };
 
 /** Build the bus once the worklet answer is in, so it does not take the fallback. */
-window.oaMasterWarm = function (ctx) { masterBus(ctx); };
+window.oaMasterWarm = function (ctx, dest) { masterBus(ctx, dest); };
 
 /** 1 once the master exists — for the voice diagnostic's bus count. */
 window.oaMasterBusCount = function (ctx) { return (ctx && ctx.__oaBuss) ? 1 : 0; };

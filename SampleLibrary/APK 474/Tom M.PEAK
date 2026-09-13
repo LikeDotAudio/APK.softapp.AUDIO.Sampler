@@ -1,18 +1,18 @@
 {
   "metadata": {
-    "analyzer_version": "20260717.0313-9a2e6ae3aa3c302e",
+    "analyzer_version": "20260904.2022",
     "name": "Tom M.wav",
-    "folder": "APK 474",
-    "sub": "APK 474",
-    "path": "APK 474/Tom M.wav",
+    "folder": "SampleLibrary/APK 474",
+    "sub": "SampleLibrary/APK 474",
+    "path": "APK:DOCKERS/APK:audio:WebPortal/SRC/APK:Softapps/SAMPLE and PLAY/SampleLibrary/APK 474/Tom M.wav",
     "length_seconds": 0.42802721088435375,
     "sample_rate": 44100,
     "bit_depth": 16,
     "channels": 2,
     "source_format": "WAV",
     "lossy_source": false,
-    "dc_offset": -0.000006610040165504477,
-    "trailing_silence_ms": 0,
+    "dc_offset": -6.610040165504477e-6,
+    "trailing_silence_ms": 0.0,
     "analysis_depth": "full"
   },
   "classification": {
@@ -44,7 +44,7 @@
     "attack_seconds": 0.0004308390022675737,
     "sustain_ratio": 0.15384615384615385,
     "sustained": false,
-    "envelope_attack_seconds": 0,
+    "envelope_attack_seconds": 0.0,
     "envelope_decay_seconds": 0.20453514739229026,
     "envelope_sustain_level": 0.07780305708566315,
     "envelope_release_seconds": 0.1346938775510204,
@@ -53,130 +53,166 @@
     "envelope_kurtosis": 1.5120487833679475,
     "envelope_shape": "Decaying",
     "decay_time_seconds_60db": 0.5846740760240845,
-    "onset_periodicity": 0,
+    "slices": [
+      {
+        "index": 0,
+        "start_seconds": 0.0,
+        "end_seconds": 0.4290249433106576,
+        "relative_level": 1.0,
+        "envelope_attack_seconds": 0.0,
+        "envelope_decay_seconds": 0.20453514739229026,
+        "envelope_sustain_level": 0.07780305708566315,
+        "envelope_release_seconds": 0.1346938775510204,
+        "envelope_temporal_centroid": 0.09046286365229675,
+        "envelope_skewness": 1.5773327516936222,
+        "envelope_kurtosis": 1.5120487833679475,
+        "envelope_shape": "Decaying",
+        "decay_time_seconds_60db": 0.5846740760240845
+      }
+    ],
+    "onset_periodicity": 0.0,
     "onset_rate_per_second": 2.3363000635727906
   },
   "spectral_features": {
     "root_mean_square_level": 0.19816151347662408,
     "crest_factor": 5.046234583487047,
     "zero_crossings_per_second": 205.5944055944056,
-    "complexity": 1645.4044919125117,
-    "spectral_centroid_hz": 674.8799608290858,
+    "complexity": 1645.4052770562898,
+    "spectral_centroid_hz": 674.880132265839,
     "spectral_rolloff_hz": 1009.2816274634456,
-    "spectral_flatness": 0.04417139249349954,
-    "low_band_energy": 0.5726102417281518,
-    "mid_band_energy": 0.3507951836125218,
-    "high_band_energy": 0.07659457465932636,
-    "spectral_flux": 0.02833322936428901,
+    "spectral_flatness": 0.04417139433999094,
+    "low_band_energy": 0.572610231764321,
+    "mid_band_energy": 0.3507951792470911,
+    "high_band_energy": 0.0765945889885879,
+    "spectral_flux": 0.02833323608723292,
     "harmonicity": 0.9601163537680073,
-    "inharmonicity": 0.14115429909095045,
+    "inharmonicity": 0.14115442015845625,
     "partial_count": 1,
     "mel_frequency_cepstral_coefficients": [
-      -47.67045530442628,
-      15.196688790745155,
-      13.481863620501768,
-      4.039117492126586,
-      5.955303658202039,
-      2.2736556128837693,
-      2.870412543980048,
-      2.4938213846372452,
-      1.1978430955644508,
-      2.7045911847293875,
-      -0.08820454625600735,
-      2.8398795616156423,
-      -0.9716969057256974
+      -47.67050257704373,
+      15.196715466177118,
+      13.48187261965332,
+      4.0390965148490965,
+      5.955316376334349,
+      2.2736569688394495,
+      2.8704031767336864,
+      2.493819538591744,
+      1.1978547530124029,
+      2.7045885869141473,
+      -0.08821461729018193,
+      2.8398920734959163,
+      -0.9717052679562683
     ],
-    "spectral_centroid_mean_hz": 372.484533824614,
-    "spectral_centroid_deviation_hz": 291.0882801672003,
-    "total_harmonic_distortion": 0,
-    "clipping_density": 0,
+    "spectral_centroid_mean_hz": 372.4843157744927,
+    "spectral_centroid_deviation_hz": 291.0885887751913,
+    "total_harmonic_distortion": 0.0,
+    "clipping_density": 0.0,
     "distortion": "Clean",
-    "stationarity": 0,
-    "spectral_entropy": 0.12719940222094395,
-    "spectral_slope_db_per_octave": -13.646698017633984,
+    "stationarity": 0.0,
+    "spectral_entropy": 0.1271994014411872,
+    "spectral_slope_db_per_octave": -13.646712818721376,
     "band_limit_high_hz": 473.73046875,
-    "spectral_centroid_slope_hz_per_second": 2337.8567566875827,
+    "spectral_centroid_slope_hz_per_second": 2337.859952306567,
     "syllabic_modulation_energy": null,
-    "voicing_ratio": 1,
+    "voicing_ratio": 1.0,
     "mid_rms": 0.19816151336041096,
     "side_rms": 0.004538907981424991,
-    "lufs": -12.747532726628716
+    "lufs": -12.747532726628716,
+    "loudness_range_lu": 0.0,
+    "true_peak_dbtp": 0.006068656772644926
   },
   "musicality": {
     "pitch_hz": 2004.5454545454545,
-    "pitch_slope_semitones_per_second": -0.17898535044147953,
+    "pitch_slope_semitones_per_second": -0.17898546427774764,
     "root_note_name": "F#1",
-    "root_frequency_hz": 46.72006629495352,
-    "root_cents_offset": 17.532843289212252,
-    "beats_per_minute": 0,
+    "root_frequency_hz": 46.7200677607499,
+    "root_cents_offset": 17.532897604986175,
+    "beats_per_minute": 0.0,
     "root_midi_note": -1,
     "chromagram": [
-      0.36563240417504017,
-      0.4021905413788013,
-      0.3838398269911186,
-      0.4483087329137177,
-      0.5217942381973751,
-      0.8753392292679488,
-      1,
-      0.6946396579821729,
-      0.42255971583808977,
-      0.45938644840987725,
-      0.40085155972335706,
-      0.3902314421924531
-    ]
+      0.3656324003934855,
+      0.40219056601465025,
+      0.383839852184669,
+      0.44830879775998833,
+      0.5217942111122036,
+      0.8753392433424532,
+      1.0,
+      0.6946396478844838,
+      0.4225598371195303,
+      0.4593865393177268,
+      0.4008516624976199,
+      0.3902314606096373
+    ],
+    "note_root_key_beat_marker_map": {
+      "global_root_note": "F#1",
+      "global_midi_note": -1,
+      "global_bpm": 120.0,
+      "total_beats": 1,
+      "beat_markers": [
+        {
+          "index": 0,
+          "timestamp_seconds": 0.0,
+          "sample_index": 0,
+          "is_downbeat": true,
+          "bar": 1,
+          "beat": 1
+        }
+      ],
+      "chunk_maps": [
+        {
+          "chunk_index": 0,
+          "start_seconds": 0.0,
+          "end_seconds": 0.384,
+          "duration_seconds": 0.384,
+          "root_note_name": "F#1",
+          "root_midi_note": 30,
+          "root_frequency_hz": 46.34,
+          "pitch_hz": 2004.55,
+          "cents_offset": 3.4,
+          "peak_amplitude": 1.0,
+          "nearest_beat_index": 0
+        }
+      ]
+    }
   },
   "unsupervised": {
-    "cluster": -1,
-    "principal_components": []
+    "cluster": 0,
+    "principal_components": [
+      -4.4707475021125,
+      0.8565353078392025,
+      1.6749240615455934
+    ]
   },
   "ucs": {
     "category": "DRUMS",
     "subcategory": "TOM",
     "id": "DRUMTom",
-    "confidence": 0.6190565341396241,
+    "confidence": 0.9806645174615087,
     "alternatives": [
       {
-        "category": "SYNTH",
-        "subcategory": "BASS",
-        "id": "SYNTBass",
-        "probability": 0.235,
+        "category": "ARCHIVED",
+        "subcategory": "IMPULSE RESPONSE",
+        "id": "IR",
+        "probability": 0.019,
         "synonyms": [
-          "808"
-        ]
-      },
-      {
-        "category": "DRUMS",
-        "subcategory": "KICK",
-        "id": "DRUMKick",
-        "probability": 0.122,
-        "synonyms": [
-          "808"
-        ]
-      },
-      {
-        "category": "LOOPS",
-        "subcategory": "BASS LOOP",
-        "id": "LOOPBass",
-        "probability": 0.024,
-        "synonyms": [
-          "808"
+          "sample"
         ]
       }
     ],
     "synonyms": [
       "tom"
     ],
-    "reason": "name matched [tom]; signal 0.54, tier signal_narrowable, 4 candidates in contention; gate ruled out AIRBlow (spectral_flatness 0.0442 < min 0.1200)"
+    "reason": "name matched [tom]; signal 0.54, tier signal_narrowable, 2 candidates in contention; gate ruled out AIRBlow (spectral_flatness 0.0442 < min 0.1200)"
   },
   "regions": {
     "count": 1,
-    "detection_threshold_decibels": -40,
+    "detection_threshold_decibels": -40.0,
     "minimum_silence_seconds": 0.15,
     "minimum_region_seconds": 0.05,
     "regions": [
       {
         "index": 0,
-        "start_seconds": 0,
+        "start_seconds": 0.0,
         "end_seconds": 0.3841269841269841,
         "duration_seconds": 0.3841269841269841,
         "peak_amplitude": 0.631667052982417,

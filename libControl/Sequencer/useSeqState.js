@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -9,12 +10,28 @@
 // interfaces, and every name they are known by remains the property of its owner.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// THE PATTERN LENGTHS, ONCE. Three files each kept their own copy of this list
+// — the hook, the drop-up and the Steps row — so a length added in one of them
+// was a length the other two would not offer and the ✓ under the button would
+// land on nothing.
+//
+// The powers of two are the drum machine's own vocabulary: a bar, two, four.
+// 100 is not one of them and is here on purpose — it is 25 beats, which no
+// number of bars divides, and it is what you reach for when the part is a piece
+// of music rather than a loop. Everything downstream already counts in steps
+// rather than in bars: the scheduler takes the length modulo, the staff draws
+// ceil(steps / 4) beats and puts a barline every fourth of them, and the
+// renderer walks step % steps. So a length that is not a power of two costs
+// nothing anywhere except the last bar of the staff, which comes up short and
+// says so.
+window.OA_STEP_OPTIONS = [4, 8, 16, 32, 64, 100];
+
 window.useSeqState = (label, DEFAULT_STEPS, TRACKS) => {
     const audioCtxRef = React.useRef(null);
     const [isPlaying, setIsPlaying] = React.useState(false);
     const [currentStep, setCurrentStep] = React.useState(0);
     const safeLabel = label.replace(/[^A-Za-z0-9]+/g, '_');
-    const patternTopic = `OpenAir/Gui/Sequencer/${safeLabel}/pattern`;
+    const patternTopic = `APK.audio/Gui/Sequencer/${safeLabel}/pattern`;
     
     const emptyPattern = (steps) => Array(TRACKS.length).fill().map(() => Array(steps).fill(0));
     const [seq, setSeq] = window.useMqttState(patternTopic, { grid: emptyPattern(DEFAULT_STEPS), bpm: 120, swing: 50, steps: DEFAULT_STEPS, toneTrack: [], toneRoot: null });
@@ -85,14 +102,14 @@ window.useSeqState = (label, DEFAULT_STEPS, TRACKS) => {
     };
     // Shared like the other mixer levels, so the Mixer's CLICK fader is the one
     // control over the record click — not a second, independent copy of it.
-    const [clickVolState, setClickVolState] = window.useMqttState(`OpenAir/Gui/Sequencer/${safeLabel}/clickVol`, { value: 0.8 });
+    const [clickVolState, setClickVolState] = window.useMqttState(`APK.audio/Gui/Sequencer/${safeLabel}/clickVol`, { value: 0.8 });
     const clickVol = (clickVolState && clickVolState.value != null) ? clickVolState.value : 0.8;
     const setClickVol = (update) => {
         const next = typeof update === 'function' ? update(clickVol) : update;
         setClickVolState({ value: next });
     };
     const clickVolRef = React.useRef(clickVol); clickVolRef.current = clickVol;
-    const [mutesState, setMutesState] = window.useMqttState(`OpenAir/Gui/Sequencer/${safeLabel}/mutes`, { items: Array(TRACKS.length).fill(false) });
+    const [mutesState, setMutesState] = window.useMqttState(`APK.audio/Gui/Sequencer/${safeLabel}/mutes`, { items: Array(TRACKS.length).fill(false) });
     const mutes = (mutesState && mutesState.items) || Array(TRACKS.length).fill(false);
     const setMutes = (update) => {
         const next = typeof update === 'function' ? update(mutes) : update;
@@ -101,7 +118,7 @@ window.useSeqState = (label, DEFAULT_STEPS, TRACKS) => {
     const mutesRef = React.useRef(mutes); mutesRef.current = mutes;
     const toggleMute = (trkIdx) => setMutes((prev) => { const n = [...prev]; n[trkIdx] = !n[trkIdx]; return n; });
 
-    const [trackVolState, setTrackVolState] = window.useMqttState(`OpenAir/Gui/Sequencer/${safeLabel}/trackVol`, { items: Array(TRACKS.length).fill(1) });
+    const [trackVolState, setTrackVolState] = window.useMqttState(`APK.audio/Gui/Sequencer/${safeLabel}/trackVol`, { items: Array(TRACKS.length).fill(1) });
     const trackVol = (trackVolState && trackVolState.items) || Array(TRACKS.length).fill(1);
     const setTrackVol = (update) => {
         const next = typeof update === 'function' ? update(trackVol) : update;
@@ -109,7 +126,7 @@ window.useSeqState = (label, DEFAULT_STEPS, TRACKS) => {
     };
     const trackVolRef = React.useRef(trackVol); trackVolRef.current = trackVol;
 
-    const [trackPanState, setTrackPanState] = window.useMqttState(`OpenAir/Gui/Sequencer/${safeLabel}/trackPan`, { items: Array(TRACKS.length).fill(0) });
+    const [trackPanState, setTrackPanState] = window.useMqttState(`APK.audio/Gui/Sequencer/${safeLabel}/trackPan`, { items: Array(TRACKS.length).fill(0) });
     const trackPan = (trackPanState && trackPanState.items) || Array(TRACKS.length).fill(0);
     const setTrackPan = (update) => {
         const next = typeof update === 'function' ? update(trackPan) : update;
@@ -117,7 +134,7 @@ window.useSeqState = (label, DEFAULT_STEPS, TRACKS) => {
     };
     const trackPanRef = React.useRef(trackPan); trackPanRef.current = trackPan;
 
-    const [solosState, setSolosState] = window.useMqttState(`OpenAir/Gui/Sequencer/${safeLabel}/solos`, { items: Array(TRACKS.length).fill(false) });
+    const [solosState, setSolosState] = window.useMqttState(`APK.audio/Gui/Sequencer/${safeLabel}/solos`, { items: Array(TRACKS.length).fill(false) });
     const solos = (solosState && solosState.items) || Array(TRACKS.length).fill(false);
     const setSolos = (update) => {
         const next = typeof update === 'function' ? update(solos) : update;
@@ -127,7 +144,7 @@ window.useSeqState = (label, DEFAULT_STEPS, TRACKS) => {
     const toggleSolo = (trkIdx) => setSolos((prev) => { const n = [...prev]; n[trkIdx] = !n[trkIdx]; return n; });
     const clearSolos = () => setSolos(Array(TRACKS.length).fill(false));
 
-    const [masterVolState, setMasterVolState] = window.useMqttState(`OpenAir/Gui/Sequencer/${safeLabel}/masterVol`, { value: 1 });
+    const [masterVolState, setMasterVolState] = window.useMqttState(`APK.audio/Gui/Sequencer/${safeLabel}/masterVol`, { value: 1 });
     const masterVol = (masterVolState && masterVolState.value != null) ? masterVolState.value : 1;
     const setMasterVol = (val) => setMasterVolState({ value: val });
     const masterVolRef = React.useRef(masterVol); masterVolRef.current = masterVol;
@@ -271,7 +288,7 @@ window.useSeqState = (label, DEFAULT_STEPS, TRACKS) => {
         try { return JSON.parse(window.localStorage.getItem(LIBRARY_KEY)) || []; }
         catch (e) { return []; }
     };
-    const libraryTopic = `OpenAir/Gui/Sequencer/${safeLabel}/library`;
+    const libraryTopic = `APK.audio/Gui/Sequencer/${safeLabel}/library`;
     const [lib, setLib] = window.useMqttState(libraryTopic, { items: loadLibrary() });
     const library = (lib && lib.items) || [];
     const setLibraryItems = (items) => setLib({ items });
@@ -281,7 +298,7 @@ window.useSeqState = (label, DEFAULT_STEPS, TRACKS) => {
             catch (e) { }
         }
     }, [lib]);
-    const songTopic = `OpenAir/Gui/Sequencer/${safeLabel}/song`;
+    const songTopic = `APK.audio/Gui/Sequencer/${safeLabel}/song`;
     const [songState, setSongState] = window.useMqttState(songTopic, { items: [] });
     const song = (songState && songState.items) || [];
     const setSongItems = (items) => setSongState({ items });

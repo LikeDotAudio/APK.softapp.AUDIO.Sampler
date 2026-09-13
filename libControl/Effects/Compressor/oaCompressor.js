@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -108,17 +109,17 @@ const dbFmt = function (v) { return (v > 0 ? '+' : '') + v.toFixed(1) + ' dB'; }
  */
 window.OA_COMP_PARAMS = [
     {
-        key: 'input', label: 'Input', min: -12, max: 36, def: 0, fmt: dbFmt,
+        key: 'input', kind: 'continuous', label: 'Input', min: -12, max: 36, def: 0, fmt: dbFmt,
         ticks: ['-12', '-6', '0', '6', '12', '18', '24', '30', '36'],
         hint: 'How hard the signal is driven into a fixed threshold. This IS the threshold control.',
     },
     {
-        key: 'output', label: 'Output', min: -24, max: 24, def: 0, fmt: dbFmt,
+        key: 'output', kind: 'continuous', label: 'Output', min: -24, max: 24, def: 0, fmt: dbFmt,
         ticks: ['-24', '-18', '-12', '-6', '0', '6', '12', '18', '24'],
         hint: 'Makeup gain — put back the level the compression took away.',
     },
     {
-        key: 'attack', label: 'Attack', min: 0, max: 1, def: 0.45,
+        key: 'attack', kind: 'continuous', label: 'Attack', min: 0, max: 1, def: 0.45,
         ticks: ['1', '2', '3', '4', '5', '6', '7'],
         fmt: function (v) {
             const us = window.oaCompAttackTime(v) * 1e6;
@@ -127,7 +128,7 @@ window.OA_COMP_PARAMS = [
         hint: 'Time to clamp down. Clockwise is FASTER. Slow lets the transient through first.',
     },
     {
-        key: 'release', label: 'Release', min: 0, max: 1, def: 0.5,
+        key: 'release', kind: 'continuous', label: 'Release', min: 0, max: 1, def: 0.5,
         ticks: ['1', '2', '3', '4', '5', '6', '7'],
         fmt: function (v) {
             const ms = window.oaCompReleaseTime(v) * 1000;
@@ -136,7 +137,7 @@ window.OA_COMP_PARAMS = [
         hint: 'Time to let go again. Clockwise is FASTER. Too fast and the channel breathes.',
     },
     {
-        key: 'mix', label: 'Blend', min: 0, max: 1, def: 1,
+        key: 'mix', kind: 'continuous', label: 'Blend', min: 0, max: 1, def: 1,
         ticks: ['0', '25', '50', '75', '100'],
         fmt: function (v) { return Math.round(v * 100) + '%'; },
         hint: 'Wet against the untouched channel. Below 100% is parallel compression: the peaks are controlled but the transients survive underneath.',
@@ -523,11 +524,21 @@ const nativeEngine = function (ctx, unit) {
  * duck each other and the release knob would have nothing to act on.
  *
  * Returns null for a channel that has never been switched on, and the caller
- * connects to the output exactly as it did before. Once built the strip stays:
+ * connects to `dest` exactly as it did before. Once built the strip stays:
  * switching the unit off sets its blend to zero, which passes the input through
  * untouched rather than tearing a live node out of a running graph.
+ *
+ * THE DESTINATION IS FIXED AT BUILD TIME, and that is not an oversight — one
+ * strip serves every voice on the channel, so there is exactly one answer to
+ * where it goes and the router is the only thing that knows it. Later calls
+ * hand back the strip that exists and ignore `dest`. The same contract the
+ * GATE states in the same words, which is the point: three of these four ports
+ * took a destination and this one did not, so a router with its own bus
+ * structure — APK:OS's Mixer, where a channel goes to a VCA and not to the
+ * master — could use the gate, the pedal and the EQ, and had to reach into
+ * `ctx.__oaComps` to use the compressor. Now all four are the same shape.
  */
-const compStrip = function (ctx, idx) {
+const compStrip = function (ctx, idx, dest) {
     const strips = ctx.__oaComps || (ctx.__oaComps = []);
     if (strips[idx]) return strips[idx];
     if (!window.oaCompActive(idx)) return null;
@@ -535,10 +546,11 @@ const compStrip = function (ctx, idx) {
     const unit = window.oaCompUnit(idx);
     const input = ctx.createGain();
     const output = ctx.createGain();
-    // The strip's output is the channel's contribution to the mix, so it goes
-    // to the MASTER BUS rather than straight out — the buss compressor has to
-    // hear a compressed channel the way the listener will.
-    output.connect(window.oaMasterInput ? window.oaMasterInput(ctx) : ctx.destination);
+    // Unrouted, the strip's output is the channel's contribution to the mix, so
+    // it goes to the MASTER BUS rather than straight out — the buss compressor
+    // has to hear a compressed channel the way the listener will. A router that
+    // sums its channels somewhere else says so.
+    output.connect(dest || (window.oaMasterInput ? window.oaMasterInput(ctx) : ctx.destination));
 
     const bus = { input: input, output: output, engine: null, gr: 0, analyser: null };
 
@@ -580,8 +592,8 @@ const compStrip = function (ctx, idx) {
  * switched on. Null is a real answer, not a failure: it is what keeps an
  * uncompressed channel's graph exactly as it was before this file existed.
  */
-window.oaCompInput = function (ctx, idx) {
-    const bus = compStrip(ctx, idx);
+window.oaCompInput = function (ctx, idx, dest) {
+    const bus = compStrip(ctx, idx, dest);
     return bus ? bus.input : null;
 };
 
@@ -591,9 +603,15 @@ window.oaCompInput = function (ctx, idx) {
  * This loop lived in oaWarmFx(), which had to know both that a strip exists per
  * PAD and that building one early is what keeps it off the native fallback.
  * Neither is the router's business; both are this file's.
+ *
+ * `destFor(i)` is asked where channel i's compressor should go, exactly as
+ * `oaGateWarm` asks: the router owns that answer because the router owns the
+ * channel order. Omitted, every strip lands on the master bus as before.
  */
-window.oaCompWarm = function (ctx) {
-    for (let i = 0; i < window.OA_PAD_MAX; i++) compStrip(ctx, i);
+window.oaCompWarm = function (ctx, destFor) {
+    for (let i = 0; i < window.OA_PAD_MAX; i++) {
+        compStrip(ctx, i, destFor ? destFor(i) : null);
+    }
 };
 
 /** How many strips exist on this context — for the voice diagnostic. */

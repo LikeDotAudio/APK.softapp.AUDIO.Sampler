@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -478,7 +479,7 @@ const FACTORY_SETS = {
 window.useSamplerSets = (setSampleNames, publishSample) => {
     const loadDrumSets = () => { try { return JSON.parse(window.localStorage.getItem('oaDrumSets')) || {}; } catch (e) { return {}; } };
     
-    const [setsState, setSetsState] = window.useMqttState('OpenAir/Gui/DrumSets', { items: loadDrumSets() });
+    const [setsState, setSetsState] = window.useMqttState('APK.audio/Gui/DrumSets', { items: loadDrumSets() });
     
     const userSets = (setsState && setsState.items) || {};
     const sets = Object.assign({}, FACTORY_SETS, userSets);

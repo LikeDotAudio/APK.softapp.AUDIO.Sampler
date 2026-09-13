@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -71,7 +72,7 @@ window.TrackSampleMenu = ({ trkIdx, trackName, anchor, version, onBrowse, onClos
                     <span style={{ color: 'var(--accent)', fontWeight: 'bold', fontSize: '13px' }}>{trackName}</span>
                     <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '16px' }}>×</button>
                 </div>
-                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div title={hasBuf ? (entry.name || 'sample') : 'Synth voice — no sample loaded'} style={{ fontSize: '11px', color: '#aaa', marginBottom: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {hasBuf ? (entry.name || 'sample') : 'Synth voice — no sample loaded'}
                 </div>
                 <div style={{ width: '100%', height: '56px', background: '#0a0a0a', border: '1px solid #444' }}>

@@ -1,18 +1,18 @@
 {
   "metadata": {
-    "analyzer_version": "20260717.0313-9a2e6ae3aa3c302e",
+    "analyzer_version": "20260904.2022",
     "name": "Crash.wav",
-    "folder": "APK 414",
-    "sub": "APK 414",
-    "path": "APK 414/Crash.wav",
+    "folder": "SampleLibrary/APK 414",
+    "sub": "SampleLibrary/APK 414",
+    "path": "APK:DOCKERS/APK:audio:WebPortal/SRC/APK:Softapps/SAMPLE and PLAY/SampleLibrary/APK 414/Crash.wav",
     "length_seconds": 2.511814058956916,
     "sample_rate": 44100,
     "bit_depth": 16,
     "channels": 2,
     "source_format": "WAV",
     "lossy_source": false,
-    "dc_offset": -0.000008040511664407877,
-    "trailing_silence_ms": 10,
+    "dc_offset": -8.040511664407877e-6,
+    "trailing_silence_ms": 10.0,
     "analysis_depth": "full"
   },
   "classification": {
@@ -49,6 +49,23 @@
     "envelope_kurtosis": 0.7855291003190921,
     "envelope_shape": "Decaying",
     "decay_time_seconds_60db": 3.777080145746895,
+    "slices": [
+      {
+        "index": 0,
+        "start_seconds": 0.0,
+        "end_seconds": 2.5142857142857142,
+        "relative_level": 1.0,
+        "envelope_attack_seconds": 0.08979591836734693,
+        "envelope_decay_seconds": 1.1723356009070294,
+        "envelope_sustain_level": 0.09222892151483225,
+        "envelope_release_seconds": 0.8929705215419501,
+        "envelope_temporal_centroid": 0.1252139407565465,
+        "envelope_skewness": 1.3616170263368135,
+        "envelope_kurtosis": 0.7855291003190921,
+        "envelope_shape": "Decaying",
+        "decay_time_seconds_60db": 3.777080145746895
+      }
+    ],
     "onset_periodicity": 0.5803746054184856,
     "onset_rate_per_second": 0.3981186411605926
   },
@@ -56,80 +73,157 @@
     "root_mean_square_level": 0.11249948953733235,
     "crest_factor": 8.85040908186382,
     "zero_crossings_per_second": 8437.32836211644,
-    "complexity": 2965.065716624125,
-    "spectral_centroid_hz": 5338.789051182093,
+    "complexity": 2965.0656665447905,
+    "spectral_centroid_hz": 5338.789056751551,
     "spectral_rolloff_hz": 8655.099258831284,
-    "spectral_flatness": 0.0964412272828874,
-    "low_band_energy": 0.0012271845481988213,
-    "mid_band_energy": 0.12641048483074335,
-    "high_band_energy": 0.8723623306210578,
-    "spectral_flux": 0.18477963311412107,
+    "spectral_flatness": 0.09644115248732707,
+    "low_band_energy": 0.0012271845966598412,
+    "mid_band_energy": 0.12641048280737727,
+    "high_band_energy": 0.8723623325959629,
+    "spectral_flux": 0.18477963294429672,
     "harmonicity": 0.29049080097698515,
-    "inharmonicity": 0.33752105708885916,
+    "inharmonicity": 0.3375210520762264,
     "partial_count": 12,
     "mel_frequency_cepstral_coefficients": [
-      8.447805177792073,
-      3.576893672067531,
-      -13.28083955667074,
-      6.022677707132745,
-      -4.15060170907267,
-      2.9432640675918385,
-      -4.855378086342935,
-      1.3217625932229875,
-      -2.950831820152842,
-      0.8619800389577005,
-      -1.871877210091699,
-      1.652136117139856,
-      -0.9193798051539422
+      8.447801416097802,
+      3.576897440503668,
+      -13.280843204032617,
+      6.022681380761729,
+      -4.150605283993935,
+      2.9432675718362318,
+      -4.855381549696586,
+      1.3217659605261167,
+      -2.950835079947554,
+      0.8619831925819591,
+      -1.8718802312166447,
+      1.6521389701916975,
+      -0.9193825253250788
     ],
-    "spectral_centroid_mean_hz": 5019.770175181096,
-    "spectral_centroid_deviation_hz": 498.819080965751,
-    "total_harmonic_distortion": 0,
-    "clipping_density": 0,
+    "spectral_centroid_mean_hz": 5019.770162163522,
+    "spectral_centroid_deviation_hz": 498.81907780779994,
+    "total_harmonic_distortion": 0.0,
+    "clipping_density": 0.0,
     "distortion": "Clean",
-    "stationarity": 0,
-    "spectral_entropy": 0.6613996026022047,
-    "spectral_slope_db_per_octave": 2.7906156228156482,
+    "stationarity": 0.0,
+    "spectral_entropy": 0.6613996014089419,
+    "spectral_slope_db_per_octave": 2.790615650423439,
     "band_limit_high_hz": 14254.98046875,
-    "spectral_centroid_slope_hz_per_second": -192.11396905708963,
-    "syllabic_modulation_energy": 0.08846860430572002,
+    "spectral_centroid_slope_hz_per_second": -192.1139662817558,
+    "syllabic_modulation_energy": 0.08846860430571996,
     "voicing_ratio": 0.4185022026431718,
     "mid_rms": 0.11249948940694796,
     "side_rms": 0.0015558501040824659,
-    "lufs": -11.071896060829916
+    "lufs": -11.071896060829914,
+    "loudness_range_lu": 0.0,
+    "true_peak_dbtp": 0.042327940171839454
   },
   "musicality": {
     "pitch_hz": 127.82608695652173,
     "pitch_slope_semitones_per_second": null,
     "root_note_name": "",
-    "root_frequency_hz": 0,
-    "root_cents_offset": 0,
-    "beats_per_minute": 0,
+    "root_frequency_hz": 0.0,
+    "root_cents_offset": 0.0,
+    "beats_per_minute": 0.0,
     "root_midi_note": -1,
     "chromagram": [
-      1,
-      0.7363298453826794,
-      0.7640882981431526,
-      0.6726800288660779,
-      0.6008430000133319,
-      0.6073801630384021,
-      0.7129745075286997,
-      0.694897466721794,
-      0.7631167752894772,
-      0.6029950100684076,
-      0.73956419875283,
-      0.631585573058267
-    ]
+      1.0,
+      0.7363298494201617,
+      0.7640882949204221,
+      0.672680038983015,
+      0.6008429953587303,
+      0.607380180882445,
+      0.7129745104660179,
+      0.6948974830344927,
+      0.7631167790755862,
+      0.6029950049647302,
+      0.7395641865129612,
+      0.631585571250077
+    ],
+    "note_root_key_beat_marker_map": {
+      "global_root_note": "",
+      "global_midi_note": -1,
+      "global_bpm": 120.0,
+      "total_beats": 6,
+      "beat_markers": [
+        {
+          "index": 0,
+          "timestamp_seconds": 0.0,
+          "sample_index": 0,
+          "is_downbeat": true,
+          "bar": 1,
+          "beat": 1
+        },
+        {
+          "index": 1,
+          "timestamp_seconds": 0.5,
+          "sample_index": 22050,
+          "is_downbeat": false,
+          "bar": 1,
+          "beat": 2
+        },
+        {
+          "index": 2,
+          "timestamp_seconds": 1.0,
+          "sample_index": 44100,
+          "is_downbeat": false,
+          "bar": 1,
+          "beat": 3
+        },
+        {
+          "index": 3,
+          "timestamp_seconds": 1.5,
+          "sample_index": 66150,
+          "is_downbeat": false,
+          "bar": 1,
+          "beat": 4
+        },
+        {
+          "index": 4,
+          "timestamp_seconds": 2.0,
+          "sample_index": 88200,
+          "is_downbeat": true,
+          "bar": 2,
+          "beat": 1
+        },
+        {
+          "index": 5,
+          "timestamp_seconds": 2.5,
+          "sample_index": 110250,
+          "is_downbeat": false,
+          "bar": 2,
+          "beat": 2
+        }
+      ],
+      "chunk_maps": [
+        {
+          "chunk_index": 0,
+          "start_seconds": 0.0,
+          "end_seconds": 2.215,
+          "duration_seconds": 2.215,
+          "root_note_name": "E5",
+          "root_midi_note": 76,
+          "root_frequency_hz": 663.83,
+          "pitch_hz": 127.83,
+          "cents_offset": 12.0,
+          "peak_amplitude": 0.996,
+          "nearest_beat_index": 0
+        }
+      ]
+    }
   },
   "unsupervised": {
-    "cluster": -1,
-    "principal_components": []
+    "cluster": 3,
+    "principal_components": [
+      2.1319759684910515,
+      0.016773441894698607,
+      -0.8480516533143005
+    ]
   },
   "ucs": {
     "category": "ICE",
     "subcategory": "CRASH & DEBRIS",
     "id": "ICECrsh",
-    "confidence": 0.25451720508966524,
+    "confidence": 0.2544882964075531,
     "alternatives": [
       {
         "category": "CYMBALS",
@@ -162,17 +256,17 @@
     "synonyms": [
       "crash"
     ],
-    "reason": "name matched [crash]; signal 0.31, tier signal_narrowable, 17 candidates in contention; gate ruled out AIRBlow (spectral_flatness 0.0964 < min 0.1200)"
+    "reason": "name matched [crash]; signal 0.31, tier signal_narrowable, 18 candidates in contention; gate ruled out AIRBlow (spectral_flatness 0.0964 < min 0.1200)"
   },
   "regions": {
     "count": 1,
-    "detection_threshold_decibels": -40,
+    "detection_threshold_decibels": -40.0,
     "minimum_silence_seconds": 0.15,
     "minimum_region_seconds": 0.05,
     "regions": [
       {
         "index": 0,
-        "start_seconds": 0,
+        "start_seconds": 0.0,
         "end_seconds": 2.214965986394558,
         "duration_seconds": 2.214965986394558,
         "peak_amplitude": 0.34386582222861495,

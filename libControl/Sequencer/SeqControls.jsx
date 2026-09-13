@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -32,7 +33,7 @@ window.SeqControls = ({
 }) => {
     const SeqButton = window.SeqButton;
     const SeqKnob = window.SeqKnob;
-    const STEP_OPTIONS = [4, 8, 16, 32, 64];
+    const STEP_OPTIONS = window.OA_STEP_OPTIONS;
     const [footerNode, setFooterNode] = React.useState(null);
     const [configBtnNode, setConfigBtnNode] = React.useState(null);
     const [showSwingGuide, setShowSwingGuide] = React.useState(false);
@@ -40,9 +41,21 @@ window.SeqControls = ({
     // re-renders on a change rather than holding a second copy of it.
     const padLayout = window.useOaPadGrid() && window.OA_PAD_LAYOUT;
     const setPadLayout = (key) => window.oaSetPadLayout(key);
+    // The transport and the ⚙ live in the app's FOOTER, which is a different
+    // component's DOM — hence the lookup by id rather than a prop.
+    //
+    // A HOST WITHOUT A FOOTER IS NOT A HOST WITHOUT A TRANSPORT. APK:OS mounts
+    // <Sequencer> on its own into a Midi window and renders no Footer at all,
+    // so both slots came back null: the ⚙ rendered nowhere, and the drop-up it
+    // is the only opener for stayed shut — taking Play, Rec, Tap, Save, the
+    // tempo and the pattern length with it. Sequencer draws a bar of its own for
+    // exactly this case; fall back to it, and the panel carries its own controls
+    // wherever the footer is not.
     React.useEffect(() => {
-        setFooterNode(document.getElementById('seq-footer-slot'));
-        setConfigBtnNode(document.getElementById('config-footer-slot'));
+        const slot = (id) => document.getElementById(id)
+            || document.getElementById('seq-standalone-bar');
+        setFooterNode(slot('seq-footer-slot'));
+        setConfigBtnNode(slot('config-footer-slot'));
     }, []);
 
     // Seeded from the default rather than from storage, because there is no
@@ -53,9 +66,9 @@ window.SeqControls = ({
     React.useEffect(() => window.oaOnAccent((e) => setAccent(e.detail.accent)), []);
 
     // ---- Cached app files -------------------------------------------------
-    // The service worker (sw.js) holds the entire machine — the bundle, the
-    // vendored React, the whole sample library — so a running instance never
-    // waits on the network. The cost is that a bad or stale copy of the shell
+    // The service worker (sw.js) installs a FOUR-ENTRY shell — the page, the
+    // manifest and the bundle — and folds every sample in as it is fetched, so
+    // it warms up rather than arriving whole. The cost is that a stale shell
     // stays put, and the only way out used to be clearing the browser's
     // history, which is a blunt instrument that also signs the user out of
     // everything else. This button is the targeted version.
@@ -73,7 +86,7 @@ window.SeqControls = ({
         let alive = true;
         (async () => {
             try {
-                if (!navigator.storage || !navigator.storageestimate) return;
+                if (!navigator.storage || !navigator.storage.estimate) return;
                 const { usage } = await navigator.storage.estimate();
                 if (alive && usage) setCacheHeld(usage);
             } catch (e) {}
@@ -373,8 +386,24 @@ window.SeqControls = ({
                 </span>
             </div>
 
-            {/* Steps, Render and Clear now live in the Patterns section of SONG
-                (see SeqLibrary) — they belong beside the patterns they act on. */}
+            {/* HOW LONG THE PATTERN IS.
+
+                This lived in the Patterns section of SONG, next to Render and
+                Clear, on the reasoning that they belong beside the patterns they
+                act on. Render and Clear still do. The LENGTH does not: it is a
+                property of the bars on screen right now, and SONG is a tab that
+                can be shut — APK:OS opens this component with SEQ alone, so the
+                one control that decides how wide the grid is was in a panel that
+                window has no way to draw. Render and Clear stay where they are.
+                Steps comes here, where the ⚙ reaches it from either host. */}
+            {window.SeqStepsRow && (
+                <window.SeqStepsRow
+                    steps={steps}
+                    setSteps={chose(setSteps)}
+                    doubleTo={chose(doubleTo)}
+                    clearPattern={clearPattern}
+                />
+            )}
         </div>
     );
 };

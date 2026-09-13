@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -33,6 +34,8 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
+import { BUNDLE_SOURCES } from './bundleSources.mjs';
+
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 /** Every .jsx in the app — the files whose job is to draw. */
@@ -58,7 +61,7 @@ const displayFiles = () => {
  */
 const FORBIDDEN = [
     {
-        re: /__oa(Comps|Reverbs|Delays|Retire|WorkletOk|FxReady)\b/,
+        re: /__oa(Comps|Gates|Reverbs|Delays|Retire|WorkletOk|FxReady)\b/,
         instead: 'the plugin frame — window.useOaFrame(id, idx, …) — not the context\'s private bus lists',
     },
     {
@@ -122,8 +125,7 @@ describe('the front end does not reach into the back end', () => {
     test('every plugin has a panel that can find it', () => {
         // A backend nobody can open is dead weight, and a panel naming a plugin
         // that does not exist renders nothing and says nothing about why.
-        const sources = JSON.parse(readFileSync(join(ROOT, 'sources.json'), 'utf8'));
-        const all = sources.map((f) => readFileSync(join(ROOT, f), 'utf8')).join('\n');
+        const all = BUNDLE_SOURCES.map((f) => readFileSync(join(ROOT, f), 'utf8')).join('\n');
 
         const registered = [...all.matchAll(/oaRegisterPlugin\(\{\s*\n\s*id:\s*'([^']+)'/g)]
             .map((m) => m[1]);
@@ -146,14 +148,13 @@ describe('the front end does not reach into the back end', () => {
         // The other direction of the same boundary. A backend that touches
         // React cannot run in the offline renderer, cannot be tested headlessly,
         // and has quietly become a component.
-        const sources = JSON.parse(readFileSync(join(ROOT, 'sources.json'), 'utf8'));
         // Each effect keeps its DSP and its panel in one folder under
         // Effects/, so the boundary is no longer a directory — it is the
         // EXTENSION. A .js under Effects/ or SoundSynth/ is audio and may not
         // draw; the .jsx beside it is the panel and may not name a node (the
         // test above). useOaPlugin.js is the one deliberate crossing: it is
         // the React side of the plugin contract every panel is written to.
-        const backends = sources.filter(
+        const backends = BUNDLE_SOURCES.filter(
             (f) => /^libControl\/(Effects|SoundSynth)\//.test(f)
                 && f.endsWith('.js')
                 && !f.includes('useOaPlugin'),
@@ -183,7 +184,7 @@ const codeOnly = (src) => src
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))   // keep line numbers
     .replace(/\/\/.*$/gm, '');
 
-const sourceList = () => JSON.parse(readFileSync(join(ROOT, 'sources.json'), 'utf8'));
+const sourceList = () => BUNDLE_SOURCES;
 
 describe('each effect owns its own audio', () => {
     /**
@@ -202,6 +203,10 @@ describe('each effect owns its own audio', () => {
         { key: '__oaReverbs', owner: 'libControl/Effects/Reverb/oaReverb.js', port: 'oaReverbInput' },
         { key: '__oaDelays', owner: 'libControl/Effects/TapeDelay/oaTapeDelay.js', port: 'oaDelayInput' },
         { key: '__oaComps', owner: 'libControl/Effects/Compressor/oaCompressor.js', port: 'oaCompInput' },
+        // Same bargain as the compressor, one stage earlier in the channel: a
+        // gate strip is per CHANNEL rather than per voice, so it is the second
+        // node list a router could be tempted to reach through.
+        { key: '__oaGates', owner: 'libControl/Effects/Gate/oaGate.js', port: 'oaGateInput' },
         // The master bus is the one every other module now connects INTO, which
         // makes it the one most likely to be reached through: it would be very
         // easy for a strip to want `.fade`, or for the mixer to want its
@@ -252,6 +257,14 @@ describe('the panels behave like each other', () => {
         'libControl/Effects/Drive/DriveEditor.jsx',
         'libControl/Effects/TapeDelay/TapeDelayEditor.jsx',
         'libControl/Effects/Reverb/VarcRemote.jsx',
+        // PLAN-18.12 step 3. The tenth plugin's panel, and the only one drawn
+        // by the generic console surface rather than a hand-built faceplate —
+        // it owes the same three things as the rack units regardless.
+        'libControl/Effects/Equalizer/EqEditor.jsx',
+    // PLAN-189.01 step 4. The ninth plugin's panel — the other one drawn by the
+    // generic console surface, with a hand-drawn transfer curve because a wrong
+    // transfer function has to be VISIBLE rather than merely audible.
+    'libControl/Effects/Gate/GateEditor.jsx',
     ];
 
     test('help is behind a button, not standing under the controls', () => {

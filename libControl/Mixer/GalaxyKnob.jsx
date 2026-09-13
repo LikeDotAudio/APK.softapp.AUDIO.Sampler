@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -34,7 +35,11 @@ const angleOf = (n) => (n * 2 - 1) * SWEEP;
 // The pointer drag, shared by both controls. `norm` is where the control is now;
 // every move reports an absolute position rather than a delta, so a drag that
 // runs past an end stop and comes back lands where the finger is.
+// No writer means no gesture. A dial that still turns under the hand while its
+// writes land nowhere is worse than one that plainly will not move. PLAN-18.12,
+// the same guard SvgKnob, RackKnob and BussKnob carry.
 const useGalaxyDrag = (norm, onNorm, defaultNorm, readout) => React.useCallback((e) => {
+    if (typeof onNorm !== 'function') return;
     if (e.altKey && defaultNorm != null) { onNorm(defaultNorm); return; }
     if (readout) readout.begin(e);
     const el = e.currentTarget;
@@ -61,6 +66,7 @@ const useGalaxyDrag = (norm, onNorm, defaultNorm, readout) => React.useCallback(
 }, [norm, onNorm, defaultNorm]);
 
 const useGalaxyWheel = (norm, onNorm) => React.useCallback((e) => {
+    if (typeof onNorm !== 'function') return;
     e.preventDefault();
     const stepBy = (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 0.005 : 0.02);
     onNorm(Math.max(0, Math.min(1, norm + stepBy)));

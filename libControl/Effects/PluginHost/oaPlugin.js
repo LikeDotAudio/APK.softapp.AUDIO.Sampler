@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -13,26 +14,21 @@
  * Header: oaPlugin.js
  * Purpose: The line between an audio plugin's BACK END and its FRONT PANEL, and
  *   the binary frame that is the only thing allowed to cross it.
- * Description: Every effect in this app used to be read by its editor directly.
- *   The compressor panel reached into ctx.__oaComps[idx].analyser, pulled a
- *   thousand floats out of it every frame and worked out a needle position; the
- *   Mixer reached into the same analyser and did the same arithmetic again for
- *   its own strip. Two consequences, both bad:
+ * Description: The back end measures ONCE, into a Float32Array allocated at
+ *   startup and never replaced; the front end reads numbers out of that array by
+ *   index. No node graph, no analysers, no allocation, no arithmetic in a panel
+ *   — a meter is `frame[LAYOUT.PEAK_L]`.
  *
- *     THE UI KNEW THE DSP. A panel that names `ctx.__oaComps` cannot be moved,
- *     reskinned or tested without an AudioContext, and the back end cannot
- *     change its node graph without breaking a display that had no business
- *     knowing about it.
+ *   TWO RULES THIS ENFORCES, and both are why panels must not read the DSP:
  *
- *     THE WORK WAS DONE TWICE, PER FRAME, WITH A FRESH ARRAY EACH TIME. Two
- *     readers meant two 1024-float allocations sixty times a second, per
- *     channel. That is a megabyte a second of garbage on a quiet machine, and
- *     the collector pauses it causes land on the audio thread as a dropout.
+ *     THE UI MUST NOT KNOW THE DSP. A panel naming `ctx.__oaComps` cannot be
+ *     moved, reskinned or tested without an AudioContext, and the back end
+ *     cannot change its node graph without breaking a display.
  *
- *   So: the back end measures ONCE, into a Float32Array it allocated at startup
- *   and never replaces, and the front end reads numbers out of that array by
- *   index. No node graph, no analysers, no allocation, no arithmetic. A meter
- *   becomes `frame[LAYOUT.PEAK_L]`, which is as simple as a display gets.
+ *     THE WORK IS DONE ONCE. Two panels reading one analyser directly is two
+ *     1024-float allocations sixty times a second per channel — about a
+ *     megabyte a second of garbage, whose collector pauses land on the audio
+ *     thread as dropouts.
  *
  *   THE FRAME. Fixed-length, per unit, allocated once:
  *
@@ -69,9 +65,9 @@ const REG = {};                  // id -> backend descriptor
 const FRAMES = {};               // id -> [Float32Array] one per unit
 
 /**
- * The scratch array every analyser read borrows. One buffer for the whole app,
- * reused for ever — the old code allocated a new one per meter per frame, which
- * is the allocation this file exists to delete.
+ * The scratch array every analyser read borrows. ONE buffer for the whole app,
+ * reused for ever — allocating per meter per frame is the cost this file exists
+ * to remove.
  */
 let SCRATCH = null;
 const scratch = function (n) {
@@ -80,16 +76,86 @@ const scratch = function (n) {
 };
 
 /**
- * Peak of an analyser's current window, 0..1. The only place in the app that
- * touches getFloatTimeDomainData — deliberately, so nothing in a display does.
+ * How long one pump pass is answerable for, in seconds — the real wall-clock
+ * gap between the previous pass and this one. Zero until two passes have
+ * happened, and zero for a hand-driven `oaPumpPluginsOnce`, which is why every
+ * reader below treats zero as "fall back to what this did before".
+ *
+ * This exists because an AnalyserNode is not a meter, it is a WINDOW. It holds
+ * the last `fftSize` samples and nothing else, so a pass that arrives later
+ * than the window is long reads a signal with a HOLE in front of it: the audio
+ * between the end of the last window and the start of this one was never in the
+ * buffer to be read at all. A peak in that hole is not reported late, it is
+ * reported as never having happened — the meters go quietly WRONG rather than
+ * visibly laggy, which is the failure PLAN-18.09 names as the reason peak-hold
+ * has to land before any rate is changed.
+ *
+ * At rAF on a 60 Hz panel the gap is 16.7 ms and a 1024-sample window at 48 kHz
+ * is 21.3 ms, so the window already overlaps and nothing was ever lost. At the
+ * 20–30 Hz tier that plan wants, 33 ms of gap against 21 ms of window loses a
+ * third of the audio. Nothing here changes the rate; this is what has to be
+ * true before anything does.
+ */
+let PUMP_SPAN = 0;
+let PUMP_LAST = 0;
+
+const now = function () {
+    const perf = window.performance;
+    return perf && perf.now ? perf.now() : Date.now();
+};
+
+/** The pump's own view of its rate, for anything that wants to display it. */
+window.oaPumpSpan = function () { return PUMP_SPAN; };
+
+/**
+ * Grow an analyser's window until it covers `samples`. Powers of two only, and
+ * 32768 is the ceiling the spec sets.
+ *
+ * GROW, never shrink. The same analyser is read by spectrum displays that chose
+ * their own resolution, and a meter quietly halving somebody else's bin count
+ * to save a memcpy is the kind of cross-talk this file exists to delete.
+ */
+const MAX_FFT = 32768;
+const fitWindow = function (analyser, samples) {
+    let want = 32;
+    while (want < samples && want < MAX_FFT) want *= 2;
+    if (analyser.fftSize < want) {
+        try { analyser.fftSize = want; } catch (e) { /* a deck may refuse; read what it gives */ }
+    }
+};
+
+/**
+ * Peak over the audio since the previous pass, 0..1. The only place in the app
+ * that touches getFloatTimeDomainData — deliberately, so nothing in a display
+ * does.
+ *
+ * The whole window is READ and only its TAIL is scanned. Passing a shorter
+ * array would be cheaper, but the spec says only that excess elements "will be
+ * dropped" and does not say from WHICH END — so a short read is a coin-flip
+ * between the newest samples and the oldest, decided by whichever engine is
+ * running. The tail of a full read is the newest samples on all of them.
  */
 window.oaAnalyserPeak = function (analyser) {
     if (!analyser || !analyser.getFloatTimeDomainData) return 0;
+
+    let need = 0;
+    if (PUMP_SPAN > 0) {
+        need = Math.ceil(PUMP_SPAN * window.oaSampleRate(window.OA_AUDIO_CTX));
+        fitWindow(analyser, need);
+    }
+
     const n = analyser.fftSize || 1024;
     const buf = scratch(n);
     analyser.getFloatTimeDomainData(buf);
+
+    // Only as far back as this pass is answerable for. Scanning the whole
+    // window instead would re-report a peak the previous pass already reported,
+    // holding it for as long as the window is long rather than for as long as
+    // the fall says.
+    const from = (need > 0 && need < n) ? n - need : 0;
+
     let peak = 0;
-    for (let i = 0; i < n; i++) {
+    for (let i = from; i < n; i++) {
         const a = buf[i] < 0 ? -buf[i] : buf[i];
         if (a > peak) peak = a;
     }
@@ -100,11 +166,19 @@ window.oaAnalyserPeak = function (analyser) {
  * A meter that rises instantly and falls smoothly. The fall has to be applied
  * where the number is WRITTEN rather than where it is read, or two displays
  * reading the same frame would decay it twice as fast as one.
+ *
+ * The fall is per SECOND, not per pass. A flat multiplier per call makes the
+ * decay a property of the display — the same meter falls twice as fast on a
+ * 120 Hz panel as on a 60 Hz one, and four times slower at the 30 Hz tier
+ * PLAN-18.09 wants. A ballistic is a time constant or it is not a ballistic.
+ * FALL_TAU is set so one 60 Hz frame still multiplies by exactly 0.86.
  */
 const FALL = 0.86;
+const FALL_TAU = 0.1105;
 window.oaWritePeak = function (frame, slot, peak) {
     const prev = frame[slot];
-    frame[slot] = peak > prev ? peak : prev * FALL;
+    if (peak > prev) { frame[slot] = peak; return; }
+    frame[slot] = prev * (PUMP_SPAN > 0 ? Math.exp(-PUMP_SPAN / FALL_TAU) : FALL);
 };
 
 // ---------------------------------------------------------------------------
@@ -118,7 +192,7 @@ window.oaWritePeak = function (frame, slot, peak) {
  *   id        short stable key, used by every frontend call
  *   label     what a panel puts on its title bar
  *   units     () => how many instances exist (channels, or buses)
- *   params    the front-panel schema: { key,label,min,max,def,fmt,hint,ticks }
+ *   params    the front-panel schema: { key,kind,label,min,max,def,fmt,hint,ticks }
  *   state     (i) => the unit's current settings, as plain data
  *   set       (i,key,value) => void, clamps and persists
  *   presets   { name: { label, ...values } }
@@ -131,11 +205,54 @@ window.oaWritePeak = function (frame, slot, peak) {
  *   load      (data, opts) => void — put it back
  */
 /**
+ * KIND — is this control a continuous quantity or a choice from a fixed set?
+ *
+ *   'continuous'  a magnitude. Any value between min and max means something,
+ *                 and `step` (when present) is QUANTISATION, not enumeration.
+ *                 The reverb's 0..255 Shape and its 4..39 metre Size are both
+ *                 continuous: 17 m is a smaller room than 18 m, not a different
+ *                 one.
+ *   'discrete'    a position selector. min..max are integer positions indexing
+ *                 a fixed list, and a value between two of them is not a
+ *                 setting — it rounds. The buss compressor's Attack, Release
+ *                 and Ratio index OA_BUSS_ATTACKS / _RELEASES / _RATIOS through
+ *                 pick(), and the chorus's Mode indexes OA_CHORUS_MODES.
+ *
+ * Every param in this tree DECLARES its kind. Nothing infers it, and the
+ * inference that was proposed — `step === 1 && ticks.length === max - min + 1`
+ * — is not merely fragile, it is WRONG TODAY on three of the forty-one: the
+ * buss trio declares no `step` at all and carries five legend labels across ten
+ * or eleven positions, so the rule reads all three as continuous. The rule was
+ * checked against `comp.input` and `chorus.chorus` and never against the buss
+ * compressor. It is not implemented anywhere and must not be.
+ *
+ * TICKS is ALWAYS A LEGEND — the labels printed around a control's travel —
+ * and never the enumeration, whatever its length happens to be. Three shapes,
+ * all legends:
+ *
+ *   comp.input     9 labels along a continuous -12..36 range     (sparse)
+ *   buss.attack    5 labels across 10 discrete positions         (sparse)
+ *   chorus.chorus  14 labels across 14 discrete positions        (one each)
+ *
+ * The third is why `ticks` looked like it meant two things. It does not; it is
+ * a legend that happens to be dense. THE CHOICES OF A DISCRETE PARAM ARE ITS
+ * POSITIONS min..max, labelled with `fmt(position)` — and where a plugin has
+ * the list to hand it may also pass `options`, as the drum synth does.
+ */
+
+/**
  * A plugin keeps its own vocabulary — the reverb's schema calls a slider's name
  * `name` because that is what the VARC engraves next to it, and the compressor
  * calls it `label`. The contract promises a front panel a `label`, so fill one
  * in rather than making every plugin rename a field it has good reason to keep.
  * Anything else the plugin declares is passed through untouched.
+ *
+ * `kind` is NOT defaulted here, deliberately. A default of 'continuous' makes
+ * contract.test.mjs vacuous: deleting `kind: 'discrete'` from the buss
+ * compressor's Attack would still pass, because the default supplies a wrong
+ * answer in its place. A fallback that manufactures a plausible value is the
+ * same defect as guessing. An undeclared kind arrives as `undefined` and stays
+ * that way, where the contract test sees it and fails.
  */
 const normaliseParams = function (params) {
     return (params || []).map(function (p) {
@@ -220,6 +337,85 @@ window.oaPluginParams = function (id, idx) {
     }
     return p.params;
 };
+/**
+ * THE ADAPTER — a registered plugin's params, projected onto SPOG's ParamSpec.
+ *
+ * The sampler describes a control the way a front panel needs it drawn:
+ * { key, kind, label, min, max, def, fmt, hint, ticks }. SPOG describes one the
+ * way a bus needs it advertised: { name, type, unit, min, max, values,
+ * writable }. They are the same object written twice for two audiences, and the
+ * gap between them is the whole reason the console surface is hand-written per
+ * mixer instead of generated once.
+ *
+ * ONE DIRECTION, ON PURPOSE. The plugin schema is the source and a ParamSpec is
+ * a projection of it. Nothing here reads a ParamSpec back — a round trip would
+ * make the bus contract an authority on the DSP, which is the coupling
+ * oaPlugin.js exists to prevent.
+ *
+ * NOTHING IS INFERRED. Guessing `type` from `step` and `ticks.length` is wrong
+ * on three of this tree's forty-one params. Params declare `kind`, so the
+ * mapping is a lookup and never a heuristic:
+ *
+ *     kind 'continuous'  →  type 'number'
+ *     kind 'discrete'    →  type 'enum', with `values` for the positions
+ *
+ * WRITABLE IS MAPPED, NEVER DEFAULTED. A remotely drivable console that can
+ * write a read-only parameter is worse than one that cannot write at all, so
+ * the bit is computed from two facts and both are checkable:
+ *
+ *   - the plugin must actually have a `set` — `voices` has params: [] and no
+ *     writer, and a console must not offer it a knob;
+ *   - the param must not be `deprecated` — the buss compressor's `mix` and
+ *     `parallel` stay in the schema so older saved units and presets load, but
+ *     bussSettings() does not read them. Advertising one as writable would
+ *     publish a control whose writes land nowhere.
+ *
+ * The meter half needs no adapter at all: oaPluginFrame(id, i) already hands
+ * back a Float32Array whose first four slots are identical across every plugin.
+ * Only the writing half was missing.
+ */
+window.oaPluginParamSpecs = function (id, idx) {
+    const p = REG[id];
+    if (!p) return [];
+    const i = Math.max(0, idx | 0);
+    const writable = typeof p.set === 'function';
+
+    return window.oaPluginParams(id, i).map(function (q) {
+        const spec = {
+            name: q.key,
+            type: q.kind === 'discrete' ? 'enum' : 'number',
+            writable: writable && !q.deprecated,
+        };
+        if (q.unit) spec.unit = q.unit;
+        if (typeof q.min === 'number') spec.min = q.min;
+        if (typeof q.max === 'number') spec.max = q.max;
+
+        if (spec.type === 'enum') {
+            // A discrete param's choices ARE its positions. Where the plugin
+            // kept the list (the drum synth does) use it; otherwise label each
+            // position with the plugin's own fmt, which is what the faceplate
+            // prints beside that detent. `ticks` is NOT consulted: it is a
+            // legend and may be sparse — the buss compressor carries five
+            // labels across ten positions.
+            if (Array.isArray(q.options)) {
+                spec.values = q.options.map(String);
+            } else {
+                const lo = Math.round(q.min), hi = Math.round(q.max);
+                const values = [];
+                for (let v = lo; v <= hi; v++) {
+                    let label = String(v);
+                    if (typeof q.fmt === 'function') {
+                        try { label = String(q.fmt(v)); } catch (e) { /* keep the index */ }
+                    }
+                    values.push(label);
+                }
+                spec.values = values;
+            }
+        }
+        return spec;
+    });
+};
+
 window.oaPluginPresets = function (id) { return REG[id] ? REG[id].presets : {}; };
 window.oaPluginUnits = function (id) { return REG[id] ? REG[id].units() : 0; };
 
@@ -254,23 +450,19 @@ window.oaPluginSubscribe = function (id, fn) {
 // ---------------------------------------------------------------------------
 // Save and restore
 //
-// A song export used to name each effect by hand: oaSongFile.js read
-// OA_REVERB, OA_DELAY and OA_DRUM_SYNTH out of the audio layer, wrote them into
-// three top-level keys, and had a matching block to put each one back. Two
-// consequences, and both of them shipped:
+// An effect declares how it is saved, next to the thing being saved, and the
+// song file asks every registered plugin at once. An effect added tomorrow is in
+// the export the moment it registers, without the exporter knowing it exists.
 //
-//   THE PEDAL AND THE COMPRESSOR WERE NEVER IN A SONG AT ALL. They were added
-//   after that list was written, nothing pointed at them, and an exported song
-//   quietly came back with every channel clean. Nothing failed — the settings
-//   simply were not in the file.
+// THE TWO FAILURES THIS PREVENTS, both of which a hand-written export list has:
 //
-//   THE RESTORE LOGIC LIVED IN THE SEQUENCER. How to put a reverb back — program
-//   first, then the edits on top, then the sends — is the REVERB's business, and
-//   it was three hundred lines away from the reverb in a file about song files.
+//   AN EFFECT SILENTLY MISSING FROM THE FILE. A named list only saves what was
+//   named when it was written; anything added later exports clean, with nothing
+//   failing to say so.
 //
-// So an effect now declares how it is saved, next to the thing being saved, and
-// the song file asks every plugin at once. An effect added tomorrow is in the
-// export the moment it registers, without the exporter knowing it exists.
+//   RESTORE LOGIC LIVING IN THE SEQUENCER. How to put a reverb back — program
+//   first, then the edits on top, then the sends — is the REVERB's business, not
+//   the song file's.
 // ---------------------------------------------------------------------------
 
 /**
@@ -339,6 +531,13 @@ let attached = 0;
  * the other fifteen down with it.
  */
 const pumpOnce = function () {
+    // Measured, never assumed. rAF is not 60 Hz — it is whatever the panel and
+    // the compositor between them decide, and a dropped frame doubles it for
+    // one pass. The reader above wants the gap that actually happened.
+    const at = now();
+    PUMP_SPAN = PUMP_LAST ? (at - PUMP_LAST) / 1000 : 0;
+    PUMP_LAST = at;
+
     const ctx = window.OA_AUDIO_CTX;
     const ids = Object.keys(REG);
     for (let k = 0; k < ids.length; k++) {
@@ -358,10 +557,84 @@ const pumpOnce = function () {
 };
 window.oaPumpPluginsOnce = pumpOnce;
 
+/**
+ * The meter cadence, in milliseconds — ONE pass, and everything watching it.
+ *
+ * This is the `Frame` heartbeat tier (36 ms, 27.8 Hz), and it is a COPIED
+ * CONSTANT rather than a subscription, deliberately. The heartbeat is an MQTT
+ * metronome for keeping benches in step across machines; a channel meter is a
+ * local display. Driving this loop off a broker message would mean no broker,
+ * no meters — a distributed dependency bought for a redraw nobody else needs to
+ * agree with. What the tier is good for is the NUMBER: a period the rest of the
+ * system already treats as canonical, that divides the hour, and that somebody
+ * chose for exactly this range. See TIERS in
+ * APK:DOCKERS/APK:BareMetal/backend/Core/heartbeat/src/main.rs — it is OFF by default there
+ * for this reason.
+ *
+ * WHY A CAP AND NOT A FASTER LOOP. Before this, `oaPlugin.js` pumped on every
+ * rAF and `Mixer.jsx` ran a SECOND rAF to read what the pump wrote, so a 120 Hz
+ * panel did both 120 times a second: 240 callbacks for a needle no eye resolves
+ * past about 30. The pass is the expensive half — every analyser in the app,
+ * read and reduced — so skipping it is where the saving is, and the rAF that
+ * remains early-returns for almost nothing.
+ *
+ * The 20-30 Hz range is safe to sit in ONLY because the peak-hold above landed
+ * first: at 36 ms against a 21 ms analyser window a naive read would miss 15 ms
+ * of every pass, which is a meter that is WRONG rather than slow. The reader
+ * grows its window to cover `PUMP_SPAN`, so the gap closes as the rate drops.
+ */
+const FRAME_MS = 36;
+
+/* When the next pass is owed. Advanced from the slot that was DUE rather than
+   from the moment this callback actually ran, so a late frame does not push the
+   cadence permanently later. More than a whole slot behind — a backgrounded tab,
+   where rAF stops entirely — resyncs instead of burning catch-up passes on audio
+   that is long gone. */
+let FRAME_DUE = 0;
+
+/* Displays that want to redraw when a pass has just filled the frames. They do
+   NOT get their own rAF: one clock, one pass, then everyone reads what it wrote,
+   which is also what guarantees a display never reads a half-filled frame. */
+const FRAME_LISTENERS = [];
+
 const loop = function () {
-    pumpOnce();
     pumpHandle = window.requestAnimationFrame(loop);
+
+    const at = now();
+    if (at < FRAME_DUE) return;
+    FRAME_DUE = (at - FRAME_DUE > FRAME_MS) ? at + FRAME_MS : FRAME_DUE + FRAME_MS;
+
+    pumpOnce();
+
+    for (let k = 0; k < FRAME_LISTENERS.length; k++) {
+        try {
+            FRAME_LISTENERS[k]();
+        } catch (e) {
+            // Same contract as a throwing back end: one broken display must not
+            // take the other fifteen down with it, and must not stop the pump.
+        }
+    }
 };
+
+/**
+ * "Redraw me when a pass has happened." Returns the way to stop, exactly like
+ * `oaPluginAttach` — and a display needs BOTH: attach starts the pump, this
+ * subscribes to it.
+ */
+window.oaPluginOnFrame = function (fn) {
+    if (typeof fn !== 'function') return function () {};
+    FRAME_LISTENERS.push(fn);
+    let released = false;
+    return function () {
+        if (released) return;          // a double-release must not evict a stranger
+        released = true;
+        const at = FRAME_LISTENERS.indexOf(fn);
+        if (at >= 0) FRAME_LISTENERS.splice(at, 1);
+    };
+};
+
+window.oaPluginFrameListenerCount = function () { return FRAME_LISTENERS.length; };
+window.oaPluginFrameMs = function () { return FRAME_MS; };
 
 /**
  * A display says "I am reading frames now" and gets back the way to say it has
@@ -371,6 +644,8 @@ const loop = function () {
 window.oaPluginAttach = function () {
     attached++;
     if (attached === 1 && !pumpHandle && window.requestAnimationFrame) {
+        // A panel opening should meter immediately, not up to a slot later.
+        FRAME_DUE = 0;
         pumpHandle = window.requestAnimationFrame(loop);
     }
     let released = false;

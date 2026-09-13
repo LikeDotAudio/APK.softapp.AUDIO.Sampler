@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -37,13 +38,13 @@
 // The tape parameters, and the ranges the panel draws its faders from. `key`
 // doubles as the AudioParam name inside the worklet.
 window.OA_DELAY_PARAMS = [
-    { key: 'timeL',    label: 'Head L',   min: 0.01, max: 2.0,   step: 0.001, unit: 's',  fmt: (v) => Math.round(v * 1000) + ' ms' },
-    { key: 'timeR',    label: 'Head R',   min: 0.01, max: 2.0,   step: 0.001, unit: 's',  fmt: (v) => Math.round(v * 1000) + ' ms' },
-    { key: 'feedback', label: 'Intensity',min: 0,    max: 1.1,   step: 0.01,  unit: '',   fmt: (v) => Math.round(v * 100) + '%' },
-    { key: 'drive',    label: 'Tape Drive',min: 0.5, max: 6,     step: 0.05,  unit: '',   fmt: (v) => v.toFixed(2) + 'x' },
-    { key: 'wowRate',  label: 'Wow Rate', min: 0.05, max: 8,     step: 0.01,  unit: 'Hz', fmt: (v) => v.toFixed(2) + ' Hz' },
-    { key: 'wowDepth', label: 'Flutter',  min: 0,    max: 0.02,  step: 0.0002,unit: '',   fmt: (v) => (v * 1000).toFixed(1) + ' ms' },
-    { key: 'damp',     label: 'Tape Age', min: 800,  max: 16000, step: 50,    unit: 'Hz', fmt: (v) => Math.round(v) + ' Hz' },
+    { key: 'timeL', kind: 'continuous',    label: 'Head L',   min: 0.01, max: 2.0,   step: 0.001, unit: 's',  fmt: (v) => Math.round(v * 1000) + ' ms' },
+    { key: 'timeR', kind: 'continuous',    label: 'Head R',   min: 0.01, max: 2.0,   step: 0.001, unit: 's',  fmt: (v) => Math.round(v * 1000) + ' ms' },
+    { key: 'feedback', kind: 'continuous', label: 'Intensity',min: 0,    max: 1.1,   step: 0.01,  unit: '',   fmt: (v) => Math.round(v * 100) + '%' },
+    { key: 'drive', kind: 'continuous',    label: 'Tape Drive',min: 0.5, max: 6,     step: 0.05,  unit: '',   fmt: (v) => v.toFixed(2) + 'x' },
+    { key: 'wowRate', kind: 'continuous',  label: 'Wow Rate', min: 0.05, max: 8,     step: 0.01,  unit: 'Hz', fmt: (v) => v.toFixed(2) + ' Hz' },
+    { key: 'wowDepth', kind: 'continuous', label: 'Flutter',  min: 0,    max: 0.02,  step: 0.0002,unit: '',   fmt: (v) => (v * 1000).toFixed(1) + ' ms' },
+    { key: 'damp', kind: 'continuous',     label: 'Tape Age', min: 800,  max: 16000, step: 50,    unit: 'Hz', fmt: (v) => Math.round(v) + ' Hz' },
 ];
 
 // The factory settings live in oaTapeDelayPresets.js, loaded first — the four
@@ -295,7 +296,7 @@ const tapeModuleUrl = function () {
 
 /**
  * Register every worklet processor the effects need on a context — the tape
- * echo here, and the channel compressor from oaCompressor.js. Resolves to true
+ * echo here, and the two compressors and the gate from their own files. Resolves to true
  * if worklets are usable, and `ctx.__oaWorkletOk` is set once it settles so bus
  * construction can go straight to the right engine without waiting — which an
  * OfflineAudioContext needs, since it schedules and renders in one tick.
@@ -312,6 +313,7 @@ window.oaPrepareFx = function (ctx) {
                     await ctx.audioWorklet.addModule(tapeModuleUrl());
                     if (window.oaCompModuleUrl) await ctx.audioWorklet.addModule(window.oaCompModuleUrl());
                     if (window.oaBussModuleUrl) await ctx.audioWorklet.addModule(window.oaBussModuleUrl());
+                    if (window.oaGateModuleUrl) await ctx.audioWorklet.addModule(window.oaGateModuleUrl());
                     ok = true;
                 }
             } catch (e) {

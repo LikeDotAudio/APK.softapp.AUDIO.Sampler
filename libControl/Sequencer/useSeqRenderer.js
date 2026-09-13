@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -57,7 +58,7 @@ window.useSeqRenderer = (pattern, steps, mutes, bpm, safeLabel) => {
                 for (let i = 0; i < loopLen; i++) dst[i] = src[i] || 0;
                 for (let j = 0; j + loopLen < src.length && j < loopLen; j++) dst[j] += src[loopLen + j]; // wrap tail
             }
-            const blob = new Blob([window.oaEncodeWav(loopBuf)], { type: 'audio/wav' });
+            const blob = new Blob([window.oaEncodeWavFromBuffer(loopBuf)], { type: 'audio/wav' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             // Stamped here rather than at the top of the render, so the name
@@ -214,7 +215,7 @@ window.useSeqRenderer = (pattern, steps, mutes, bpm, safeLabel) => {
                 }
 
                 const trackName = (TRACKS[trkIdx] && TRACKS[trkIdx].name) ? TRACKS[trkIdx].name.replace(/[^a-zA-Z0-9_-]/g, '_') : `Track_${trkIdx + 1}`;
-                const wavData = new Uint8Array(window.oaEncodeWav(stemBuf));
+                const wavData = new Uint8Array(window.oaEncodeWavFromBuffer(stemBuf));
                 zipFiles.push({ name: `${String(trkIdx + 1).padStart(2, '0')}_${trackName}.wav`, data: wavData });
             }
 

@@ -1,3 +1,4 @@
+# Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 # ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 # https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 #
@@ -15,8 +16,8 @@ import os
 from PIL import Image, ImageDraw
 
 def generate_icon(size, output_path):
-    img = Image.new("RGBA", (size, size), (20, 20, 20, 255))
-    draw = ImageDraw.Draw(img)
+    image = Image.new("RGBA", (size, size), (20, 20, 20, 255))
+    draw = ImageDraw.Draw(image)
     
     grid_size = 16
     cell_w = size / grid_size
@@ -39,10 +40,10 @@ def generate_icon(size, output_path):
         # Envelope mimicking a kick drum + tail
         envelope = math.exp(-nx * 10) * (1 - math.exp(-nx * 50))
         
-        val = math.sin(nx * 40 * math.pi) * envelope
+        value = math.sin(nx * 40 * math.pi) * envelope
         noise = (random.random() - 0.5) * 0.3 * envelope
         
-        y = center_y + (val + noise) * (size * 0.4)
+        y = center_y + (value + noise) * (size * 0.4)
         points.append((x, int(y)))
         
     draw.line(points, fill=wave_color, width=max(2, int(size/40)))
@@ -50,7 +51,7 @@ def generate_icon(size, output_path):
     border_w = max(2, int(size/20))
     draw.rectangle([border_w//2, border_w//2, size - border_w//2, size - border_w//2], outline=wave_color, width=border_w)
     
-    img.save(output_path)
+    image.save(output_path)
     print(f"Saved {output_path}")
 
 os.chdir("/home/anthony/Documents/GitProjects/Sampler.Like.Audio/ICON and LOGO")

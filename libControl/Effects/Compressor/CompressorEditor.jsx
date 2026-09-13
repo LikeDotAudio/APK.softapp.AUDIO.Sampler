@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -65,6 +66,12 @@ const vuPos = (db) => {
 // are spread evenly across the 270° of travel, low end first.
 // ---------------------------------------------------------------------------
 const RackKnob = ({ value, min, max, defaultVal, ticks, size = 62, label, display, onChange }) => {
+    // No writer means the adapter said this parameter is read-only. A knob that
+    // turns and is heard by nothing is the failure this whole lane is about, so
+    // it comes up GREYED AND INERT — both, exactly as oaBypassVeil argues: a
+    // grey knob that still turns is a worse lie than no indication at all, and
+    // a dead knob with no explanation is a fault with no symptom.
+    const live = typeof onChange === 'function';
     // Room outside the knob for the collar. The engraved numbers sit past the
     // tick marks and a two-character label is ~10px wide, so the box has to
     // clear the knob by more than the label radius or the end stops get cropped.
@@ -89,6 +96,7 @@ const RackKnob = ({ value, min, max, defaultVal, ticks, size = 62, label, displa
     });
 
     const onPointerDown = (e) => {
+        if (!live) return;
         if (e.altKey) { onChange(defaultVal); return; }
         readout.begin(e);
         const startY = e.clientY;
@@ -107,6 +115,7 @@ const RackKnob = ({ value, min, max, defaultVal, ticks, size = 62, label, displa
         e.preventDefault();
     };
     const onWheel = (e) => {
+        if (!live) return;
         e.preventDefault();
         onChange(clampV(cur + (e.deltaY < 0 ? 1 : -1) * (max - min) / 50));
     };
@@ -145,7 +154,12 @@ const RackKnob = ({ value, min, max, defaultVal, ticks, size = 62, label, displa
 
     return (
         <svg width={S} height={S} viewBox={`0 0 ${S} ${S}`}
-             style={{ display: 'block', touchAction: 'none', cursor: 'ns-resize' }}
+             style={{
+                 display: 'block', touchAction: 'none',
+                 cursor: live ? 'ns-resize' : 'default',
+                 filter: live ? undefined : 'grayscale(1) brightness(0.6)',
+                 opacity: live ? undefined : 0.7,
+             }}
              onPointerDown={onPointerDown} onWheel={onWheel}>
             <defs>
                 <radialGradient id={uid} cx="36%" cy="26%" r="80%">
@@ -329,10 +343,10 @@ const screw = (
  * because the strip is shared by every voice on the channel, a knob move lands
  * on the sound that is already ringing rather than waiting for the next hit.
  */
-window.CompressorEditor = ({ idx, name, onClose, oaPopped }) => {
+window.CompressorEditor = ({ idx, name, onClose, oaPopped, oaHosted }) => {
     const [showHelp, setShowHelp] = React.useState(false);
     const panel = window.useOaPanel({
-        id: `comp-${idx}`, title: `${name} — COMPRESS`, copy: oaPopped,
+        id: `comp-${idx}`, title: `${name} — COMPRESS`, copy: oaPopped, hosted: oaHosted,
         render: () => <window.CompressorEditor idx={idx} name={name} onClose={onClose} oaPopped />,
     });
     // On a phone the plate cannot hold one row, so it wraps. Left to itself the
@@ -365,6 +379,11 @@ window.CompressorEditor = ({ idx, name, onClose, oaPopped }) => {
         window.oaPluginParams('comp', idx).forEach((p) => { opened.current[p.key] = u[p.key]; });
     }, [idx]);
 
+    // The control list, its bounds and its writability all come from
+    // PLAN-18.01's adapter now; the engraving still comes from the plugin's own
+    // schema. `P` survives only for the two places that want a formatter for a
+    // value they are not drawing a control for.
+    const surface = window.useOaConsoleSurface('comp', idx);
     const P = (k) => params.find((p) => p.key === k);
     const ratio = window.oaCompRatio(unit.ratio);
     const on = unit.on && unit.mix > 0.0005;
@@ -420,21 +439,28 @@ window.CompressorEditor = ({ idx, name, onClose, oaPopped }) => {
         if (grRef.current) grRef.current.textContent = gr > 0.05 ? '-' + gr.toFixed(1) + ' dB' : '0.0 dB';
     });
 
+    // ONE knob column, from ONE descriptor. This used to reach into `params`
+    // for the bounds and into `unit` for the value and assume every parameter
+    // it was handed could be written — the hand-written per-mixer surface
+    // PLAN-18.01 step 5 exists to delete. It now draws whatever the adapter
+    // says this plugin has, and a read-only parameter comes back engraved and
+    // inert rather than as a knob whose writes land nowhere.
     const knobCol = (key, size) => {
-        const p = P(key);
+        const d = surface.by[key];
+        if (!d) return null;
         return (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px' }}>
                 <RackKnob
-                    value={unit[key]} min={p.min} max={p.max} defaultVal={p.def}
-                    ticks={p.ticks} size={size} onChange={(v) => set(key, v)}
-                    label={p.label.toUpperCase()} display={p.fmt(unit[key])}
+                    value={d.value} min={d.min} max={d.max} defaultVal={d.def}
+                    ticks={d.ticks} size={size} onChange={d.writable ? d.set : undefined}
+                    label={d.label.toUpperCase()} display={d.display}
                 />
-                <Engraved size={7.5} style={{ letterSpacing: '2px' }}>{p.label.toUpperCase()}</Engraved>
+                <Engraved size={7.5} style={{ letterSpacing: '2px' }}>{d.label.toUpperCase()}</Engraved>
                 <div style={{
                     fontSize: '8.5px', color: INK, fontWeight: '700',
                     fontVariantNumeric: 'tabular-nums', opacity: 0.85
                 }}>
-                    {p.fmt(unit[key])}
+                    {d.display}
                 </div>
             </div>
         );
@@ -453,9 +479,9 @@ window.CompressorEditor = ({ idx, name, onClose, oaPopped }) => {
                 </span>
                 <span style={{ fontSize: '9px', color: '#666' }}>after the pan, sends tapped ahead of it</span>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
-                    <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
+                    {panel.chrome && <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
                         title={panel.popTitle}
-                        style={{ padding: '4px 10px' }} />
+                        style={{ padding: '4px 10px' }} />}
                     {/* Help is a BUTTON rather than a standing paragraph: it is
                         read once and then in the way for ever. */}
                     <window.SeqButton label="? Help" onClick={() => setShowHelp((v) => !v)}
@@ -467,7 +493,7 @@ window.CompressorEditor = ({ idx, name, onClose, oaPopped }) => {
                         title="Back to how this channel sounded when the panel was opened"
                         style={{ padding: '4px 10px', border: 'none' }} />
                     {bypassed && <window.OaOutOfCircuit />}
-                    <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />
+                    {panel.chrome && <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />}
                 </div>
             </div>
 

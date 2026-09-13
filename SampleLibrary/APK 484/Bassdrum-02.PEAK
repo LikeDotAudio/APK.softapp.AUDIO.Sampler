@@ -1,10 +1,10 @@
 {
   "metadata": {
-    "analyzer_version": "20260717.0313-9a2e6ae3aa3c302e",
+    "analyzer_version": "20260904.2022",
     "name": "Bassdrum-02.wav",
-    "folder": "APK 484",
-    "sub": "APK 484",
-    "path": "APK 484/Bassdrum-02.wav",
+    "folder": "SampleLibrary/APK 484",
+    "sub": "SampleLibrary/APK 484",
+    "path": "APK:DOCKERS/APK:audio:WebPortal/SRC/APK:Softapps/SAMPLE and PLAY/SampleLibrary/APK 484/Bassdrum-02.wav",
     "length_seconds": 0.2276190476190476,
     "sample_rate": 44100,
     "bit_depth": 16,
@@ -12,7 +12,7 @@
     "source_format": "WAV",
     "lossy_source": false,
     "dc_offset": -0.00003316559670906804,
-    "trailing_silence_ms": 0,
+    "trailing_silence_ms": 0.0,
     "analysis_depth": "full"
   },
   "classification": {
@@ -52,6 +52,23 @@
     "envelope_kurtosis": -1.5317396312377825,
     "envelope_shape": "Decaying",
     "decay_time_seconds_60db": 0.2697779668983943,
+    "slices": [
+      {
+        "index": 0,
+        "start_seconds": 0.0,
+        "end_seconds": 0.22947845804988662,
+        "relative_level": 1.0,
+        "envelope_attack_seconds": 0.044897959183673466,
+        "envelope_decay_seconds": 0.06485260770975057,
+        "envelope_sustain_level": 0.2752967598247103,
+        "envelope_release_seconds": 0.02494331065759637,
+        "envelope_temporal_centroid": 0.28454130671930916,
+        "envelope_skewness": 0.10991336447769826,
+        "envelope_kurtosis": -1.5317396312377825,
+        "envelope_shape": "Decaying",
+        "decay_time_seconds_60db": 0.2697779668983943
+      }
+    ],
     "onset_periodicity": 0.5573117245226882,
     "onset_rate_per_second": 4.393305439330544
   },
@@ -59,47 +76,49 @@
     "root_mean_square_level": 0.43344751176728613,
     "crest_factor": 2.2875465775026904,
     "zero_crossings_per_second": 180.12552301255232,
-    "complexity": 1655.0697265046063,
-    "spectral_centroid_hz": 660.5990765765443,
+    "complexity": 1655.0693248373832,
+    "spectral_centroid_hz": 660.598938193564,
     "spectral_rolloff_hz": 544.7698744769875,
-    "spectral_flatness": 0.02364393985133292,
-    "low_band_energy": 0.6179247740650403,
-    "mid_band_energy": 0.29652153086848737,
-    "high_band_energy": 0.08555369506647231,
-    "spectral_flux": 0.18969474966221547,
+    "spectral_flatness": 0.023643258415193526,
+    "low_band_energy": 0.6179247630999054,
+    "mid_band_energy": 0.2965215559015767,
+    "high_band_energy": 0.08555368099851794,
+    "spectral_flux": 0.18969474805264702,
     "harmonicity": 0.9649733481164783,
-    "inharmonicity": 0.6344879323207556,
+    "inharmonicity": 0.6344880756972104,
     "partial_count": 4,
     "mel_frequency_cepstral_coefficients": [
-      -32.13959433769105,
-      19.213624949628986,
-      8.072260653275588,
-      9.057707098912344,
-      2.9152018286997805,
-      4.89691090626346,
-      1.2013243467886539,
-      3.226072848651147,
-      0.18481624184856899,
-      1.9599637233623368,
-      0.3914743733695308,
-      1.075187794044834,
-      0.8261058882876762
+      -32.13958093000414,
+      19.21361981975849,
+      8.072257427324294,
+      9.057711231285058,
+      2.9151880354041806,
+      4.896932920133958,
+      1.2013217174727597,
+      3.226050476380793,
+      0.18484595414145077,
+      1.959925872360163,
+      0.39151546763722817,
+      1.0751573366387457,
+      0.8261307294776242
     ],
-    "spectral_centroid_mean_hz": 182.844479936154,
-    "spectral_centroid_deviation_hz": 126.70106239288673,
-    "total_harmonic_distortion": 0,
-    "clipping_density": 0,
+    "spectral_centroid_mean_hz": 182.84469517421053,
+    "spectral_centroid_deviation_hz": 126.701048553935,
+    "total_harmonic_distortion": 0.0,
+    "clipping_density": 0.0,
     "distortion": "Clean",
-    "stationarity": 0.34987611070457936,
-    "spectral_entropy": 0.17774748667064927,
-    "spectral_slope_db_per_octave": -12.472135110877103,
+    "stationarity": 0.3498761197375009,
+    "spectral_entropy": 0.17774748747261254,
+    "spectral_slope_db_per_octave": -12.472134482311596,
     "band_limit_high_hz": 645.99609375,
-    "spectral_centroid_slope_hz_per_second": -333.5932417513933,
+    "spectral_centroid_slope_hz_per_second": -333.593171793899,
     "syllabic_modulation_energy": null,
     "voicing_ratio": 0.9473684210526315,
     "mid_rms": 0.4334475119251484,
     "side_rms": 0.008223036866439104,
-    "lufs": -70
+    "lufs": -70.0,
+    "loudness_range_lu": 0.0,
+    "true_peak_dbtp": 0.0087988419700457
   },
   "musicality": {
     "pitch_hz": 2004.5454545454545,
@@ -107,48 +126,82 @@
     "root_note_name": "A#0",
     "root_frequency_hz": 28.556485355648537,
     "root_cents_offset": -34.735828972996785,
-    "beats_per_minute": 0,
+    "beats_per_minute": 0.0,
     "root_midi_note": -1,
     "chromagram": [
-      0.9578831683231197,
-      0.8291638738730563,
-      0.9337558939999479,
-      0.8977390596645152,
-      0.7885222223019046,
-      0.6802741582873453,
-      0.7259146743575531,
-      0.663058270433045,
-      1,
-      0.5917594059817869,
-      0.9618988597967378,
-      0.8738198637001233
-    ]
+      0.9578832503929517,
+      0.82916388003152,
+      0.9337559105406954,
+      0.8977391095494186,
+      0.7885222954242067,
+      0.6802742162890918,
+      0.7259147389253098,
+      0.6630582528196082,
+      1.0,
+      0.5917594192062402,
+      0.9618986728224854,
+      0.8738199573885252
+    ],
+    "note_root_key_beat_marker_map": {
+      "global_root_note": "A#0",
+      "global_midi_note": -1,
+      "global_bpm": 120.0,
+      "total_beats": 1,
+      "beat_markers": [
+        {
+          "index": 0,
+          "timestamp_seconds": 0.0,
+          "sample_index": 0,
+          "is_downbeat": true,
+          "bar": 1,
+          "beat": 1
+        }
+      ],
+      "chunk_maps": [
+        {
+          "chunk_index": 0,
+          "start_seconds": 0.0,
+          "end_seconds": 0.22,
+          "duration_seconds": 0.22,
+          "root_note_name": "A0",
+          "root_midi_note": 21,
+          "root_frequency_hz": 28.29,
+          "pitch_hz": 2004.55,
+          "cents_offset": 49.3,
+          "peak_amplitude": 0.992,
+          "nearest_beat_index": 0
+        }
+      ]
+    }
   },
   "unsupervised": {
-    "cluster": -1,
-    "principal_components": []
+    "cluster": 7,
+    "principal_components": [
+      -5.169311810057904,
+      -1.9102124015032573,
+      -2.159770837311417
+    ]
   },
   "ucs": {
     "category": "DRUMS",
     "subcategory": "KICK",
     "id": "DRUMKick",
-    "confidence": 1,
+    "confidence": 1.0,
     "alternatives": [],
     "synonyms": [
-      "bassdrum",
-      "909"
+      "bassdrum"
     ],
-    "reason": "name matched [bassdrum, 909]; signal 0.26, tier signal_separable, 1 candidate in contention; gate ruled out AIRBlow (spectral_flatness 0.0236 < min 0.1200)"
+    "reason": "name matched [bassdrum]; signal 0.26, tier signal_separable, 1 candidate in contention; gate ruled out AIRBlow (spectral_flatness 0.0236 < min 0.1200)"
   },
   "regions": {
     "count": 1,
-    "detection_threshold_decibels": -40,
+    "detection_threshold_decibels": -40.0,
     "minimum_silence_seconds": 0.15,
     "minimum_region_seconds": 0.05,
     "regions": [
       {
         "index": 0,
-        "start_seconds": 0,
+        "start_seconds": 0.0,
         "end_seconds": 0.21950113378684805,
         "duration_seconds": 0.21950113378684805,
         "peak_amplitude": 0.7758214696196291,

@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -23,16 +24,21 @@ const fromNorm = (p, n) => p.log
     ? p.min * Math.pow(p.max / p.min, n)
     : p.min + n * (p.max - p.min);
 
-const DriveKnob = ({ p, value, color, size = 40, onChange }) => (
+// One knob, from ONE descriptor. `d` carries the bounds and the default from
+// the adapter, the label and formatter from the plugin's own schema, and the
+// live value already formatted — so this no longer reaches into `params` for
+// half of it and `unit` for the other half. A read-only descriptor hands
+// SvgKnob no writer, and SvgKnob greys itself and refuses the gesture.
+const DriveKnob = ({ d, color, size = 40 }) => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
         <window.SvgKnob
-            value={toNorm(p, value)} min={0} max={1} defaultVal={toNorm(p, p.def)}
+            value={toNorm(d, d.value)} min={0} max={1} defaultVal={toNorm(d, d.def)}
             color={color} size={size}
-            label={p.label.toUpperCase()} display={p.fmt(value)}
-            onChange={(n) => onChange(fromNorm(p, n))}
+            label={d.label.toUpperCase()} display={d.display}
+            onChange={d.writable ? (n) => d.set(fromNorm(d, n)) : undefined}
         />
-        <div style={{ fontSize: '8px', color: '#8f9299', letterSpacing: '1px' }}>{p.label.toUpperCase()}</div>
-        <div style={{ fontSize: '9px', color: color, fontVariantNumeric: 'tabular-nums' }}>{p.fmt(value)}</div>
+        <div style={{ fontSize: '8px', color: '#8f9299', letterSpacing: '1px' }}>{d.label.toUpperCase()}</div>
+        <div style={{ fontSize: '9px', color: color, fontVariantNumeric: 'tabular-nums' }}>{d.display}</div>
     </div>
 );
 
@@ -109,13 +115,14 @@ const TransferPlot = ({ idx, unit, color }) => {
  * The pedal panel for one channel. Writes straight to the live unit, and since
  * the pedal is built per voice the next hit carries whatever is set here.
  */
-window.DriveEditor = ({ idx, name, onClose, oaPopped }) => {
+window.DriveEditor = ({ idx, name, onClose, oaPopped, oaHosted }) => {
     const panel = window.useOaPanel({
-        id: `drive-${idx}`, title: `${name} — DRIVE`, copy: oaPopped,
+        id: `drive-${idx}`, title: `${name} — DRIVE`, copy: oaPopped, hosted: oaHosted,
         render: () => <window.DriveEditor idx={idx} name={name} onClose={onClose} oaPopped />,
     });
     const unit = window.useOaState('drive', idx);
-    const params = window.useOaParams('drive', idx);
+    // What controls this pedal has, and which may be written. PLAN-18.12.
+    const surface = window.useOaConsoleSurface('drive', idx);
     // Armed for a take: the pedal is not in the graph at all, so the faceplate
     // says so and stops taking knob moves that nothing would hear.
     const bypassed = window.useOaFxBypass();
@@ -134,17 +141,20 @@ window.DriveEditor = ({ idx, name, onClose, oaPopped }) => {
     // The mode's own colour and hint stay a drive-specific lookup: a voicing is
     // not a parameter, it is which of three curves the pedal is baking.
     const mode = window.oaDriveMode(unit.mode);
-    const mixP = params.find((p) => p.key === 'mix');
-    const knobs = params.filter((p) => p.key !== 'mix');
+    const mixD = surface.by.mix;
+    const knobs = surface.list.filter((d) => d.key !== 'mix');
     const on = unit.mix > window.OA_DRIVE_EPSILON;
     const color = mode.color;
 
     const dirty = !!opened.current && (opened.current.mode !== unit.mode
-        || params.some((p) => opened.current[p.key] !== unit[p.key]));
+        || surface.list.some((d) => opened.current[d.key] !== unit[d.key]));
+    // ABORT restores what was on the panel when it opened. It goes through the
+    // descriptor's own writer, so a parameter the adapter will not let the
+    // panel write is not written back by the undo path either.
     const abort = () => {
         if (!opened.current) return;
         window.oaPluginSet('drive', idx, 'mode', opened.current.mode);
-        params.forEach((p) => window.oaPluginSet('drive', idx, p.key, opened.current[p.key]));
+        surface.list.forEach((d) => { if (d.writable) d.set(opened.current[d.key]); });
     };
 
     return panel.frame(
@@ -160,9 +170,9 @@ window.DriveEditor = ({ idx, name, onClose, oaPopped }) => {
                 </span>
                 <span style={{ fontSize: '9px', color: '#666' }}>before the pan and the sends</span>
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
+                    {panel.chrome && <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
                         title={panel.popTitle}
-                        style={{ padding: '4px 10px' }} />
+                        style={{ padding: '4px 10px' }} />}
                     {/* Help is a BUTTON rather than a standing paragraph: it is
                         read once and then in the way for ever. */}
                     <window.SeqButton label="? Help" onClick={() => setShowHelp((v) => !v)}
@@ -174,7 +184,7 @@ window.DriveEditor = ({ idx, name, onClose, oaPopped }) => {
                         title="Back to how this channel sounded when the panel was opened"
                         style={{ padding: '4px 10px', border: 'none' }} />
                     {bypassed && <window.OaOutOfCircuit />}
-                    <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />
+                    {panel.chrome && <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />}
                 </div>
             </div>
 
@@ -195,9 +205,8 @@ window.DriveEditor = ({ idx, name, onClose, oaPopped }) => {
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'space-between' }}>
-                            {knobs.map((p) => (
-                                <DriveKnob key={p.key} p={p} value={unit[p.key]} color={color}
-                                    onChange={(v) => window.oaPluginSet('drive', idx, p.key, v)} />
+                            {knobs.map((d) => (
+                                <DriveKnob key={d.key} d={d} color={color} />
                             ))}
                         </div>
 
@@ -208,8 +217,7 @@ window.DriveEditor = ({ idx, name, onClose, oaPopped }) => {
                             display: 'flex', alignItems: 'center', gap: '10px',
                             borderTop: '1px solid #ffffff10', paddingTop: '10px'
                         }}>
-                            <DriveKnob p={mixP} value={unit.mix} color={color} size={52}
-                                onChange={(v) => window.oaPluginSet('drive', idx, 'mix', v)} />
+                            {mixD ? <DriveKnob d={mixD} color={color} size={52} /> : null}
                             <div style={{ flex: 1 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                                     <span style={{

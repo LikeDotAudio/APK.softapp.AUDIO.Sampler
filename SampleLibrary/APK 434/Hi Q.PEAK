@@ -1,10 +1,10 @@
 {
   "metadata": {
-    "analyzer_version": "20260717.0313-9a2e6ae3aa3c302e",
+    "analyzer_version": "20260904.2022",
     "name": "Hi Q.wav",
-    "folder": "APK 434/Percussion",
-    "sub": "APK 434/Percussion",
-    "path": "APK 434/Percussion/Hi Q.wav",
+    "folder": "SampleLibrary/APK 434",
+    "sub": "SampleLibrary/APK 434",
+    "path": "APK:DOCKERS/APK:audio:WebPortal/SRC/APK:Softapps/SAMPLE and PLAY/SampleLibrary/APK 434/Hi Q.wav",
     "length_seconds": 0.05444444444444444,
     "sample_rate": 44100,
     "bit_depth": 16,
@@ -12,26 +12,27 @@
     "source_format": "WAV",
     "lossy_source": false,
     "dc_offset": -0.00013849209964598085,
-    "trailing_silence_ms": 0,
+    "trailing_silence_ms": 0.0,
     "analysis_depth": "full"
   },
   "classification": {
     "group": "Perc",
     "reason": [
-      "1) path matched \"percussion\"",
+      "1) Acoustic ML Fallback (ZCR/Inharmonicity)",
       "2) envelope Sustained (attack 10 ms, sustain 84%, 1 transient)",
       "3) Inharmonic · high-band 47%"
     ],
     "timbre": "Percussive",
     "length_class": "Short",
-    "subgroup": "Perc Short",
+    "subgroup": "Acoustic Guess",
     "audit": false,
     "acoustic_types": [
       "Inharmonic"
     ],
     "sound_design_roles": [],
     "instrument_family": [
-      "Percussion"
+      "Percussion",
+      "Idiophone"
     ]
   },
   "envelope": {
@@ -48,6 +49,23 @@
     "envelope_kurtosis": -1.4948064197949897,
     "envelope_shape": "Sustained",
     "decay_time_seconds_60db": null,
+    "slices": [
+      {
+        "index": 0,
+        "start_seconds": 0.0,
+        "end_seconds": 0.05487528344671202,
+        "relative_level": 1.0,
+        "envelope_attack_seconds": 0.009977324263038548,
+        "envelope_decay_seconds": 0.009977324263038548,
+        "envelope_sustain_level": 0.8378950284314641,
+        "envelope_release_seconds": 0.009977324263038548,
+        "envelope_temporal_centroid": 0.4480359150207619,
+        "envelope_skewness": 0.3136735057042125,
+        "envelope_kurtosis": -1.4948064197949897,
+        "envelope_shape": "Sustained",
+        "decay_time_seconds_60db": null
+      }
+    ],
     "onset_periodicity": null,
     "onset_rate_per_second": 18.367346938775512
   },
@@ -55,80 +73,117 @@
     "root_mean_square_level": 0.33619238797715534,
     "crest_factor": 2.9743965603701414,
     "zero_crossings_per_second": 2204.081632653061,
-    "complexity": 2818.122796728969,
-    "spectral_centroid_hz": 2840.0817246855313,
+    "complexity": 2818.1227029388815,
+    "spectral_centroid_hz": 2840.0817199837834,
     "spectral_rolloff_hz": 5638.775510204082,
-    "spectral_flatness": 0.10196337777922289,
-    "low_band_energy": 0.06389820149792047,
-    "mid_band_energy": 0.46615895281913766,
-    "high_band_energy": 0.46994284568294187,
-    "spectral_flux": 0,
+    "spectral_flatness": 0.10196332124689365,
+    "low_band_energy": 0.06389819905715707,
+    "mid_band_energy": 0.4661589515336802,
+    "high_band_energy": 0.46994284940916276,
+    "spectral_flux": 0.0,
     "harmonicity": 0.06392119897062437,
-    "inharmonicity": 0.42059333500974955,
+    "inharmonicity": 0.4205905408872659,
     "partial_count": 6,
     "mel_frequency_cepstral_coefficients": [
-      51.844206078845545,
-      13.343731677032821,
-      -8.158012981542615,
-      4.521871156783087,
-      -4.755997495584595,
-      1.0605341206851302,
-      -2.386824620354638,
-      1.6857594365404824,
-      -2.8182347312769114,
-      0.5972004448599572,
-      -0.8306871915317107,
-      -0.3196447643795689,
-      -0.3291472262801815
+      51.84421187540476,
+      13.3437260094888,
+      -8.158007277443609,
+      4.521865793961182,
+      -4.755992214986884,
+      1.0605291943061672,
+      -2.3868198535631837,
+      1.68575493881977,
+      -2.818230466646041,
+      0.59719647138672,
+      -0.8306835370705672,
+      -0.3196480260190194,
+      -0.32914442197179394
     ],
-    "spectral_centroid_mean_hz": 2959.1935539352753,
-    "spectral_centroid_deviation_hz": 0,
-    "total_harmonic_distortion": 2.1400529811416744,
-    "clipping_density": 0,
+    "spectral_centroid_mean_hz": 2959.193654812074,
+    "spectral_centroid_deviation_hz": 0.0,
+    "total_harmonic_distortion": 2.1400532416232902,
+    "clipping_density": 0.0,
     "distortion": "Dirty",
     "stationarity": null,
-    "spectral_entropy": 0.7339590672389218,
-    "spectral_slope_db_per_octave": -1.8792668211653951,
+    "spectral_entropy": 0.7339590657322838,
+    "spectral_slope_db_per_octave": -1.879266798537576,
     "band_limit_high_hz": 14879.443359375,
     "spectral_centroid_slope_hz_per_second": null,
     "syllabic_modulation_energy": null,
-    "voicing_ratio": 0,
+    "voicing_ratio": 0.0,
     "mid_rms": 0.33619238777495675,
     "side_rms": 0.0006972367855722813,
-    "lufs": -70
+    "lufs": -70.0,
+    "loudness_range_lu": 0.0,
+    "true_peak_dbtp": 0.18703660190572602
   },
   "musicality": {
     "pitch_hz": 2004.5454545454545,
     "pitch_slope_semitones_per_second": null,
     "root_note_name": "",
-    "root_frequency_hz": 0,
-    "root_cents_offset": 0,
-    "beats_per_minute": 0,
+    "root_frequency_hz": 0.0,
+    "root_cents_offset": 0.0,
+    "beats_per_minute": 0.0,
     "root_midi_note": -1,
     "chromagram": [
-      0.9405033179976533,
-      0.8967587888942742,
-      0.9176311676534507,
-      0.908638393845312,
-      0.9630379867139031,
-      0.8751720943420214,
-      0.9085729479127255,
-      0.8082815270494647,
-      1,
-      0.9268374744509027,
-      0.8279550088712245,
-      0.6468734422418786
-    ]
+      0.9405032924721152,
+      0.8967588086381628,
+      0.9176311052413404,
+      0.9086383663592723,
+      0.9630379209913703,
+      0.8751720727926309,
+      0.9085729428307899,
+      0.8082814793011415,
+      1.0,
+      0.9268374605188632,
+      0.8279549958502792,
+      0.6468734357804045
+    ],
+    "note_root_key_beat_marker_map": {
+      "global_root_note": "",
+      "global_midi_note": -1,
+      "global_bpm": 120.0,
+      "total_beats": 1,
+      "beat_markers": [
+        {
+          "index": 0,
+          "timestamp_seconds": 0.0,
+          "sample_index": 0,
+          "is_downbeat": true,
+          "bar": 1,
+          "beat": 1
+        }
+      ],
+      "chunk_maps": [
+        {
+          "chunk_index": 0,
+          "start_seconds": 0.0,
+          "end_seconds": 0.054,
+          "duration_seconds": 0.054,
+          "root_note_name": "D#3",
+          "root_midi_note": -1,
+          "root_frequency_hz": 156.12,
+          "pitch_hz": 2004.55,
+          "cents_offset": 6.2,
+          "peak_amplitude": 1.0,
+          "nearest_beat_index": 0
+        }
+      ]
+    }
   },
   "unsupervised": {
-    "cluster": -1,
-    "principal_components": []
+    "cluster": 1,
+    "principal_components": [
+      -1.0996044025995393,
+      -4.509414666409429,
+      1.1077360878077867
+    ]
   },
   "ucs": {
     "category": "KEYBOARD",
     "subcategory": "MISC",
     "id": "KEYBMisc",
-    "confidence": 0.037056746983906735,
+    "confidence": 0.03705688681545284,
     "alternatives": [
       {
         "category": "FOOD & DRINK",
@@ -157,7 +212,7 @@
   },
   "regions": {
     "count": 0,
-    "detection_threshold_decibels": -40,
+    "detection_threshold_decibels": -40.0,
     "minimum_silence_seconds": 0.15,
     "minimum_region_seconds": 0.05,
     "regions": []

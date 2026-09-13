@@ -1,18 +1,18 @@
 {
   "metadata": {
-    "analyzer_version": "20260717.0313-9a2e6ae3aa3c302e",
+    "analyzer_version": "20260904.2022",
     "name": "Snare 2.wav",
-    "folder": "APK 414",
-    "sub": "APK 414",
-    "path": "APK 414/Snare 2.wav",
+    "folder": "SampleLibrary/APK 414",
+    "sub": "SampleLibrary/APK 414",
+    "path": "APK:DOCKERS/APK:audio:WebPortal/SRC/APK:Softapps/SAMPLE and PLAY/SampleLibrary/APK 414/Snare 2.wav",
     "length_seconds": 0.5103628117913832,
     "sample_rate": 44100,
     "bit_depth": 16,
     "channels": 2,
     "source_format": "WAV",
     "lossy_source": false,
-    "dc_offset": -0.000004368080060856067,
-    "trailing_silence_ms": 10,
+    "dc_offset": -4.368080060856067e-6,
+    "trailing_silence_ms": 10.0,
     "analysis_depth": "full"
   },
   "classification": {
@@ -44,7 +44,7 @@
     "attack_seconds": 0.0014285714285714286,
     "sustain_ratio": 0.06451612903225806,
     "sustained": false,
-    "envelope_attack_seconds": 0,
+    "envelope_attack_seconds": 0.0,
     "envelope_decay_seconds": 0.20952380952380953,
     "envelope_sustain_level": 0.051907524924965774,
     "envelope_release_seconds": 0.23945578231292516,
@@ -53,6 +53,23 @@
     "envelope_kurtosis": 11.775549973006976,
     "envelope_shape": "Decaying",
     "decay_time_seconds_60db": 0.7693943641248724,
+    "slices": [
+      {
+        "index": 0,
+        "start_seconds": 0.0,
+        "end_seconds": 0.5138321995464853,
+        "relative_level": 1.0,
+        "envelope_attack_seconds": 0.0,
+        "envelope_decay_seconds": 0.20952380952380953,
+        "envelope_sustain_level": 0.051907524924965774,
+        "envelope_release_seconds": 0.23945578231292516,
+        "envelope_temporal_centroid": 0.05029849500290202,
+        "envelope_skewness": 3.3016478475513633,
+        "envelope_kurtosis": 11.775549973006976,
+        "envelope_shape": "Decaying",
+        "decay_time_seconds_60db": 0.7693943641248724
+      }
+    ],
     "onset_periodicity": 0.014348090801297635,
     "onset_rate_per_second": 1.9593904118718621
   },
@@ -60,95 +77,150 @@
     "root_mean_square_level": 0.08951195985313798,
     "crest_factor": 11.171350555417646,
     "zero_crossings_per_second": 3575.887501666148,
-    "complexity": 4040.1104153278543,
-    "spectral_centroid_hz": 4450.433730264087,
+    "complexity": 4040.110483138327,
+    "spectral_centroid_hz": 4450.433744787531,
     "spectral_rolloff_hz": 9101.3684631448,
-    "spectral_flatness": 0.21247910230068112,
-    "low_band_energy": 0.14369013522722823,
-    "mid_band_energy": 0.233229872575935,
-    "high_band_energy": 0.6230799921968367,
-    "spectral_flux": 0.21218972067696384,
+    "spectral_flatness": 0.21247919952228006,
+    "low_band_energy": 0.14369013152333268,
+    "mid_band_energy": 0.2332298778299114,
+    "high_band_energy": 0.6230799906467559,
+    "spectral_flux": 0.21218972053663274,
     "harmonicity": 0.6352008955027393,
-    "inharmonicity": 0.31628120177146585,
+    "inharmonicity": 0.31628120122362957,
     "partial_count": 8,
     "mel_frequency_cepstral_coefficients": [
-      -2.401803532065755,
-      8.928365365756648,
-      -3.6372288429415227,
-      9.148525696527791,
-      -1.482494051664252,
-      4.062681068008357,
-      -2.4189398237047364,
-      2.138285189261264,
-      -2.421445314155464,
-      1.2625496858026048,
-      -1.644765159104293,
-      1.0708751301731592,
-      -1.0767381488802374
+      -2.401805301728403,
+      8.928367212025135,
+      -3.637230571764927,
+      9.148527441306321,
+      -1.4824957816141242,
+      4.062682739844888,
+      -2.4189414928783575,
+      2.1382868320230237,
+      -2.4214469052271204,
+      1.2625512319150605,
+      -1.644766658882683,
+      1.0708765414467207,
+      -1.0767394882972052
     ],
-    "spectral_centroid_mean_hz": 4094.229961744682,
-    "spectral_centroid_deviation_hz": 815.40726689966,
-    "total_harmonic_distortion": 0,
-    "clipping_density": 0,
+    "spectral_centroid_mean_hz": 4094.229934009358,
+    "spectral_centroid_deviation_hz": 815.4072536031528,
+    "total_harmonic_distortion": 0.0,
+    "clipping_density": 0.0,
     "distortion": "Clean",
-    "stationarity": 0,
-    "spectral_entropy": 0.4532302568390554,
-    "spectral_slope_db_per_octave": -2.5204808042087024,
+    "stationarity": 0.0,
+    "spectral_entropy": 0.45323025537699085,
+    "spectral_slope_db_per_octave": -2.5204808274455113,
     "band_limit_high_hz": 14879.443359375,
-    "spectral_centroid_slope_hz_per_second": -2027.983346909472,
+    "spectral_centroid_slope_hz_per_second": -2027.9834255015007,
     "syllabic_modulation_energy": null,
     "voicing_ratio": 0.9722222222222222,
     "mid_rms": 0.08951195962015082,
     "side_rms": 0.0018978314827314733,
-    "lufs": -19.87905739432791
+    "lufs": -19.87905739432791,
+    "loudness_range_lu": 0.0,
+    "true_peak_dbtp": 0.05788548130898173
   },
   "musicality": {
     "pitch_hz": 2004.5454545454545,
-    "pitch_slope_semitones_per_second": 1.149540022840928,
+    "pitch_slope_semitones_per_second": 1.1495400475608664,
     "root_note_name": "F2",
     "root_frequency_hz": 87.19287332829786,
     "root_cents_offset": -2.265676244127235,
-    "beats_per_minute": 0,
+    "beats_per_minute": 0.0,
     "root_midi_note": -1,
     "chromagram": [
-      0.6446982672914807,
-      0.6365368113199991,
-      0.6776348155943117,
-      0.6363822974895705,
-      0.7907952119652876,
-      0.9205460326896369,
-      1,
-      0.8465494435638199,
-      0.7848530617170887,
-      0.7051579485334597,
-      0.723978025742992,
-      0.6448153914157392
-    ]
+      0.644698242855966,
+      0.6365368405662477,
+      0.677634839286341,
+      0.6363823100396332,
+      0.7907952032720666,
+      0.9205460207544227,
+      1.0,
+      0.8465494474283627,
+      0.7848530514866601,
+      0.7051579713585027,
+      0.7239780294416633,
+      0.6448154077789413
+    ],
+    "note_root_key_beat_marker_map": {
+      "global_root_note": "F2",
+      "global_midi_note": -1,
+      "global_bpm": 120.0,
+      "total_beats": 2,
+      "beat_markers": [
+        {
+          "index": 0,
+          "timestamp_seconds": 0.0,
+          "sample_index": 0,
+          "is_downbeat": true,
+          "bar": 1,
+          "beat": 1
+        },
+        {
+          "index": 1,
+          "timestamp_seconds": 0.5,
+          "sample_index": 22050,
+          "is_downbeat": false,
+          "bar": 1,
+          "beat": 2
+        }
+      ],
+      "chunk_maps": [
+        {
+          "chunk_index": 0,
+          "start_seconds": 0.0,
+          "end_seconds": 0.379,
+          "duration_seconds": 0.379,
+          "root_note_name": "F#2",
+          "root_midi_note": 42,
+          "root_frequency_hz": 91.0,
+          "pitch_hz": 2004.55,
+          "cents_offset": -28.4,
+          "peak_amplitude": 1.0,
+          "nearest_beat_index": 0
+        }
+      ]
+    }
   },
   "unsupervised": {
-    "cluster": -1,
-    "principal_components": []
+    "cluster": 2,
+    "principal_components": [
+      0.5216636135032555,
+      1.9265705375368016,
+      -1.1937528716244943
+    ]
   },
   "ucs": {
     "category": "DRUMS",
     "subcategory": "SNARE",
     "id": "DRUMSnr",
-    "confidence": 1,
-    "alternatives": [],
+    "confidence": 0.7835720404577877,
+    "alternatives": [
+      {
+        "category": "ARCHIVED",
+        "subcategory": "IMPULSE RESPONSE",
+        "id": "IR",
+        "probability": 0.216,
+        "synonyms": [
+          "sample"
+        ]
+      }
+    ],
     "synonyms": [
       "snare"
     ],
-    "reason": "name matched [snare]; signal 0.59, tier signal_separable, 1 candidate in contention; gate ruled out AIRSuck (envelope_temporal_centroid 0.0503 < min 0.4000)"
+    "reason": "name matched [snare]; signal 0.59, tier signal_separable, 2 candidates in contention; gate ruled out AIRSuck (envelope_temporal_centroid 0.0503 < min 0.4000)"
   },
   "regions": {
     "count": 1,
-    "detection_threshold_decibels": -40,
+    "detection_threshold_decibels": -40.0,
     "minimum_silence_seconds": 0.15,
     "minimum_region_seconds": 0.05,
     "regions": [
       {
         "index": 0,
-        "start_seconds": 0,
+        "start_seconds": 0.0,
         "end_seconds": 0.3791383219954648,
         "duration_seconds": 0.3791383219954648,
         "peak_amplitude": 0.4327523384802557,

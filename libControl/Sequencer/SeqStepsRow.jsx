@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -12,7 +13,7 @@
 // Dedicated row component for Pattern steps / extensions
 window.SeqStepsRow = ({ steps, setSteps, doubleTo, clearPattern }) => {
     const SeqButton = window.SeqButton;
-    const STEP_OPTIONS = [4, 8, 16, 32, 64];
+    const STEP_OPTIONS = window.OA_STEP_OPTIONS;
 
     return (
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '5px', flexWrap: 'wrap', marginBottom: '8px' }}>
@@ -22,7 +23,7 @@ window.SeqStepsRow = ({ steps, setSteps, doubleTo, clearPattern }) => {
                     <SeqButton label={String(n)} active={steps === n} onClick={() => setSteps(n)} />
                     {i > 0 && (
                         <SeqButton
-                            label={`+${STEP_OPTIONS[i - 1]}`}
+                            label={`+${n / 2}`}
                             onClick={() => doubleTo(n)}
                             color="#26323a" textColor="var(--accent-t15)"
                             title={`Extend to ${n} steps: copy the first ${n / 2} onto the second ${n / 2}`}

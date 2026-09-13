@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -57,7 +58,7 @@ window.SeqTrack = ({
             </div>
             {/* Half the vertical padding of the horizontal — rows sit tighter
                 together without crowding the steps side to side. */}
-            <div style={{ display: 'flex', gap: '3px', background: '#0a0a0a', padding: '2px 4px', borderRadius: '4px', border: '1px solid #222', opacity: muted ? 0.4 : 1 }}>
+            <div role="group" aria-label={`${trackName} — ${steps} steps`} style={{ display: 'flex', gap: '3px', background: '#0a0a0a', padding: '2px 4px', borderRadius: '4px', border: '1px solid #222', opacity: muted ? 0.4 : 1 }}>
                 {[...Array(steps)].map((_, step) => {
                     const vel = velOf(pattern[trkIdx][step]);
                     const isLit = vel > 0;
@@ -69,6 +70,9 @@ window.SeqTrack = ({
                     return (
                         <div key={step}
                             data-oa-trk={trkIdx} data-oa-step={step}
+                            role="checkbox"
+                            aria-checked={isLit}
+                            aria-label={`${trackName} step ${step + 1}${isLit ? `, velocity ${vel}` : ''}`}
                             onPointerDown={(e) => onStepPointerDown(e, trkIdx, step)}
                             title={isLit ? `Velocity ${vel} — Drag up/down to adjust intensity` : 'Click/drag horizontally to paint · Drag vertically for intensity'}
                             style={{

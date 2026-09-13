@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -8,6 +9,18 @@
 // or manufacturers; their layouts appear here only because they are familiar
 // interfaces, and every name they are known by remains the property of its owner.
 // ─────────────────────────────────────────────────────────────────────────────
+
+// THE INDEX INVARIANT, and it is load-bearing across three modules:
+//
+//     pad index (0-15) === Sequencer track index === key into OA_DRUM_SAMPLES
+//
+// Sequencer.jsx reads window.OA_DRUM_KIT as its TRACKS, TrackSampleMenu.jsx
+// edits OA_DRUM_SAMPLES[trkIdx] directly, and the pads here index the same
+// array. There is no translation layer anywhere: a pad and a track are the same
+// slot, which is what makes a sample loaded on a pad play on its track. Reorder
+// or filter the kit in one place and the other two silently address the wrong
+// voice. Harvested from the retired export's SamplerDrumkit.js, which was the
+// only file that ever wrote this down (PLAN-126.01).
 
 window.useSamplerPads = (
     centerVelocity, edgeVelocity, onHit, toneRoot, midiBaseRef, 

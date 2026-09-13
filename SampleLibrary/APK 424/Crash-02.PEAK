@@ -1,17 +1,17 @@
 {
   "metadata": {
-    "analyzer_version": "20260717.0313-9a2e6ae3aa3c302e",
+    "analyzer_version": "20260904.2022",
     "name": "Crash-02.wav",
-    "folder": "APK 424/Cymbals",
-    "sub": "APK 424/Cymbals",
-    "path": "APK 424/Cymbals/Crash-02.wav",
+    "folder": "SampleLibrary/APK 424",
+    "sub": "SampleLibrary/APK 424",
+    "path": "APK:DOCKERS/APK:audio:WebPortal/SRC/APK:Softapps/SAMPLE and PLAY/SampleLibrary/APK 424/Crash-02.wav",
     "length_seconds": 1.1739002267573697,
     "sample_rate": 44100,
     "bit_depth": 16,
     "channels": 2,
     "source_format": "WAV",
     "lossy_source": false,
-    "dc_offset": -0.000004965612998820481,
+    "dc_offset": -4.965612998820481e-6,
     "trailing_silence_ms": 14.671201814058957,
     "analysis_depth": "full"
   },
@@ -46,6 +46,23 @@
     "envelope_kurtosis": 0.5462848778887501,
     "envelope_shape": "Decaying",
     "decay_time_seconds_60db": 1.1588389716683636,
+    "slices": [
+      {
+        "index": 0,
+        "start_seconds": 0.0,
+        "end_seconds": 1.1773242630385488,
+        "relative_level": 1.0,
+        "envelope_attack_seconds": 0.02494331065759637,
+        "envelope_decay_seconds": 0.5587301587301587,
+        "envelope_sustain_level": 0.04436760499324628,
+        "envelope_release_seconds": 0.21950113378684807,
+        "envelope_temporal_centroid": 0.11104366473720423,
+        "envelope_skewness": 1.3390457037989576,
+        "envelope_kurtosis": 0.5462848778887501,
+        "envelope_shape": "Decaying",
+        "decay_time_seconds_60db": 1.1588389716683636
+      }
+    ],
     "onset_periodicity": 0.3250772323261647,
     "onset_rate_per_second": 0.8518611524271281
   },
@@ -53,86 +70,139 @@
     "root_mean_square_level": 0.08293418484410503,
     "crest_factor": 12.057386038116379,
     "zero_crossings_per_second": 9129.395970561533,
-    "complexity": 4860.787752097973,
-    "spectral_centroid_hz": 8210.299755191683,
+    "complexity": 4860.78774533205,
+    "spectral_centroid_hz": 8210.29973168384,
     "spectral_rolloff_hz": 12409.913268558405,
-    "spectral_flatness": 0.575328533220079,
-    "low_band_energy": 0.005317248004849397,
-    "mid_band_energy": 0.057206391049364605,
-    "high_band_energy": 0.937476360945786,
-    "spectral_flux": 0.20618743776867834,
+    "spectral_flatness": 0.5753285378103968,
+    "low_band_energy": 0.005317247935458409,
+    "mid_band_energy": 0.05720639205392864,
+    "high_band_energy": 0.937476360010613,
+    "spectral_flux": 0.20618743796346592,
     "harmonicity": 0.1487608940351422,
-    "inharmonicity": 0.4102123524886642,
+    "inharmonicity": 0.410212357485398,
     "partial_count": 12,
     "mel_frequency_cepstral_coefficients": [
-      -7.363043030310377,
-      -3.63804749756024,
-      -3.1615653001950252,
-      4.003843810136425,
-      0.44081834624682475,
-      0.3065748660532015,
-      -0.378122974377525,
-      -0.7221352403165378,
-      0.8996963284438195,
-      -0.17251279893672936,
-      0.06013724002741521,
-      -0.7106291708823074,
-      0.23061311966273143
+      -7.3630430636737145,
+      -3.638047412605993,
+      -3.1615652529650236,
+      4.003843832309221,
+      0.44081836276840586,
+      0.30657487711440257,
+      -0.3781229739985693,
+      -0.7221352248845967,
+      0.8996963101165171,
+      -0.1725127716935329,
+      0.060137238819675615,
+      -0.7106291817182995,
+      0.23061312827486108
     ],
-    "spectral_centroid_mean_hz": 7613.890275652078,
-    "spectral_centroid_deviation_hz": 767.8060691336924,
-    "total_harmonic_distortion": 1.7897745056179895,
-    "clipping_density": 0,
+    "spectral_centroid_mean_hz": 7613.8902560445395,
+    "spectral_centroid_deviation_hz": 767.8060749953245,
+    "total_harmonic_distortion": 1.7897745088022647,
+    "clipping_density": 0.0,
     "distortion": "Clean",
-    "stationarity": 0,
-    "spectral_entropy": 0.6090197228104599,
-    "spectral_slope_db_per_octave": 1.0651113912245858,
+    "stationarity": 0.0,
+    "spectral_entropy": 0.609019723205725,
+    "spectral_slope_db_per_octave": 1.0651113657834015,
     "band_limit_high_hz": 22028.466796875,
-    "spectral_centroid_slope_hz_per_second": -554.6074008561236,
-    "syllabic_modulation_energy": 0.003134591719999179,
+    "spectral_centroid_slope_hz_per_second": -554.6074178348387,
+    "syllabic_modulation_energy": 0.0031345917199991787,
     "voicing_ratio": 0.025974025974025976,
     "mid_rms": 0.0829341846728478,
     "side_rms": 0.0008314732737413461,
-    "lufs": -14.173628386149664
+    "lufs": -14.173628386149662,
+    "loudness_range_lu": 0.0,
+    "true_peak_dbtp": 0.17307316029930728
   },
   "musicality": {
     "pitch_hz": 247.75280898876406,
-    "pitch_slope_semitones_per_second": -8.213053285449039,
+    "pitch_slope_semitones_per_second": -8.213052755061627,
     "root_note_name": "",
-    "root_frequency_hz": 0,
-    "root_cents_offset": 0,
-    "beats_per_minute": 0,
+    "root_frequency_hz": 0.0,
+    "root_cents_offset": 0.0,
+    "beats_per_minute": 0.0,
     "root_midi_note": -1,
     "chromagram": [
-      0.8670624669299216,
-      0.8801187886164976,
-      0.7797530344685181,
-      0.9743986954633523,
-      0.8346766335623628,
-      0.7309348360667463,
-      0.723771563025783,
-      0.7200536989928141,
-      0.7145509966888862,
-      0.7919826336529352,
-      0.8442769975231954,
-      1
-    ]
+      0.867062445136435,
+      0.880118786828377,
+      0.7797530332813278,
+      0.9743986862973715,
+      0.8346766285010483,
+      0.7309348355568572,
+      0.7237715691512928,
+      0.7200536938587948,
+      0.7145510021639696,
+      0.7919826186319397,
+      0.8442770092488671,
+      1.0
+    ],
+    "note_root_key_beat_marker_map": {
+      "global_root_note": "",
+      "global_midi_note": -1,
+      "global_bpm": 120.0,
+      "total_beats": 3,
+      "beat_markers": [
+        {
+          "index": 0,
+          "timestamp_seconds": 0.0,
+          "sample_index": 0,
+          "is_downbeat": true,
+          "bar": 1,
+          "beat": 1
+        },
+        {
+          "index": 1,
+          "timestamp_seconds": 0.5,
+          "sample_index": 22050,
+          "is_downbeat": false,
+          "bar": 1,
+          "beat": 2
+        },
+        {
+          "index": 2,
+          "timestamp_seconds": 1.0,
+          "sample_index": 44100,
+          "is_downbeat": false,
+          "bar": 1,
+          "beat": 3
+        }
+      ],
+      "chunk_maps": [
+        {
+          "chunk_index": 0,
+          "start_seconds": 0.005,
+          "end_seconds": 0.733,
+          "duration_seconds": 0.728,
+          "root_note_name": "E5",
+          "root_midi_note": 76,
+          "root_frequency_hz": 656.28,
+          "pitch_hz": 85.47,
+          "cents_offset": -7.8,
+          "peak_amplitude": 1.0,
+          "nearest_beat_index": 0
+        }
+      ]
+    }
   },
   "unsupervised": {
-    "cluster": -1,
-    "principal_components": []
+    "cluster": 6,
+    "principal_components": [
+      2.751419523457909,
+      0.5783786621860717,
+      0.14032131953474608
+    ]
   },
   "ucs": {
     "category": "CYMBALS",
     "subcategory": "MISC",
     "id": "CYMBMisc",
-    "confidence": 0.13224071459870682,
+    "confidence": 0.12953828175344795,
     "alternatives": [
       {
         "category": "DESIGNED",
         "subcategory": "IMPACT",
         "id": "DSGNImpt",
-        "probability": 0.118,
+        "probability": 0.116,
         "synonyms": [
           "crash"
         ]
@@ -141,7 +211,7 @@
         "category": "METAL",
         "subcategory": "IMPACT",
         "id": "METLImpt",
-        "probability": 0.106,
+        "probability": 0.104,
         "synonyms": [
           "crash"
         ]
@@ -150,7 +220,7 @@
         "category": "CHAINS",
         "subcategory": "IMPACT",
         "id": "CHAINImpt",
-        "probability": 0.101,
+        "probability": 0.099,
         "synonyms": [
           "crash"
         ]
@@ -159,11 +229,11 @@
     "synonyms": [
       "crash"
     ],
-    "reason": "name matched [crash]; signal 0.46, tier signal_narrowable, 21 candidates in contention; gate ruled out AIRSuck (envelope_temporal_centroid 0.1110 < min 0.4000); ABSTAINED to MISC (top two too close to call)"
+    "reason": "name matched [crash]; signal 0.46, tier signal_narrowable, 23 candidates in contention; gate ruled out AIRSuck (envelope_temporal_centroid 0.1110 < min 0.4000); ABSTAINED to MISC (top two too close to call)"
   },
   "regions": {
     "count": 1,
-    "detection_threshold_decibels": -40,
+    "detection_threshold_decibels": -40.0,
     "minimum_silence_seconds": 0.15,
     "minimum_region_seconds": 0.05,
     "regions": [

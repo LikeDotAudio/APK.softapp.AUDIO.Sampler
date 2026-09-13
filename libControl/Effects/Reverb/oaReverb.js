@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -58,42 +59,42 @@ const kHz = function (v) {
 
 window.OA_REVERB_PARAMS = [
     // ---- PAGE 1: the six on the front of the manual ----
-    { key: 'rtMid', short: 'RTM', name: 'Reverb Time', page: 0, min: 0.15, max: 12, step: 0.005,
+    { key: 'rtMid', kind: 'continuous', short: 'RTM', name: 'Reverb Time', page: 0, min: 0.15, max: 12, step: 0.005,
       fmt: (v) => v.toFixed(3),
       hint: 'How long the tail takes to fall 60dB. The single biggest decision.' },
-    { key: 'shape', short: 'SHP', name: 'Shape', page: 0, min: 0, max: 255, step: 1,
+    { key: 'shape', kind: 'continuous', short: 'SHP', name: 'Shape', page: 0, min: 0, max: 255, step: 1,
       fmt: (v) => String(Math.round(v)),
       hint: 'The CONTOUR of the buildup. Low is an immediate hit that decays; high swells in before it falls.' },
-    { key: 'spread', short: 'SPR', name: 'Spread', page: 0, min: 0, max: 255, step: 1,
+    { key: 'spread', kind: 'continuous', short: 'SPR', name: 'Spread', page: 0, min: 0, max: 255, step: 1,
       fmt: (v) => String(Math.round(v)),
       hint: 'How LONG the buildup lasts. Shape draws the curve, spread stretches it.' },
-    { key: 'size', short: 'SIZ', name: 'Size', page: 0, min: 4, max: 39, step: 1,
+    { key: 'size', kind: 'continuous', short: 'SIZ', name: 'Size', page: 0, min: 4, max: 39, step: 1,
       fmt: (v) => Math.round(v) + 'M',
       hint: 'Room dimension in metres. Sets the spacing of the early reflections, and scales spread with it.' },
-    { key: 'hfCut', short: 'HFC', name: 'HF Cutoff', page: 0, min: 500, max: 20000, step: 10,
+    { key: 'hfCut', kind: 'continuous', short: 'HFC', name: 'HF Cutoff', page: 0, min: 500, max: 20000, step: 10,
       fmt: kHz,
       hint: 'Air and soft walls eat the top end as the tail ages. Lower is a darker, more distant room.' },
-    { key: 'preDelay', short: 'PDL', name: 'Pre Delay', page: 0, min: 0, max: 250, step: 1,
+    { key: 'preDelay', kind: 'continuous', short: 'PDL', name: 'Pre Delay', page: 0, min: 0, max: 250, step: 1,
       fmt: (v) => Math.round(v) + 'MS',
       hint: 'Silence before the room answers. A few milliseconds keeps the dry hit clear of the tail.' },
 
     // ---- PAGE 2 ----
-    { key: 'diffusion', short: 'DIF', name: 'Diffusion', page: 1, min: 0, max: 255, step: 1,
+    { key: 'diffusion', kind: 'continuous', short: 'DIF', name: 'Diffusion', page: 1, min: 0, max: 255, step: 1,
       fmt: (v) => String(Math.round(v)),
       hint: 'How smeared the early part is. Low leaves discrete slapping echoes; high is a smooth wash.' },
-    { key: 'rtLow', short: 'RTL', name: 'Bass Multiply', page: 1, min: 0.2, max: 4, step: 0.05,
+    { key: 'rtLow', kind: 'continuous', short: 'RTL', name: 'Bass Multiply', page: 1, min: 0.2, max: 4, step: 0.05,
       fmt: (v) => v.toFixed(2) + 'X',
       hint: 'Low-frequency decay as a multiple of reverb time. Above 1 the bottom rings on after the top has gone.' },
-    { key: 'xover', short: 'XOV', name: 'Crossover', page: 1, min: 80, max: 2000, step: 10,
+    { key: 'xover', kind: 'continuous', short: 'XOV', name: 'Crossover', page: 1, min: 80, max: 2000, step: 10,
       fmt: kHz,
       hint: 'Where bass multiply stops applying and reverb time takes over.' },
-    { key: 'erLevel', short: 'ERL', name: 'Early Level', page: 1, min: 0, max: 1, step: 0.01,
+    { key: 'erLevel', kind: 'continuous', short: 'ERL', name: 'Early Level', page: 1, min: 0, max: 1, step: 0.01,
       fmt: (v) => String(Math.round(v * 100)),
       hint: 'Loudness of the discrete wall bounces against the diffuse tail.' },
-    { key: 'erTime', short: 'ERT', name: 'Early Time', page: 1, min: 0.2, max: 3, step: 0.02,
+    { key: 'erTime', kind: 'continuous', short: 'ERT', name: 'Early Time', page: 1, min: 0.2, max: 3, step: 0.02,
       fmt: (v) => v.toFixed(2) + 'X',
       hint: 'Stretches or compresses the early reflection pattern without moving the room size.' },
-    { key: 'ret', short: 'LVL', name: 'Return Level', page: 1, min: 0, max: 1, step: 0.01,
+    { key: 'ret', kind: 'continuous', short: 'LVL', name: 'Return Level', page: 1, min: 0, max: 1, step: 0.01,
       fmt: (v) => String(Math.round(v * 100)),
       hint: 'How much of this machine comes back into the mix. The return fader on the strip is the same control.' },
 ];

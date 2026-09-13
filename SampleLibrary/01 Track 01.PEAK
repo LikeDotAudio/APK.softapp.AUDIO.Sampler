@@ -1,16 +1,16 @@
 {
   "metadata": {
-    "analyzer_version": "20260824.0509",
-    "name": "01 Track 01.m4a",
-    "folder": "Downloads",
-    "sub": "Downloads",
-    "path": "/home/anthony/Downloads/01 Track 01.m4a",
+    "analyzer_version": "20260904.2022",
+    "name": "01 Track 01.wav",
+    "folder": "SampleLibrary",
+    "sub": "SampleLibrary",
+    "path": "APK:DOCKERS/APK:audio:WebPortal/SRC/APK:Softapps/SAMPLE and PLAY/SampleLibrary/01 Track 01.wav",
     "length_seconds": 193.84,
     "sample_rate": 44100,
-    "bit_depth": 0,
+    "bit_depth": 16,
     "channels": 2,
-    "source_format": "M4A",
-    "lossy_source": true,
+    "source_format": "WAV",
+    "lossy_source": false,
     "dc_offset": -0.00004838339810707233,
     "trailing_silence_ms": 2.2448979591836733,
     "analysis_depth": "full"
@@ -2904,7 +2904,9 @@
     "voicing_ratio": 0.9085907335907336,
     "mid_rms": 0.06473771738463095,
     "side_rms": 0.014393213674242213,
-    "lufs": -20.926059551816817
+    "lufs": -20.926059551816813,
+    "loudness_range_lu": 5.913149660090429,
+    "true_peak_dbtp": -6.5850906070037984
   },
   "musicality": {
     "pitch_hz": 2004.5454545454545,
@@ -5272,43 +5274,42 @@
     }
   },
   "unsupervised": {
-    "cluster": 13,
+    "cluster": 9,
     "principal_components": [
-      2.064498489774576,
-      -1.3852030778670645,
-      1.2873082876878026
+      -0.9206332826536295,
+      3.658327027626449,
+      0.8860204214139283
     ]
   },
   "ucs": {
-    "category": "AIRCRAFT",
-    "subcategory": "MISC",
-    "id": "AEROMisc",
-    "confidence": 0.025450129045085926,
+    "category": "AMBIENCE",
+    "subcategory": "PUBLIC PLACE",
+    "id": "AMBPubl",
+    "confidence": 0.977122338643456,
     "alternatives": [
       {
-        "category": "TRAINS",
-        "subcategory": "SUBWAY",
-        "id": "TRNSbwy",
+        "category": "CROWDS",
+        "subcategory": "QUIET",
+        "id": "CRWDQuiet",
         "probability": 0.023,
-        "synonyms": []
+        "synonyms": [
+          "library"
+        ]
       },
       {
-        "category": "MOTORS",
-        "subcategory": "COMBUSTION",
-        "id": "MOTRComb",
-        "probability": 0.019,
-        "synonyms": []
-      },
-      {
-        "category": "VEHICLES",
-        "subcategory": "CAR",
-        "id": "VEHCar",
-        "probability": 0.018,
-        "synonyms": []
+        "category": "AMBIENCE",
+        "subcategory": "ROOM TONE",
+        "id": "AMBRoom",
+        "probability": 0.0,
+        "synonyms": [
+          "library"
+        ]
       }
     ],
-    "synonyms": [],
-    "reason": "no name evidence; signal 0.88, tier signal_narrowable, 330 candidates in contention; lossy source — brightness and clipping gates relaxed; gate ruled out AIRBlow (length_seconds 193.8400 > max 120.0000); ABSTAINED to MISC (confidence below threshold)"
+    "synonyms": [
+      "library"
+    ],
+    "reason": "name matched [library]; signal 0.40, tier semantic_only, 3 candidates in contention; gate ruled out AIRBlow (length_seconds 193.8400 > max 120.0000)"
   },
   "regions": {
     "count": 4,
@@ -5325,17 +5326,17 @@
         "name": "",
         "analysis": {
           "metadata": {
-            "analyzer_version": "20260824.0509",
-            "name": "01 Track 01.m4a",
-            "folder": "Downloads",
-            "sub": "Downloads",
-            "path": "/home/anthony/Downloads/01 Track 01.m4a",
+            "analyzer_version": "20260904.2022",
+            "name": "01 Track 01.wav",
+            "folder": "SampleLibrary",
+            "sub": "SampleLibrary",
+            "path": "APK:DOCKERS/APK:audio:WebPortal/SRC/APK:Softapps/SAMPLE and PLAY/SampleLibrary/01 Track 01.wav",
             "length_seconds": 0.20952380952380953,
             "sample_rate": 44100,
-            "bit_depth": 0,
+            "bit_depth": 16,
             "channels": 2,
-            "source_format": "M4A",
-            "lossy_source": true,
+            "source_format": "WAV",
+            "lossy_source": false,
             "dc_offset": -0.00017555203788724297,
             "trailing_silence_ms": 0.0,
             "analysis_depth": "full"
@@ -5439,7 +5440,9 @@
             "voicing_ratio": 0.9047619047619048,
             "mid_rms": 0.03183101886880614,
             "side_rms": 0.003374145113396881,
-            "lufs": -70.0
+            "lufs": -70.0,
+            "loudness_range_lu": 0.0,
+            "true_peak_dbtp": -15.797488336767952
           },
           "musicality": {
             "pitch_hz": 2004.5454545454545,
@@ -5503,19 +5506,19 @@
             "category": "ANIMALS",
             "subcategory": "MISC",
             "id": "ANMLMisc",
-            "confidence": 0.01457999392934618,
+            "confidence": 0.011143925187508293,
             "alternatives": [
               {
                 "category": "ANIMALS",
                 "subcategory": "CAT DOMESTIC",
                 "id": "ANMLCat",
-                "probability": 0.013,
+                "probability": 0.011,
                 "synonyms": []
               },
               {
-                "category": "ANIMALS",
-                "subcategory": "WILD",
-                "id": "ANMLWild",
+                "category": "BIRDS",
+                "subcategory": "SEA",
+                "id": "BIRDSea",
                 "probability": 0.011,
                 "synonyms": []
               },
@@ -5523,12 +5526,12 @@
                 "category": "FOOD & DRINK",
                 "subcategory": "KITCHENWARE",
                 "id": "FOODKware",
-                "probability": 0.011,
+                "probability": 0.01,
                 "synonyms": []
               }
             ],
             "synonyms": [],
-            "reason": "no name evidence; signal 0.88, tier semantic_only, 458 candidates in contention; lossy source — brightness and clipping gates relaxed; gate ruled out AIRHiss (length_seconds 0.2095 < min 0.5000); ABSTAINED to MISC (confidence below threshold)"
+            "reason": "no name evidence; signal 0.83, tier semantic_only, 450 candidates in contention; gate ruled out AIRHiss (length_seconds 0.2095 < min 0.5000); ABSTAINED to MISC (confidence below threshold)"
           },
           "regions": {
             "count": 0,
@@ -5556,17 +5559,17 @@
         "name": "",
         "analysis": {
           "metadata": {
-            "analyzer_version": "20260824.0509",
-            "name": "01 Track 01.m4a",
-            "folder": "Downloads",
-            "sub": "Downloads",
-            "path": "/home/anthony/Downloads/01 Track 01.m4a",
+            "analyzer_version": "20260904.2022",
+            "name": "01 Track 01.wav",
+            "folder": "SampleLibrary",
+            "sub": "SampleLibrary",
+            "path": "APK:DOCKERS/APK:audio:WebPortal/SRC/APK:Softapps/SAMPLE and PLAY/SampleLibrary/01 Track 01.wav",
             "length_seconds": 0.1746031746031746,
             "sample_rate": 44100,
-            "bit_depth": 0,
+            "bit_depth": 16,
             "channels": 2,
-            "source_format": "M4A",
-            "lossy_source": true,
+            "source_format": "WAV",
+            "lossy_source": false,
             "dc_offset": -0.00011989444881290584,
             "trailing_silence_ms": 0.0,
             "analysis_depth": "full"
@@ -5670,7 +5673,9 @@
             "voicing_ratio": 0.9411764705882353,
             "mid_rms": 0.020822368394876292,
             "side_rms": 0.002191201314446728,
-            "lufs": -70.0
+            "lufs": -70.0,
+            "loudness_range_lu": 0.0,
+            "true_peak_dbtp": -18.38173190705514
           },
           "musicality": {
             "pitch_hz": 2004.5454545454545,
@@ -5731,35 +5736,35 @@
             "principal_components": []
           },
           "ucs": {
-            "category": "ANIMALS",
+            "category": "FOOD & DRINK",
             "subcategory": "MISC",
-            "id": "ANMLMisc",
-            "confidence": 0.015510604603911373,
+            "id": "FOODMisc",
+            "confidence": 0.012908260797818207,
             "alternatives": [
               {
-                "category": "FOOD & DRINK",
-                "subcategory": "KITCHENWARE",
-                "id": "FOODKware",
-                "probability": 0.015,
+                "category": "ANIMALS",
+                "subcategory": "RODENT",
+                "id": "ANMLRdnt",
+                "probability": 0.012,
                 "synonyms": []
               },
               {
                 "category": "ANIMALS",
                 "subcategory": "WILD",
                 "id": "ANMLWild",
-                "probability": 0.012,
+                "probability": 0.01,
                 "synonyms": []
               },
               {
-                "category": "MALLET",
-                "subcategory": "STEELPAN",
-                "id": "MALTStl",
-                "probability": 0.011,
+                "category": "BIRDS",
+                "subcategory": "BIRD OF PREY",
+                "id": "BIRDPrey",
+                "probability": 0.01,
                 "synonyms": []
               }
             ],
             "synonyms": [],
-            "reason": "no name evidence; signal 0.90, tier semantic_only, 426 candidates in contention; lossy source — brightness and clipping gates relaxed; gate ruled out AIRHiss (length_seconds 0.1746 < min 0.5000); ABSTAINED to MISC (confidence below threshold)"
+            "reason": "no name evidence; signal 0.91, tier signal_narrowable, 419 candidates in contention; gate ruled out AIRHiss (length_seconds 0.1746 < min 0.5000); ABSTAINED to MISC (confidence below threshold)"
           },
           "regions": {
             "count": 0,
@@ -5787,17 +5792,17 @@
         "name": "",
         "analysis": {
           "metadata": {
-            "analyzer_version": "20260824.0509",
-            "name": "01 Track 01.m4a",
-            "folder": "Downloads",
-            "sub": "Downloads",
-            "path": "/home/anthony/Downloads/01 Track 01.m4a",
+            "analyzer_version": "20260904.2022",
+            "name": "01 Track 01.wav",
+            "folder": "SampleLibrary",
+            "sub": "SampleLibrary",
+            "path": "APK:DOCKERS/APK:audio:WebPortal/SRC/APK:Softapps/SAMPLE and PLAY/SampleLibrary/01 Track 01.wav",
             "length_seconds": 0.25943310657596375,
             "sample_rate": 44100,
-            "bit_depth": 0,
+            "bit_depth": 16,
             "channels": 2,
-            "source_format": "M4A",
-            "lossy_source": true,
+            "source_format": "WAV",
+            "lossy_source": false,
             "dc_offset": -0.00010556985464830435,
             "trailing_silence_ms": 0.0,
             "analysis_depth": "full"
@@ -5901,7 +5906,9 @@
             "voicing_ratio": 0.7692307692307693,
             "mid_rms": 0.024165603731426667,
             "side_rms": 0.002826397308771584,
-            "lufs": -70.0
+            "lufs": -70.0,
+            "loudness_range_lu": 0.0,
+            "true_peak_dbtp": -17.61317550386648
           },
           "musicality": {
             "pitch_hz": 2004.5454545454545,
@@ -5962,35 +5969,15 @@
             "principal_components": []
           },
           "ucs": {
-            "category": "VOCALS",
-            "subcategory": "MISC",
-            "id": "VOCLMisc",
-            "confidence": 0.015122100370715074,
-            "alternatives": [
-              {
-                "category": "ANIMALS",
-                "subcategory": "CAT DOMESTIC",
-                "id": "ANMLCat",
-                "probability": 0.014,
-                "synonyms": []
-              },
-              {
-                "category": "VOCALS",
-                "subcategory": "CHOP",
-                "id": "VOCLChop",
-                "probability": 0.012,
-                "synonyms": []
-              },
-              {
-                "category": "ANIMALS",
-                "subcategory": "RODENT",
-                "id": "ANMLRdnt",
-                "probability": 0.012,
-                "synonyms": []
-              }
+            "category": "ARCHIVED",
+            "subcategory": "IMPULSE RESPONSE",
+            "id": "IR",
+            "confidence": 1.0,
+            "alternatives": [],
+            "synonyms": [
+              "sample"
             ],
-            "synonyms": [],
-            "reason": "no name evidence; signal 0.96, tier semantic_only, 472 candidates in contention; lossy source — brightness and clipping gates relaxed; gate ruled out AIRHiss (length_seconds 0.2594 < min 0.5000); ABSTAINED to MISC (confidence below threshold)"
+            "reason": "name matched [sample]; signal 0.07, tier signal_separable, 1 candidate in contention; gate ruled out AIRHiss (length_seconds 0.2594 < min 0.5000)"
           },
           "regions": {
             "count": 0,
@@ -6018,17 +6005,17 @@
         "name": "",
         "analysis": {
           "metadata": {
-            "analyzer_version": "20260824.0509",
-            "name": "01 Track 01.m4a",
-            "folder": "Downloads",
-            "sub": "Downloads",
-            "path": "/home/anthony/Downloads/01 Track 01.m4a",
+            "analyzer_version": "20260904.2022",
+            "name": "01 Track 01.wav",
+            "folder": "SampleLibrary",
+            "sub": "SampleLibrary",
+            "path": "APK:DOCKERS/APK:audio:WebPortal/SRC/APK:Softapps/SAMPLE and PLAY/SampleLibrary/01 Track 01.wav",
             "length_seconds": 188.64628117913833,
             "sample_rate": 44100,
-            "bit_depth": 0,
+            "bit_depth": 16,
             "channels": 2,
-            "source_format": "M4A",
-            "lossy_source": true,
+            "source_format": "WAV",
+            "lossy_source": false,
             "dc_offset": -0.00004856243432264941,
             "trailing_silence_ms": 0.0,
             "analysis_depth": "full"
@@ -9192,7 +9179,9 @@
             "voicing_ratio": 0.9075687185443283,
             "mid_rms": 0.06560480557503615,
             "side_rms": 0.01458889263882239,
-            "lufs": -20.911724728574573
+            "lufs": -20.911724728574573,
+            "loudness_range_lu": 5.421125853622264,
+            "true_peak_dbtp": -6.5850906070037984
           },
           "musicality": {
             "pitch_hz": 2004.5454545454545,
@@ -11461,35 +11450,34 @@
             "principal_components": []
           },
           "ucs": {
-            "category": "AIRCRAFT",
-            "subcategory": "MISC",
-            "id": "AEROMisc",
-            "confidence": 0.022867732709072337,
+            "category": "AMBIENCE",
+            "subcategory": "PUBLIC PLACE",
+            "id": "AMBPubl",
+            "confidence": 0.9794709438186592,
             "alternatives": [
               {
-                "category": "TRAINS",
-                "subcategory": "SUBWAY",
-                "id": "TRNSbwy",
-                "probability": 0.02,
-                "synonyms": []
+                "category": "CROWDS",
+                "subcategory": "QUIET",
+                "id": "CRWDQuiet",
+                "probability": 0.021,
+                "synonyms": [
+                  "library"
+                ]
               },
               {
-                "category": "BELLS",
-                "subcategory": "GONG",
-                "id": "BELLGong",
-                "probability": 0.019,
-                "synonyms": []
-              },
-              {
-                "category": "BELLS",
-                "subcategory": "LARGE",
-                "id": "BELLLrg",
-                "probability": 0.019,
-                "synonyms": []
+                "category": "AMBIENCE",
+                "subcategory": "ROOM TONE",
+                "id": "AMBRoom",
+                "probability": 0.0,
+                "synonyms": [
+                  "library"
+                ]
               }
             ],
-            "synonyms": [],
-            "reason": "no name evidence; signal 0.89, tier signal_narrowable, 330 candidates in contention; lossy source — brightness and clipping gates relaxed; gate ruled out AIRBlow (length_seconds 188.6463 > max 120.0000); ABSTAINED to MISC (confidence below threshold)"
+            "synonyms": [
+              "library"
+            ],
+            "reason": "name matched [library]; signal 0.43, tier semantic_only, 3 candidates in contention; gate ruled out AIRBlow (length_seconds 188.6463 > max 120.0000)"
           },
           "regions": {
             "count": 0,

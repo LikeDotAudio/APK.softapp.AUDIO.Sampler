@@ -22,4 +22,24 @@ package-lock.json
 #
 # Run ./build.sh after editing anything under libControl/ to refresh your local
 # copy — a fresh clone has no dist/ until you do.
-dist/
+#
+# THE TWO EXCEPTIONS ARE dist/gui.js AND dist/app.js, AND THEY ARE TRACKED FOR
+# THE REASON KAD'S dist IS. APK:OS does not carry effects of its own:
+# Mixer/dsp/load-sampler-gui.js loads the FACEPLATES out of this folder, and
+# .apk.scripts/deploy.py publishes it, so a checkout without gui.js is nine
+# Audio & DSP windows drawing "has no engine in this window" — which is what
+# apk.audio drew until 2026-09-06. dist/app.js is this app's OWN bundle, loaded
+# by its own index.html, and PLAN-364.01 put that page on the site: untracked,
+# it is the Launch Pad's `Sampler & Play` and `Sound Library` drawing a 404.
+# CI cannot recompile either into a commit here: nothing in .github/workflows/
+# builds this app, and the loop the paragraph above remembers was closed
+# anyway when OA_BUILD_VERSION stopped reading the clock and started reading
+# the last commit that touched a source. `node build.mjs --check` is what
+# holds both committed bundles to those sources; `check.sh sampler` runs it.
+#
+# dist/precache.json stays untracked. It is generated too, but --check does not
+# gate it, and sw.js already falls back to a four-entry shell list when the
+# fetch 404s — so an unpublished manifest degrades instead of lying.
+/dist/*
+!/dist/gui.js
+!/dist/app.js

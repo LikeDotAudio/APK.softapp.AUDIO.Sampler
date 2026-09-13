@@ -1,10 +1,10 @@
 {
   "metadata": {
-    "analyzer_version": "20260717.0313-9a2e6ae3aa3c302e",
+    "analyzer_version": "20260904.2022",
     "name": "Srcatch-01.wav",
-    "folder": "APK 434/Percussion",
-    "sub": "APK 434/Percussion",
-    "path": "APK 434/Percussion/Srcatch-01.wav",
+    "folder": "SampleLibrary/APK 434",
+    "sub": "SampleLibrary/APK 434",
+    "path": "APK:DOCKERS/APK:audio:WebPortal/SRC/APK:Softapps/SAMPLE and PLAY/SampleLibrary/APK 434/Srcatch-01.wav",
     "length_seconds": 0.1082766439909297,
     "sample_rate": 44100,
     "bit_depth": 16,
@@ -12,26 +12,27 @@
     "source_format": "WAV",
     "lossy_source": false,
     "dc_offset": -0.000022448794379908376,
-    "trailing_silence_ms": 0,
+    "trailing_silence_ms": 0.0,
     "analysis_depth": "full"
   },
   "classification": {
     "group": "Perc",
     "reason": [
-      "1) path matched \"percussion\"",
+      "1) Acoustic ML Fallback (ZCR/Inharmonicity)",
       "2) envelope Decaying (attack 20 ms, sustain 41%, 1 transient)",
       "3) Inharmonic · high-band 72%"
     ],
     "timbre": "Bright",
     "length_class": "Short",
-    "subgroup": "Perc Short",
+    "subgroup": "Acoustic Guess",
     "audit": false,
     "acoustic_types": [
       "Inharmonic"
     ],
     "sound_design_roles": [],
     "instrument_family": [
-      "Percussion"
+      "Percussion",
+      "Idiophone"
     ]
   },
   "envelope": {
@@ -48,87 +49,141 @@
     "envelope_kurtosis": -0.9418964973819128,
     "envelope_shape": "Decaying",
     "decay_time_seconds_60db": null,
-    "onset_periodicity": 0,
+    "slices": [
+      {
+        "index": 0,
+        "start_seconds": 0.0,
+        "end_seconds": 0.10975056689342404,
+        "relative_level": 1.0,
+        "envelope_attack_seconds": 0.019954648526077097,
+        "envelope_decay_seconds": 0.029931972789115645,
+        "envelope_sustain_level": 0.4109205730570017,
+        "envelope_release_seconds": 0.009977324263038548,
+        "envelope_temporal_centroid": 0.35774933686098165,
+        "envelope_skewness": 0.5538120328383079,
+        "envelope_kurtosis": -0.9418964973819128,
+        "envelope_shape": "Decaying",
+        "decay_time_seconds_60db": null
+      }
+    ],
+    "onset_periodicity": 0.0,
     "onset_rate_per_second": 9.235602094240837
   },
   "spectral_features": {
     "root_mean_square_level": 0.19886033625155064,
     "crest_factor": 5.028424684789374,
     "zero_crossings_per_second": 4276.0837696335075,
-    "complexity": 2712.4120511508836,
-    "spectral_centroid_hz": 3784.5473597430027,
+    "complexity": 2712.41225270388,
+    "spectral_centroid_hz": 3784.547409875528,
     "spectral_rolloff_hz": 6548.041884816754,
-    "spectral_flatness": 0.05469568974481405,
-    "low_band_energy": 0.07555480507842996,
-    "mid_band_energy": 0.20008792553923274,
-    "high_band_energy": 0.7243572693823372,
-    "spectral_flux": 0.22023835140239317,
+    "spectral_flatness": 0.054696526041945207,
+    "low_band_energy": 0.07555479792171066,
+    "mid_band_energy": 0.20008793641945194,
+    "high_band_energy": 0.7243572656588374,
+    "spectral_flux": 0.22023835526728694,
     "harmonicity": 0.3531427590583865,
-    "inharmonicity": 0.580099764435169,
+    "inharmonicity": 0.5800998220440383,
     "partial_count": 12,
     "mel_frequency_cepstral_coefficients": [
-      35.13450826106609,
-      12.626866581847837,
-      -12.218812868469719,
-      11.297671181465171,
-      -3.454238891750813,
-      5.934214274497718,
-      -3.011698662708258,
-      4.111399125548806,
-      -1.8515643020467154,
-      2.007540692559775,
-      -2.1937423563713914,
-      0.48314458659755966,
-      -1.5419215389896543
+      35.13449336072963,
+      12.626881485468747,
+      -12.218827453888924,
+      11.297685558289956,
+      -3.4542528452419314,
+      5.934227784671211,
+      -3.0117116025133432,
+      4.111411541497292,
+      -1.8515761034474745,
+      2.0075518227201816,
+      -2.1937528592216258,
+      0.4831542905921409,
+      -1.5419305569672657
     ],
-    "spectral_centroid_mean_hz": 3911.2506852637507,
-    "spectral_centroid_deviation_hz": 247.17064835574968,
-    "total_harmonic_distortion": 0,
-    "clipping_density": 0,
+    "spectral_centroid_mean_hz": 3911.2506311809357,
+    "spectral_centroid_deviation_hz": 247.17065520404702,
+    "total_harmonic_distortion": 0.0,
+    "clipping_density": 0.0,
     "distortion": "Clean",
-    "stationarity": 0.5790624722930322,
-    "spectral_entropy": 0.6786329364382072,
-    "spectral_slope_db_per_octave": -3.0968029666137893,
+    "stationarity": 0.5790624704407055,
+    "spectral_entropy": 0.678632929886953,
+    "spectral_slope_db_per_octave": -3.09680303088547,
     "band_limit_high_hz": 14298.046875,
-    "spectral_centroid_slope_hz_per_second": 10292.05523216811,
+    "spectral_centroid_slope_hz_per_second": 10292.056531653316,
     "syllabic_modulation_energy": null,
     "voicing_ratio": 0.1111111111111111,
     "mid_rms": 0.1988603361249054,
     "side_rms": 0.002722135341263271,
-    "lufs": -70
+    "lufs": -70.0,
+    "loudness_range_lu": 0.0,
+    "true_peak_dbtp": 0.1257495100754566
   },
   "musicality": {
-    "pitch_hz": 1764,
+    "pitch_hz": 1764.0,
     "pitch_slope_semitones_per_second": null,
     "root_note_name": "",
-    "root_frequency_hz": 0,
-    "root_cents_offset": 0,
-    "beats_per_minute": 0,
+    "root_frequency_hz": 0.0,
+    "root_cents_offset": 0.0,
+    "beats_per_minute": 0.0,
     "root_midi_note": -1,
     "chromagram": [
-      0.8898431386451454,
-      0.9205522170501091,
-      0.9213003336369298,
-      0.8429695047247909,
-      0.863685934181211,
-      0.7816217928621049,
-      0.8556230306371414,
-      0.7946572495971951,
-      0.9651724890861543,
-      0.8604612730591978,
-      0.7014658441498985,
-      1
-    ]
+      0.8898431388822045,
+      0.9205521873501807,
+      0.9213003403601061,
+      0.842969475283067,
+      0.8636859453914467,
+      0.7816217825694584,
+      0.8556230569294825,
+      0.7946572510992328,
+      0.9651724808310029,
+      0.8604612876396831,
+      0.7014658382747405,
+      1.0
+    ],
+    "note_root_key_beat_marker_map": {
+      "global_root_note": "",
+      "global_midi_note": -1,
+      "global_bpm": 120.0,
+      "total_beats": 1,
+      "beat_markers": [
+        {
+          "index": 0,
+          "timestamp_seconds": 0.0,
+          "sample_index": 0,
+          "is_downbeat": true,
+          "bar": 1,
+          "beat": 1
+        }
+      ],
+      "chunk_maps": [
+        {
+          "chunk_index": 0,
+          "start_seconds": 0.015,
+          "end_seconds": 0.108,
+          "duration_seconds": 0.093,
+          "root_note_name": "A1",
+          "root_midi_note": 33,
+          "root_frequency_hz": 54.81,
+          "pitch_hz": 1764.0,
+          "cents_offset": -6.1,
+          "peak_amplitude": 1.0,
+          "nearest_beat_index": 0
+        }
+      ]
+    }
   },
   "unsupervised": {
-    "cluster": -1,
-    "principal_components": []
+    "cluster": 2,
+    "principal_components": [
+      0.19138061222471064,
+      -2.189588597790582,
+      -2.79849388372479
+    ]
   },
   "ucs": {
     "category": "MALLET",
     "subcategory": "MISC",
     "id": "MALTMisc",
-    "confidence": 0.02612397937436754,
+    "confidence": 0.026123959343700758,
     "alternatives": [
       {
         "category": "FOOD & DRINK",
@@ -157,7 +212,7 @@
   },
   "regions": {
     "count": 1,
-    "detection_threshold_decibels": -40,
+    "detection_threshold_decibels": -40.0,
     "minimum_silence_seconds": 0.15,
     "minimum_region_seconds": 0.05,
     "regions": [

@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -142,7 +143,7 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
                     .oa-pad-name { font-size: 10px !important; }
                 }
             `}</style>
-            <div className="oa-pad-grid" style={{ width: '100%', maxWidth: `${Math.min(1100, 200 * grid.cols)}px`, display: 'grid', gridTemplateColumns: `repeat(${grid.cols}, max-content)`, gap: '8px', justifyContent: 'center' }}>
+            <div className="oa-pad-grid" role="group" aria-label={`${label} — ${grid.count} velocity pads`} style={{ width: '100%', maxWidth: `${Math.min(1100, 200 * grid.cols)}px`, display: 'grid', gridTemplateColumns: `repeat(${grid.cols}, max-content)`, gap: '8px', justifyContent: 'center' }}>
                 {layout.map((padNum) => {
                     const idx = padNum - 1;
                     const name = (KIT[idx] && KIT[idx].name) || `Pad ${padNum}`;

@@ -1,0 +1,79 @@
+{
+  "_comment": "What the chromagram and the scan report for test/chromaFixture.mjs's progression(), emitted from the naive per-bin windowed DFT as it stood before PLAN-801.01 replaced it with a Goertzel filter. The point of the change was speed; this file is what holds it to having changed nothing else. Re-emit only for a deliberate change to what the scan REPORTS: node test/chromaFixture.mjs --emit",
+  "rate": 16000,
+  "seconds": 24,
+  "chroma": [
+    1,
+    0.0018718481296673417,
+    0.0015953503316268325,
+    0.00164414057508111,
+    0.9994423985481262,
+    0.0021036004181951284,
+    0.002314241835847497,
+    0.9988433122634888,
+    0.0015501254238188267,
+    0.0021663259249180555,
+    0.0012346144067123532,
+    0.00303207291290164
+  ],
+  "total_chords": 5,
+  "chords": [
+    {
+      "timestamp_seconds": 0,
+      "chord": "Cmaj",
+      "confidence": 0.99,
+      "root_note": "C"
+    },
+    {
+      "timestamp_seconds": 6,
+      "chord": "Am",
+      "confidence": 0.99,
+      "root_note": "A"
+    },
+    {
+      "timestamp_seconds": 12,
+      "chord": "Fmaj",
+      "confidence": 0.99,
+      "root_note": "F"
+    },
+    {
+      "timestamp_seconds": 17.75,
+      "chord": "G7",
+      "confidence": 0.79,
+      "root_note": "G"
+    },
+    {
+      "timestamp_seconds": 18,
+      "chord": "Gmaj",
+      "confidence": 0.99,
+      "root_note": "G"
+    }
+  ],
+  "sections": [
+    {
+      "index": 0,
+      "label": "Intro",
+      "start_seconds": 0,
+      "end_seconds": 8,
+      "duration_seconds": 8,
+      "key_center": "Cmaj"
+    },
+    {
+      "index": 1,
+      "label": "Verse 1",
+      "start_seconds": 8,
+      "end_seconds": 16,
+      "duration_seconds": 8,
+      "key_center": "Fmaj"
+    },
+    {
+      "index": 2,
+      "label": "Chorus 1",
+      "start_seconds": 16,
+      "end_seconds": 24,
+      "duration_seconds": 8,
+      "key_center": "G7"
+    }
+  ],
+  "notes_length": 94
+}

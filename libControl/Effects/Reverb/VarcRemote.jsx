@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -206,7 +207,7 @@ const VarcMeter = ({ dotsRef }) => {
     );
 };
 
-window.VarcRemote = ({ u, onClose, oaPopped }) => {
+window.VarcRemote = ({ u, onClose, oaPopped, oaHosted }) => {
     const [active, setActive] = React.useState(u || 0);
     const [, force] = React.useReducer((n) => n + 1, 0);
     React.useEffect(() => {
@@ -230,7 +231,7 @@ window.VarcRemote = ({ u, onClose, oaPopped }) => {
     // The remote can be switched between machines from its own front, so the
     // window is named after the one it is DRIVING, not the one it was opened on.
     const panel = window.useOaPanel({
-        id: `varc-${u || 0}`, title: `${meta.name} — VARC 444`, copy: oaPopped,
+        id: `varc-${u || 0}`, title: `${meta.name} — VARC 444`, copy: oaPopped, hosted: oaHosted,
         render: () => <window.VarcRemote u={u} onClose={onClose} oaPopped />,
     });
 
@@ -383,9 +384,9 @@ window.VarcRemote = ({ u, onClose, oaPopped }) => {
                     <span style={{ fontSize: '9px', color: '#e5533d', fontWeight: '700' }}>STANDBY</span>
                 )}
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
-                    <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
+                    {panel.chrome && <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
                         title={panel.popTitle}
-                        style={{ padding: '4px 10px' }} />
+                        style={{ padding: '4px 10px' }} />}
                     <window.SeqButton
                         label={showHelp ? '✖ Help' : '? Help'}
                         onClick={() => setShowHelp(!showHelp)}
@@ -393,7 +394,7 @@ window.VarcRemote = ({ u, onClose, oaPopped }) => {
                         title="How the banks, programs and pages work"
                         style={{ padding: '4px 10px' }} />
                     {bypassed && <window.OaOutOfCircuit />}
-                    <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />
+                    {panel.chrome && <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />}
                 </div>
             </div>
 

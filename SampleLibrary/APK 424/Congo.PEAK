@@ -1,30 +1,30 @@
 {
   "metadata": {
-    "analyzer_version": "20260717.0313-9a2e6ae3aa3c302e",
+    "analyzer_version": "20260904.2022",
     "name": "Congo.wav",
-    "folder": "APK 424/Percussion",
-    "sub": "APK 424/Percussion",
-    "path": "APK 424/Percussion/Congo.wav",
+    "folder": "SampleLibrary/APK 424",
+    "sub": "SampleLibrary/APK 424",
+    "path": "APK:DOCKERS/APK:audio:WebPortal/SRC/APK:Softapps/SAMPLE and PLAY/SampleLibrary/APK 424/Congo.wav",
     "length_seconds": 0.35829931972789114,
     "sample_rate": 44100,
     "bit_depth": 16,
     "channels": 2,
     "source_format": "WAV",
     "lossy_source": false,
-    "dc_offset": -0.000005246566734799222,
-    "trailing_silence_ms": 0,
+    "dc_offset": -5.246566734799222e-6,
+    "trailing_silence_ms": 0.0,
     "analysis_depth": "full"
   },
   "classification": {
     "group": "Perc",
     "reason": [
-      "1) path matched \"percussion\"",
+      "1) Acoustic ML Fallback (ZCR/Inharmonicity)",
       "2) envelope Decaying (attack 10 ms, sustain 5%, 1 transient)",
       "3) Inharmonic+Stochastic+Impulsive · mid-band 67% · root A3"
     ],
     "timbre": "Tonal",
     "length_class": "Short",
-    "subgroup": "Perc Short",
+    "subgroup": "Acoustic Guess",
     "audit": false,
     "acoustic_types": [
       "Inharmonic",
@@ -35,7 +35,8 @@
       "Pluck"
     ],
     "instrument_family": [
-      "Percussion"
+      "Percussion",
+      "Idiophone"
     ]
   },
   "envelope": {
@@ -52,122 +53,156 @@
     "envelope_kurtosis": 7.235088045648579,
     "envelope_shape": "Decaying",
     "decay_time_seconds_60db": 0.4438899904021493,
-    "onset_periodicity": 0,
+    "slices": [
+      {
+        "index": 0,
+        "start_seconds": 0.0,
+        "end_seconds": 0.35918367346938773,
+        "relative_level": 1.0,
+        "envelope_attack_seconds": 0.009977324263038548,
+        "envelope_decay_seconds": 0.16961451247165532,
+        "envelope_sustain_level": 0.04874059675266314,
+        "envelope_release_seconds": 0.10476190476190476,
+        "envelope_temporal_centroid": 0.06580326859970664,
+        "envelope_skewness": 2.6867040065442502,
+        "envelope_kurtosis": 7.235088045648579,
+        "envelope_shape": "Decaying",
+        "decay_time_seconds_60db": 0.4438899904021493
+      }
+    ],
+    "onset_periodicity": 0.0,
     "onset_rate_per_second": 2.790962597303968
   },
   "spectral_features": {
     "root_mean_square_level": 0.10946969952960539,
     "crest_factor": 9.134669106782736,
     "zero_crossings_per_second": 976.8369090563889,
-    "complexity": 3902.90938114462,
-    "spectral_centroid_hz": 2518.5171809205153,
+    "complexity": 3902.909377508644,
+    "spectral_centroid_hz": 2518.5172204453693,
     "spectral_rolloff_hz": 4914.885133852287,
-    "spectral_flatness": 0.24680171103417223,
-    "low_band_energy": 0.025777501317457683,
-    "mid_band_energy": 0.6731767730792039,
-    "high_band_energy": 0.3010457256033384,
-    "spectral_flux": 0.1362295909362419,
+    "spectral_flatness": 0.2468017157509139,
+    "low_band_energy": 0.025777495419170456,
+    "mid_band_energy": 0.6731767685445443,
+    "high_band_energy": 0.30104573603628515,
+    "spectral_flux": 0.13622959374087315,
     "harmonicity": 0.6755858148513345,
-    "inharmonicity": 0.23956809547823166,
+    "inharmonicity": 0.23956809700654988,
     "partial_count": 3,
     "mel_frequency_cepstral_coefficients": [
-      -20.23729913219773,
-      16.414889304338022,
-      3.7264710016157845,
-      3.1615004700635767,
-      -0.1728158542056566,
-      -1.3183848782004042,
-      -0.8407365523876816,
-      -1.7286040275986412,
-      -1.1669973656634116,
-      -1.2211147972982408,
-      -0.9258898037365891,
-      -0.7218188031235838,
-      -1.3596218722588527
+      -20.237299334876003,
+      16.414889538212815,
+      3.7264708045540704,
+      3.161500840573472,
+      -0.1728159846965343,
+      -1.3183848343969264,
+      -0.8407366850767954,
+      -1.728603921156529,
+      -1.1669975666832595,
+      -1.2211144184192904,
+      -0.9258900751557637,
+      -0.7218187896871243,
+      -1.3596217614612545
     ],
-    "spectral_centroid_mean_hz": 1431.8773300441549,
-    "spectral_centroid_deviation_hz": 816.4137846421085,
-    "total_harmonic_distortion": 0.4162951207429985,
-    "clipping_density": 0,
+    "spectral_centroid_mean_hz": 1431.877277702111,
+    "spectral_centroid_deviation_hz": 816.4137575743105,
+    "total_harmonic_distortion": 0.41629512617045433,
+    "clipping_density": 0.0,
     "distortion": "Clean",
-    "stationarity": 0,
-    "spectral_entropy": 0.2880636572191086,
-    "spectral_slope_db_per_octave": -5.5460320853029765,
+    "stationarity": 0.0,
+    "spectral_entropy": 0.2880636565577817,
+    "spectral_slope_db_per_octave": -5.546032227397656,
     "band_limit_high_hz": 6395.361328125,
-    "spectral_centroid_slope_hz_per_second": 5430.5335261210075,
+    "spectral_centroid_slope_hz_per_second": 5430.533546002903,
     "syllabic_modulation_energy": null,
-    "voicing_ratio": 1,
+    "voicing_ratio": 1.0,
     "mid_rms": 0.1094696992811916,
     "side_rms": 0.0028048656863851234,
-    "lufs": -70
+    "lufs": -70.0,
+    "loudness_range_lu": 0.0,
+    "true_peak_dbtp": 0.005946559480147422
   },
   "musicality": {
     "pitch_hz": 53.9119804400978,
-    "pitch_slope_semitones_per_second": 0.4065099818322118,
+    "pitch_slope_semitones_per_second": 0.40650993237206706,
     "root_note_name": "A3",
     "root_frequency_hz": 224.67248908296943,
     "root_cents_offset": 36.383946056507455,
-    "beats_per_minute": 0,
+    "beats_per_minute": 0.0,
     "root_midi_note": -1,
     "chromagram": [
-      0.827572183864895,
-      0.8910892468529212,
-      0.8519166814222625,
-      0.8879399187364087,
-      1,
-      0.4647755418025784,
-      0.47806683604355465,
-      0.6534721584541459,
-      0.6394384651759332,
-      0.7771297294674592,
-      0.3300513671625058,
-      0.49974648183939363
-    ]
+      0.8275721146010278,
+      0.891089216377132,
+      0.8519166782770541,
+      0.8879398568626037,
+      1.0,
+      0.46477553691366147,
+      0.47806682662914884,
+      0.6534721493337156,
+      0.6394384304925018,
+      0.7771297019123338,
+      0.3300513702905169,
+      0.49974644608429575
+    ],
+    "note_root_key_beat_marker_map": {
+      "global_root_note": "A3",
+      "global_midi_note": -1,
+      "global_bpm": 120.0,
+      "total_beats": 1,
+      "beat_markers": [
+        {
+          "index": 0,
+          "timestamp_seconds": 0.0,
+          "sample_index": 0,
+          "is_downbeat": true,
+          "bar": 1,
+          "beat": 1
+        }
+      ],
+      "chunk_maps": [
+        {
+          "chunk_index": 0,
+          "start_seconds": 0.0,
+          "end_seconds": 0.279,
+          "duration_seconds": 0.279,
+          "root_note_name": "A1",
+          "root_midi_note": 33,
+          "root_frequency_hz": 55.48,
+          "pitch_hz": 54.04,
+          "cents_offset": 15.1,
+          "peak_amplitude": 1.0,
+          "nearest_beat_index": 0
+        }
+      ]
+    }
   },
   "unsupervised": {
-    "cluster": -1,
-    "principal_components": []
+    "cluster": 4,
+    "principal_components": [
+      -0.8150400171589962,
+      1.7083071983621216,
+      1.6160104631090282
+    ]
   },
   "ucs": {
-    "category": "GUITAR",
-    "subcategory": "MISC",
-    "id": "GUITMisc",
-    "confidence": 0.01403744673578695,
-    "alternatives": [
-      {
-        "category": "FOOD & DRINK",
-        "subcategory": "KITCHENWARE",
-        "id": "FOODKware",
-        "probability": 0.012,
-        "synonyms": []
-      },
-      {
-        "category": "SYNTH",
-        "subcategory": "KEYS",
-        "id": "SYNTKeys",
-        "probability": 0.012,
-        "synonyms": []
-      },
-      {
-        "category": "PLASTIC",
-        "subcategory": "IMPACT",
-        "id": "PLASImpt",
-        "probability": 0.011,
-        "synonyms": []
-      }
+    "category": "ARCHIVED",
+    "subcategory": "IMPULSE RESPONSE",
+    "id": "IR",
+    "confidence": 1.0,
+    "alternatives": [],
+    "synonyms": [
+      "sample"
     ],
-    "synonyms": [],
-    "reason": "no name evidence; signal 0.95, tier signal_narrowable, 491 candidates in contention; gate ruled out AIRHiss (length_seconds 0.3583 < min 0.5000); ABSTAINED to MISC (confidence below threshold)"
+    "reason": "name matched [sample]; signal 0.30, tier signal_separable, 1 candidate in contention; gate ruled out AIRHiss (length_seconds 0.3583 < min 0.5000)"
   },
   "regions": {
     "count": 1,
-    "detection_threshold_decibels": -40,
+    "detection_threshold_decibels": -40.0,
     "minimum_silence_seconds": 0.15,
     "minimum_region_seconds": 0.05,
     "regions": [
       {
         "index": 0,
-        "start_seconds": 0,
+        "start_seconds": 0.0,
         "end_seconds": 0.27936507936507937,
         "duration_seconds": 0.27936507936507937,
         "peak_amplitude": 0.4474561907152162,

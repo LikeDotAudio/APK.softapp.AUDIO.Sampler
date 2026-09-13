@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -98,6 +99,9 @@ const dressWindow = (doc) => {
  *   id      what to file this panel's position under; unique per open panel
  *   title   what the popped-out window is called
  *   copy    true when THIS instance is the one drawn inside the popup
+ *   hosted  true when the surface around this panel already carries a title bar
+ *           and a way to close it — a shell display, or the Mixer's modal. See
+ *           `chrome` below.
  *   render  how to draw the popped-out copy — the same component again, with
  *           its `oaPopped` prop set, which is what stops it popping itself out
  *
@@ -107,6 +111,7 @@ const dressWindow = (doc) => {
 window.useOaPanel = function (opts) {
     const id = opts.id;
     const isCopy = !!opts.copy;
+    const hosted = !!opts.hosted;
 
     const nodeRef = React.useRef(null);
     const [pos, setPos] = React.useState(() => (isCopy ? null : restorePos(id)));
@@ -262,22 +267,46 @@ window.useOaPanel = function (opts) {
     // Inside the window the panel is the whole page: no fixed corner to sit in,
     // no shadow to lift it off a background it no longer has, and the window's
     // own scrollbar instead of the panel's.
-    const frameStyle = isCopy
-        ? {
-            position: 'static', left: 'auto', right: 'auto', top: 'auto', bottom: 'auto',
-            transform: 'none', margin: 0, width: '100%', maxWidth: 'none', maxHeight: 'none',
-            border: 'none', borderRadius: 0, boxShadow: 'none', zIndex: 'auto',
-            overflowY: 'visible', boxSizing: 'border-box',
-        }
-        : {
-            zIndex: z,
-            ...(pos ? { left: `${pos.x}px`, top: `${pos.y}px`, right: 'auto', bottom: 'auto', transform: 'none' } : null),
-        };
+    //
+    // THE WHOLE PAGE IS NOT THE WHOLE WIDTH. A faceplate declares the width the
+    // box it draws actually is — `min(340px, 96vw)` on the VARC, because the
+    // real remote is a tall thing you hold in one hand, not a wide thing you
+    // set down — and `width: 100%` in a host 1900px across pulled every one of
+    // them apart: six travel faders a hand's span from each other, a keypad the
+    // width of a desk, and two rotary heads at opposite ends of a tape echo.
+    // So the declared width becomes the CAP and the panel centres under it. A
+    // wider host now gives the panel room rather than stretching it, and a
+    // narrower one still gets the 100% that made this branch exist.
+    const copyStyle = (style) => ({
+        position: 'static', left: 'auto', right: 'auto', top: 'auto', bottom: 'auto',
+        transform: 'none', margin: '0 auto',
+        width: '100%', maxWidth: (style && style.width) || 'none', maxHeight: 'none',
+        border: 'none', borderRadius: 0, boxShadow: 'none', zIndex: 'auto',
+        overflowY: 'visible', boxSizing: 'border-box',
+    });
+
+    const frameStyle = {
+        zIndex: z,
+        ...(pos ? { left: `${pos.x}px`, top: `${pos.y}px`, right: 'auto', bottom: 'auto', transform: 'none' } : null),
+    };
 
     const popLabel = isCopy || popped ? '⧉ Pop In' : '⧉ Pop Out';
 
     return {
         popped, isCopy, popLabel,
+
+        /* WHETHER THIS PANEL DRAWS ITS OWN WINDOW BUTTONS — pop out, and close.
+           False when something else already owns the window: APK:OS mounts these
+           faceplates into a display with its own tab and its own ✕, and into the
+           Mixer's modal with its own ✕, so the panel was drawing a second close
+           beside the host's and a ⧉ Pop In whose handler closes a browser window
+           this panel never opened.
+
+           NOT the same question as `isCopy`. The copy inside a real popped-out
+           window is hosted by nothing — ⧉ Pop In is the only way back to the
+           page from there, and it works. */
+        chrome: !hosted,
+
         popTitle: isCopy || popped
             ? 'Put this panel back in the page'
             : 'Open this panel in its own window, alongside the app',
@@ -289,7 +318,7 @@ window.useOaPanel = function (opts) {
         /** Spread onto the panel's outer box, passing its own style through. */
         frameProps: (style) => ({
             ref: nodeRef,
-            style: { ...style, ...frameStyle },
+            style: isCopy ? { ...style, ...copyStyle(style) } : { ...style, ...frameStyle },
             onPointerDown: toFront,
         }),
 

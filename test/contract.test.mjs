@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -100,6 +101,139 @@ describe('plugin contract', () => {
                     assert.equal(typeof preset.label, 'string', `${id}: preset "${name}" has no label`);
                 });
             }
+        }
+    });
+
+    // PLAN-18.04. Before this, a continuous knob and a discrete selector were
+    // written identically and the only way to tell them apart was a heuristic
+    // — `step === 1 && ticks.length === max - min + 1` — which reads the buss
+    // compressor's Attack, Release and Ratio as continuous and is therefore
+    // wrong on three of the forty-one params in this tree. Nothing infers it
+    // now; every param says which it is, and this is what keeps that true.
+    test('every param declares its kind, and nothing has to guess', async () => {
+        const { window } = await createWarmWorld();
+        let seen = 0;
+        let discrete = 0;
+        for (const id of window.oaPluginIds()) {
+            const units = window.oaPluginUnits(id);
+            for (let i = 0; i < Math.min(units, 3); i++) {
+                for (const p of window.oaPluginParams(id, i)) {
+                    seen++;
+                    assert.ok(
+                        p.kind === 'continuous' || p.kind === 'discrete',
+                        `${id}[${i}].${p.key}: kind is "${p.kind}", not continuous or discrete`,
+                    );
+                    if (p.kind !== 'discrete') continue;
+                    discrete++;
+
+                    // A discrete param's travel IS its list of positions, so
+                    // the bounds have to be whole numbers or "position" means
+                    // nothing.
+                    assert.ok(
+                        Number.isInteger(p.min) && Number.isInteger(p.max),
+                        `${id}[${i}].${p.key}: discrete bounds must be integers, got ${p.min}..${p.max}`,
+                    );
+                }
+            }
+        }
+        assert.ok(seen > 0, 'no params were examined — the harness is not loading plugins');
+        assert.ok(discrete > 0, 'not one discrete param was found, which cannot be right');
+    });
+
+    // The suite below already special-cases `p.options` as "a different kind of
+    // control". That sentence is now a field, and the two must not drift: an
+    // option list is discrete by definition.
+    test('a param with an option list is declared discrete', async () => {
+        const { window } = await createWarmWorld();
+        for (const id of window.oaPluginIds()) {
+            const units = window.oaPluginUnits(id);
+            for (let i = 0; i < Math.min(units, 3); i++) {
+                for (const p of window.oaPluginParams(id, i)) {
+                    if (!p.options) continue;
+                    assert.equal(
+                        p.kind, 'discrete',
+                        `${id}[${i}].${p.key}: has options but is declared ${p.kind}`,
+                    );
+                }
+            }
+        }
+    });
+
+    // PLAN-18.01. The value of the adapter is that it is generic, so testing it
+    // on one plugin proves nothing about the eighth. This runs every registered
+    // plugin through it at once.
+    test('every plugin projects onto SPOG ParamSpec', async () => {
+        const { window } = await createWarmWorld();
+        const ids = window.oaPluginIds();
+        assert.ok(ids.length >= 8, `expected the eight registered plugins, got ${ids.length}`);
+
+        let enums = 0;
+        for (const id of ids) {
+            const units = window.oaPluginUnits(id);
+            const specs = window.oaPluginParamSpecs(id, 0);
+            assert.ok(Array.isArray(specs), `${id}: params specs must be an array`);
+            assert.equal(
+                specs.length, window.oaPluginParams(id, 0).length,
+                `${id}: the projection dropped or invented a param`,
+            );
+
+            for (const s of specs) {
+                assert.equal(typeof s.name, 'string', `${id}: a spec has no name`);
+                assert.ok(
+                    s.type === 'number' || s.type === 'enum',
+                    `${id}.${s.name}: type is "${s.type}"`,
+                );
+                assert.equal(typeof s.writable, 'boolean', `${id}.${s.name}: writable must be mapped, not absent`);
+
+                if (s.type !== 'enum') continue;
+                enums++;
+                assert.ok(Array.isArray(s.values) && s.values.length > 0,
+                    `${id}.${s.name}: an enum with no values is not drivable`);
+                assert.ok(s.values.every((v) => typeof v === 'string'),
+                    `${id}.${s.name}: enum values must be strings`);
+                // One label per position, or the console cannot address them.
+                assert.equal(s.values.length, Math.round(s.max) - Math.round(s.min) + 1,
+                    `${id}.${s.name}: ${s.values.length} values across ${s.min}..${s.max} positions`);
+            }
+            if (units === 0) continue;
+        }
+        assert.ok(enums > 0, 'no discrete param survived the projection');
+    });
+
+    // The bit that matters most: a console that can write a read-only param is
+    // worse than one that cannot write at all.
+    test('writable is mapped from the plugin, never assumed', async () => {
+        const { window } = await createWarmWorld();
+
+        // `voices` declares no params and no writer — it is pan, sends and
+        // metering. It must offer nothing drivable.
+        assert.deepEqual(window.oaPluginParamSpecs('voices', 0), [],
+            'voices advertised a control it cannot set');
+
+        // The buss compressor keeps `mix` in its schema so older saved units
+        // load, and bussSettings() no longer reads it. It must not be offered
+        // as writable.
+        const buss = window.oaPluginParamSpecs('buss', 0);
+        const mix = buss.find((s) => s.name === 'mix');
+        assert.ok(mix, 'buss.mix vanished from the projection');
+        assert.equal(mix.writable, false, 'buss.mix is deprecated and must not be writable');
+
+        const thresh = buss.find((s) => s.name === 'thresh');
+        assert.equal(thresh.writable, true, 'buss.thresh is a live control and must be writable');
+    });
+
+    // The buss trio is the case the old heuristic reads as continuous. If the
+    // projection ever calls these 'number' again, the console loses its detents.
+    test('the buss selectors project as enums with a label per position', async () => {
+        const { window } = await createWarmWorld();
+        const buss = window.oaPluginParamSpecs('buss', 0);
+        for (const name of ['attack', 'release', 'ratio']) {
+            const s = buss.find((x) => x.name === name);
+            assert.equal(s.type, 'enum', `buss.${name} projected as ${s.type}`);
+            assert.ok(s.values.length >= 10, `buss.${name}: ${s.values.length} positions`);
+            // fmt() is what the faceplate engraves, so the labels carry units.
+            assert.ok(s.values.some((v) => /[a-zA-Z:]/.test(v)),
+                `buss.${name}: positions are bare indices, not the panel's own labels`);
         }
     });
 

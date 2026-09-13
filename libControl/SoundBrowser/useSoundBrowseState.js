@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -9,9 +10,18 @@
 // interfaces, and every name they are known by remains the property of its owner.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const AUDIO_RE = /\.(mp3|wav|wave|aif|aiff|aac|m4a|mp4|mov|mkv|webm|avi|m4v|3gp|flv|ogg|oga|flac|opus)$/i;
 const MAX_FILES = 4000;
 const NAME_MAX = 60000;
+
+// TWO BROWSERS, ONE UI. `supportsFS` is the branch, and every consumer below
+// depends on it: with the File System Access API (Chromium) this walks a real
+// folder TREE from a directory handle; without it, showDirectoryPicker is
+// absent and the whole thing degrades to a flat multi-file picker whose results
+// are shown in the grid with no tree at all. Deep search and folder navigation
+// only exist on the first path -- guard any new feature on `supportsFS` rather
+// than assuming a handle. Harvested from the retired export's
+// SamplerSoundBrowse.jsx, which stated the fallback and nothing here did
+// (PLAN-126.01).
 
 window.useSoundBrowseState = () => {
     const supportsFS = typeof window.showDirectoryPicker === 'function';
@@ -19,11 +29,36 @@ window.useSoundBrowseState = () => {
     const [selectedFolder, setSelectedFolder] = React.useState(null);
     const [selectedFolderPath, setSelectedFolderPath] = React.useState('');
     const [folderFiles, setFolderFiles] = React.useState([]);
+    // WHAT THE BENCH HAS IS NOT WHAT THE SITE CARRIES, AND THIS LIST IS THE
+    // WHOLE CONTENT OF THE BROWSER UNTIL A VISITOR PICKS A FOLDER OF THEIR OWN.
+    //
+    // `01 Track 01.wav` and `02 Track 02.wav` are 70 MB of SampleLibrary/'s
+    // 79 MB, they are full-length demo songs rather than pad sounds, and
+    // `APK:OS/system/published.set.json` drops both from the upload set
+    // (PLAN-364.01). Nothing plays them: `Pads/useSamplerSets.js` names the
+    // eight kits and neither track.
+    //
+    // The list named them FOUR times anyway, and twice under an `.m4a`
+    // extension that no file in this tree — or any tree — has ever carried:
+    // both `.m4a` rows pointed at the `.wav` beside them. So a visitor to
+    // apk.audio got four of twelve rows that fetch a 404, and a bench got two
+    // rows lying about their own format. `benchOnly` states the drop where the
+    // row is written, and the filter below is what stops the site offering a
+    // sound it does not have. PLAN-387.01.
+    //
+    // The other half of this is the `cost` field of the two matching
+    // `drops` entries in published.set.json: it names, in prose, which rows
+    // this costs. Add or lift a drop here and that field moves with it.
+    //
+    // A MISSING `oaIsLocalOrigin` FAILS TO HIDDEN. mqttBus.js is the second
+    // entry in sources.json and this is the ninety-seventh, so in the shipped
+    // bundle the helper is always there; if some future world loads this file
+    // alone, listing nothing is the safe half of the guess, and the `res.ok`
+    // branch in selectFileByIndex says so out loud either way.
+    const localOrigin = typeof window.oaIsLocalOrigin === 'function' && window.oaIsLocalOrigin();
     const DEFAULT_SAMPLES = [
-        { name: '01 Track 01.m4a', url: './SampleLibrary/01 Track 01.wav', folder: 'Downloads' },
-        { name: '01 Track 01.wav', url: './SampleLibrary/01 Track 01.wav', folder: 'Downloads' },
-        { name: '02 Track 02.m4a', url: './SampleLibrary/02 Track 02.wav', folder: 'Downloads' },
-        { name: '02 Track 02.wav', url: './SampleLibrary/02 Track 02.wav', folder: 'Downloads' },
+        { name: '01 Track 01.wav', url: './SampleLibrary/01 Track 01.wav', folder: 'Downloads', benchOnly: true },
+        { name: '02 Track 02.wav', url: './SampleLibrary/02 Track 02.wav', folder: 'Downloads', benchOnly: true },
         { name: 'Bassdrum.wav', url: './SampleLibrary/APK 404/Bassdrum.wav', folder: 'SampleLibrary/APK 404' },
         { name: 'Snare (SD).wav', url: './SampleLibrary/APK 404/SD.wav', folder: 'SampleLibrary/APK 404' },
         { name: 'Clap.wav', url: './SampleLibrary/APK 404/Clap.wav', folder: 'SampleLibrary/APK 404' },
@@ -32,7 +67,7 @@ window.useSoundBrowseState = () => {
         { name: 'Tambourine.wav', url: './SampleLibrary/APK 404/Tambourin.wav', folder: 'SampleLibrary/APK 404' },
         { name: 'Tom High.wav', url: './SampleLibrary/APK 404/Tom H.wav', folder: 'SampleLibrary/APK 404' },
         { name: 'Tom Low.wav', url: './SampleLibrary/APK 404/Tom L.wav', folder: 'SampleLibrary/APK 404' }
-    ];
+    ].filter((s) => !s.benchOnly || localOrigin);
 
     const [flatEntries, setFlatEntries] = React.useState(DEFAULT_SAMPLES);
     const [selectedIndex, setSelectedIndex] = React.useState(-1);
@@ -45,7 +80,7 @@ window.useSoundBrowseState = () => {
 
     // Favorites
     const loadFavs = () => { try { return JSON.parse(window.localStorage.getItem('oaSoundFavs')) || []; } catch (e) { return []; } };
-    const [favState, setFavState] = window.useMqttState('OpenAir/Gui/SoundFavorites', { items: loadFavs() });
+    const [favState, setFavState] = window.useMqttState('APK.audio/Gui/SoundFavorites', { items: loadFavs() });
     const favorites = (favState && favState.items) || [];
     React.useEffect(() => { try { localStorage.setItem('oaSoundFavs', JSON.stringify(favorites)); } catch (e) {} }, [favState]);
     
@@ -101,7 +136,7 @@ window.useSoundBrowseState = () => {
             const text = await file.text();
             setCloudData(JSON.parse(text));
         } catch (e) {
-            setCloudErr('No sample_cloud_data.PEAK found. Run the analyzer on this folder: python3 BackEnd/sample_analyzer_app.py (Rust core, 30 workers).');
+            setCloudErr('No sample_cloud_data.PEAK found. Run the analyzer on this folder: cargo run --manifest-path "APK:Softapps/SCAN/sample_analyzer_rs/Cargo.toml"');
             setCloudData(null);
         }
     };
@@ -167,18 +202,41 @@ window.useSoundBrowseState = () => {
     };
 
     const onPlainFiles = (fileList) => {
-        setFlatEntries(Array.from(fileList || []).filter((f) => AUDIO_RE.test(f.name)).map((f) => ({ name: f.name, file: f })));
+        setFlatEntries(Array.from(fileList || []).filter((f) => window.oaIsFindableAudio(f.name)).map((f) => ({ name: f.name, file: f })));
         setSelectedIndex(-1);
     };
 
     const selectFileByIndex = async (idx, setBuffer, setPos) => {
         if (idx < 0 || idx >= shown.length) return;
         setSelectedIndex(idx);
+        // A new click is a new attempt, so the previous complaint goes. Only
+        // `selectFolder` used to clear this, which was harmless while nothing
+        // reported a failed fetch and is not once something does: the ⚠️ line
+        // would sit over the next sound that loaded perfectly well.
+        setErr('');
         const entry = shown[idx];
         try {
             let file = entry.file || (entry.handle && await entry.handle.getFile());
             if (!file && entry.url) {
                 const res = await fetch(entry.url);
+                // A 404 HAS A BODY, AND `res.blob()` HANDS IT OVER WITHOUT
+                // COMPLAINT. Nothing here read `res.ok`, so the host's error
+                // page became a File, `setSelected` succeeded, decoding failed
+                // into the empty catch below, and `err` stayed ''. The row drew
+                // as selected with a blank waveform and the browser said
+                // nothing at all about why — which is a worse failure than the
+                // 404, because there is nothing on screen to act on.
+                //
+                // The shell's mount-web-app.js settled the wording for this:
+                // non-publication is INFERRED, a status code is PROVEN, so the
+                // status goes in the sentence and the drop only explains it.
+                // PLAN-387.01.
+                if (!res.ok) {
+                    setErr(entry.benchOnly
+                        ? `${entry.name} is in the repository and is not published to this site — the host answered ${res.status}.`
+                        : `${entry.name} could not be fetched — the host answered ${res.status}.`);
+                    return;
+                }
                 const blob = await res.blob();
                 file = new File([blob], entry.name, { type: 'audio/wav' });
             }

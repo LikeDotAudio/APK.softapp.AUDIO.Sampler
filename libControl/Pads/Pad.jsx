@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -25,10 +26,26 @@ window.Pad = ({
         (remembered ? `${name} — remembered: ${remembered.name}\n(Restore to re-load, or ALT+click to pick)` : 
         `${name} — synth voice\nALT+click to load a sample`));
 
+    // The accessible NAME, which `title` is not: titleText is multi-line prose
+    // carrying ALT+click hints, and a screen reader reads it as one run-on
+    // string. This says what the pad IS and what is on it, and nothing else.
+    const ariaLabel = isToneMode
+        ? `Pad ${padNum}, ${noteName}, tone mode from pad ${toneRoot + 1}`
+        : `Pad ${padNum}, ${name}, ${noteName}, ` + (
+            hasSample ? `sample ${(window.OA_DRUM_SAMPLES[idx] && window.OA_DRUM_SAMPLES[idx].name) || sampleNames[idx]}`
+                      : (remembered ? `sample ${remembered.name} remembered, not loaded` : 'synth voice'));
+
+    // A pad is a momentary trigger, not a toggle, so it carries no aria-pressed
+    // of its own -- except in tone mode, where being the root IS a held state
+    // the user selected with ctrl+click. `undefined` omits the attribute.
+    const pressed = isToneMode ? (toneRoot === idx) : undefined;
+
     return (
         <button
             ref={setPadButtonRef}
             title={titleText}
+            aria-label={ariaLabel}
+            aria-pressed={pressed}
             onPointerDown={onPointerDown}
             onPointerUp={onPointerUp}
             onPointerLeave={onPointerLeave}
@@ -42,7 +59,7 @@ window.Pad = ({
                 e.stopPropagation();
                 const files = e.dataTransfer ? Array.from(e.dataTransfer.files) : [];
                 const peakFile = files.find(f => /\.(peak|json)$/i.test(f.name));
-                const audioFile = files.find(f => f.type.startsWith('audio/') || /\.(wav|mp3|m4a|aac|flac|aif|aiff|ogg|mp4|mov|mkv|webm)$/i.test(f.name));
+                const audioFile = files.find(f => window.oaIsDroppableAudio(f));
 
                 if (audioFile && window.oaLoadSampleToPad) {
                     await window.oaLoadSampleToPad(idx, audioFile);
@@ -51,11 +68,10 @@ window.Pad = ({
                     try {
                         const text = await peakFile.text();
                         const peakData = JSON.parse(text);
-                        if (window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[idx]) {
-                            window.OA_DRUM_SAMPLES[idx].noteMap = peakData.note_root_key_beat_marker_map || peakData.musicality;
-                            window.OA_DRUM_SAMPLES[idx].beatMarkers = peakData.beat_markers;
-                            window.OA_DRUM_SAMPLES[idx].chartData = peakData;
-                        }
+                        // The same normaliser the two global drop targets use —
+                        // three `.PEAK` writers spell these fields three ways, and
+                        // one copy of that knowledge is the point of the helper.
+                        if (window.oaApplyPeakToPad) window.oaApplyPeakToPad(idx, peakData);
                     } catch (err) {
                         console.error("Could not parse sidecar on pad drop:", err);
                     }

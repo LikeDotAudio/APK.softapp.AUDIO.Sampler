@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -90,7 +91,11 @@ window.DrumSynthEditor = ({ idx, name, onClose, oaPopped }) => {
     // 'drumsynth' plugin and renders what it is handed — which is what lets the
     // same panel work for an engine added later.
     const patch = window.useOaState('drumsynth', idx);
-    const specs = window.useOaParams('drumsynth', idx);
+    // What knobs this pad's engine has, and which may be written. Re-projected
+    // when the engine changes, which for the drum synth is often — its control
+    // list is not fixed. PLAN-18.12.
+    const surface = window.useOaConsoleSurface('drumsynth', idx);
+    const specs = surface.list;
 
     // Every edit writes straight through to the live patch and localStorage, so
     // the only way back is a copy taken before any of it happened. Re-taken when
@@ -196,16 +201,23 @@ window.DrumSynthEditor = ({ idx, name, onClose, oaPopped }) => {
             }}>
                 {specs.map((spec) => {
                     const key = spec.key;
-                    const v = patch[key];
-                    if (spec.options) {
+                    const v = spec.value;
+                    // A choice. The surface projects a name-valued one onto its
+                    // positions and writes the NAME back, so this is the same
+                    // <select> for both kinds and the panel never learns which
+                    // it is looking at.
+                    if (spec.type === 'enum') {
                         return (
                             <SynthKnob key={key} label={spec.label} display="">
                                 <select
-                                    value={v}
-                                    onChange={(e) => set(key, e.target.value)}
+                                    value={Math.round(v)}
+                                    onChange={(e) => spec.set(Number(e.target.value))}
+                                    disabled={!spec.writable}
                                     style={{ width: '74px', background: '#222', color: '#ccc', border: '1px solid #444', borderRadius: '3px', fontSize: '10px', padding: '3px 2px' }}
                                 >
-                                    {spec.options.map((o) => <option key={o} value={o}>{o}</option>)}
+                                    {(spec.values || []).map((o, i) => (
+                                        <option key={o} value={Math.round(spec.min) + i}>{o}</option>
+                                    ))}
                                 </select>
                             </SynthKnob>
                         );
@@ -220,11 +232,13 @@ window.DrumSynthEditor = ({ idx, name, onClose, oaPopped }) => {
                                     value={v} min={spec.min} max={spec.max} defaultVal={spec.def}
                                     size={40} label={spec.label}
                                     display={`${fmtValue(spec, v)}${spec.unit ? ' ' + spec.unit : ''}`}
-                                    onChange={(nv) => set(key, quantize(spec, nv))}
+                                    onChange={spec.writable ? (nv) => spec.set(quantize(spec, nv)) : undefined}
                                 />
                             </div>
                             {spec.unit === 'Hz' && (
-                                <NoteKnob spec={spec} value={v} onChange={(hz) => set(key, hz)} audition={audition} />
+                                <NoteKnob spec={spec} value={v}
+                                    onChange={spec.writable ? (hz) => spec.set(hz) : undefined}
+                                    audition={audition} />
                             )}
                         </SynthKnob>
                     );

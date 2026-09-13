@@ -1,10 +1,10 @@
 {
   "metadata": {
-    "analyzer_version": "20260717.0313-9a2e6ae3aa3c302e",
+    "analyzer_version": "20260904.2022",
     "name": "Ride.wav",
-    "folder": "APK 454",
-    "sub": "APK 454",
-    "path": "APK 454/Ride.wav",
+    "folder": "SampleLibrary/APK 454",
+    "sub": "SampleLibrary/APK 454",
+    "path": "APK:DOCKERS/APK:audio:WebPortal/SRC/APK:Softapps/SAMPLE and PLAY/SampleLibrary/APK 454/Ride.wav",
     "length_seconds": 0.6047845804988662,
     "sample_rate": 44100,
     "bit_depth": 16,
@@ -12,7 +12,7 @@
     "source_format": "WAV",
     "lossy_source": false,
     "dc_offset": -0.000019233820610107888,
-    "trailing_silence_ms": 0,
+    "trailing_silence_ms": 0.0,
     "analysis_depth": "full"
   },
   "classification": {
@@ -43,7 +43,7 @@
     "attack_seconds": 0.0016553287981859411,
     "sustain_ratio": 0.1891891891891892,
     "sustained": false,
-    "envelope_attack_seconds": 0,
+    "envelope_attack_seconds": 0.0,
     "envelope_decay_seconds": 0.28435374149659864,
     "envelope_sustain_level": 0.18523361374248695,
     "envelope_release_seconds": 0.28435374149659864,
@@ -51,7 +51,24 @@
     "envelope_skewness": 1.104313349802705,
     "envelope_kurtosis": 0.3631629479574743,
     "envelope_shape": "Decaying",
-    "decay_time_seconds_60db": 1.069498151714181,
+    "decay_time_seconds_60db": 1.0694981517141808,
+    "slices": [
+      {
+        "index": 0,
+        "start_seconds": 0.0,
+        "end_seconds": 0.6086167800453515,
+        "relative_level": 1.0,
+        "envelope_attack_seconds": 0.0,
+        "envelope_decay_seconds": 0.28435374149659864,
+        "envelope_sustain_level": 0.18523361374248695,
+        "envelope_release_seconds": 0.28435374149659864,
+        "envelope_temporal_centroid": 0.14022580215223668,
+        "envelope_skewness": 1.104313349802705,
+        "envelope_kurtosis": 0.3631629479574743,
+        "envelope_shape": "Decaying",
+        "decay_time_seconds_60db": 1.0694981517141808
+      }
+    ],
     "onset_periodicity": 0.055123915143977624,
     "onset_rate_per_second": 1.653481309287241
   },
@@ -59,105 +76,159 @@
     "root_mean_square_level": 0.11124837411196088,
     "crest_factor": 8.988621095850812,
     "zero_crossings_per_second": 10319.37685126167,
-    "complexity": 3421.3604473867763,
-    "spectral_centroid_hz": 6446.081167970491,
+    "complexity": 3421.3603721408504,
+    "spectral_centroid_hz": 6446.0811219762,
     "spectral_rolloff_hz": 9547.201079824528,
-    "spectral_flatness": 0.16714116184865607,
-    "low_band_energy": 0.004271444791780154,
-    "mid_band_energy": 0.08430446528806385,
-    "high_band_energy": 0.911424089920156,
-    "spectral_flux": 0.1475895906591801,
+    "spectral_flatness": 0.16714114614198708,
+    "low_band_energy": 0.004271445299959781,
+    "mid_band_energy": 0.08430446428679561,
+    "high_band_energy": 0.9114240904132446,
+    "spectral_flux": 0.14758959079720496,
     "harmonicity": 0.6005885523646248,
-    "inharmonicity": 0.2328395093370285,
+    "inharmonicity": 0.23283950399480047,
     "partial_count": 12,
     "mel_frequency_cepstral_coefficients": [
-      17.299665292896027,
-      -1.374700224586498,
-      -9.346110976910849,
-      4.050218608635963,
-      -4.798292086371462,
-      -2.1176391759632938,
-      -3.3751090967821393,
-      1.5964164474063929,
-      -1.5830524189460866,
-      1.4189286480935743,
-      -0.8155890324844671,
-      2.619539326901883,
-      -1.3003525807718617
+      17.299665446827984,
+      -1.374700293104281,
+      -9.34611076671424,
+      4.050218483086015,
+      -4.7982918993069825,
+      -2.1176393152611555,
+      -3.3751089164087267,
+      1.5964163510883458,
+      -1.5830523066241657,
+      1.418928573157295,
+      -0.8155889117081614,
+      2.6195392125809,
+      -1.3003524972601161
     ],
-    "spectral_centroid_mean_hz": 5795.547581245742,
-    "spectral_centroid_deviation_hz": 342.7061043979004,
-    "total_harmonic_distortion": 0,
-    "clipping_density": 0,
+    "spectral_centroid_mean_hz": 5795.547585347547,
+    "spectral_centroid_deviation_hz": 342.70609776282055,
+    "total_harmonic_distortion": 0.0,
+    "clipping_density": 0.0,
     "distortion": "Clean",
-    "stationarity": 0.11896124122704888,
-    "spectral_entropy": 0.5739583621469584,
-    "spectral_slope_db_per_octave": 3.357382842387067,
+    "stationarity": 0.11896123941950365,
+    "spectral_entropy": 0.5739583623366483,
+    "spectral_slope_db_per_octave": 3.3573828077010033,
     "band_limit_high_hz": 15740.771484375,
-    "spectral_centroid_slope_hz_per_second": -1979.3288703164337,
+    "spectral_centroid_slope_hz_per_second": -1979.328895241138,
     "syllabic_modulation_energy": null,
     "voicing_ratio": 0.65625,
     "mid_rms": 0.11124837387258622,
     "side_rms": 0.0014698041080985732,
-    "lufs": -14.258739372557804
+    "lufs": -14.258739372557802,
+    "loudness_range_lu": 0.0,
+    "true_peak_dbtp": 0.6390518127936063
   },
   "musicality": {
     "pitch_hz": 459.375,
     "pitch_slope_semitones_per_second": null,
     "root_note_name": "",
-    "root_frequency_hz": 0,
-    "root_cents_offset": 0,
-    "beats_per_minute": 0,
+    "root_frequency_hz": 0.0,
+    "root_cents_offset": 0.0,
+    "beats_per_minute": 0.0,
     "root_midi_note": -1,
     "chromagram": [
-      0.6793470335711459,
-      0.5299122138459615,
-      0.7370802398219778,
-      0.36096856550528367,
-      0.30037792930601614,
-      0.39679956126065635,
-      1,
-      0.5072478496516637,
-      0.5213262845491994,
-      0.6892622947020983,
-      0.851100989780179,
-      0.6643958584950596
-    ]
+      0.6793470262538737,
+      0.5299122418537623,
+      0.7370802427219424,
+      0.36096855626311447,
+      0.30037791614070575,
+      0.39679955148653384,
+      1.0,
+      0.5072478560579662,
+      0.5213262689082923,
+      0.6892622700039285,
+      0.8511010035431842,
+      0.6643958637988333
+    ],
+    "note_root_key_beat_marker_map": {
+      "global_root_note": "",
+      "global_midi_note": -1,
+      "global_bpm": 120.0,
+      "total_beats": 2,
+      "beat_markers": [
+        {
+          "index": 0,
+          "timestamp_seconds": 0.0,
+          "sample_index": 0,
+          "is_downbeat": true,
+          "bar": 1,
+          "beat": 1
+        },
+        {
+          "index": 1,
+          "timestamp_seconds": 0.5,
+          "sample_index": 22050,
+          "is_downbeat": false,
+          "bar": 1,
+          "beat": 2
+        }
+      ],
+      "chunk_maps": [
+        {
+          "chunk_index": 0,
+          "start_seconds": 0.0,
+          "end_seconds": 0.594,
+          "duration_seconds": 0.594,
+          "root_note_name": "Unpitched",
+          "root_midi_note": -1,
+          "root_frequency_hz": 0.0,
+          "pitch_hz": 459.38,
+          "cents_offset": 0.0,
+          "peak_amplitude": 1.0,
+          "nearest_beat_index": 0
+        }
+      ]
+    }
   },
   "unsupervised": {
-    "cluster": -1,
-    "principal_components": []
+    "cluster": 5,
+    "principal_components": [
+      2.3550576289210663,
+      -0.42543872514122616,
+      0.8975963685930396
+    ]
   },
   "ucs": {
     "category": "MACHINES",
     "subcategory": "AMUSEMENT",
     "id": "MACHAmus",
-    "confidence": 0.5654919238904381,
+    "confidence": 0.5591430647359972,
     "alternatives": [
       {
         "category": "CYMBALS",
         "subcategory": "RIDE",
         "id": "CYMBRide",
-        "probability": 0.435,
+        "probability": 0.43,
         "synonyms": [
           "ride"
+        ]
+      },
+      {
+        "category": "ARCHIVED",
+        "subcategory": "IMPULSE RESPONSE",
+        "id": "IR",
+        "probability": 0.011,
+        "synonyms": [
+          "sample"
         ]
       }
     ],
     "synonyms": [
       "ride"
     ],
-    "reason": "name matched [ride]; signal 0.26, tier semantic_only, 2 candidates in contention; gate ruled out AIRSuck (envelope_temporal_centroid 0.1402 < min 0.4000)"
+    "reason": "name matched [ride]; signal 0.26, tier semantic_only, 3 candidates in contention; gate ruled out AIRSuck (envelope_temporal_centroid 0.1402 < min 0.4000)"
   },
   "regions": {
     "count": 1,
-    "detection_threshold_decibels": -40,
+    "detection_threshold_decibels": -40.0,
     "minimum_silence_seconds": 0.15,
     "minimum_region_seconds": 0.05,
     "regions": [
       {
         "index": 0,
-        "start_seconds": 0,
+        "start_seconds": 0.0,
         "end_seconds": 0.5936507936507937,
         "duration_seconds": 0.5936507936507937,
         "peak_amplitude": 0.2982286187455754,

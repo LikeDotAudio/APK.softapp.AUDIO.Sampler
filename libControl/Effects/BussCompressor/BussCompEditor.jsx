@@ -1,3 +1,4 @@
+// Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
 // ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
 // https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
 //
@@ -47,6 +48,12 @@ const BussKnob = ({ value, min, max, defaultVal, ticks, size = 54, onChange, tit
     const rad = (d) => d * Math.PI / 180;
     const pt = (r, a) => [cx + r * Math.sin(rad(a)), cy - r * Math.cos(rad(a))];
 
+    // A knob with no writer is a READOUT. The adapter marks a deprecated
+    // parameter unwritable and hands back a `set` that does nothing; without
+    // this, the knob still turned, still reported, and was heard by nothing.
+    // Same guard, same three lines of styling, as RackKnob in CompressorEditor.
+    const live = typeof onChange === 'function';
+
     const clampV = (v) => Math.max(min, Math.min(max, v));
     const cur = clampV(value);
     const angle = (((cur - min) / ((max - min) || 1)) * 2 - 1) * 135;
@@ -60,6 +67,7 @@ const BussKnob = ({ value, min, max, defaultVal, ticks, size = 54, onChange, tit
     });
 
     const onPointerDown = (e) => {
+        if (!live) return;
         if (e.altKey) { onChange(defaultVal); return; }
         readout.begin(e);
         const startY = e.clientY;
@@ -78,6 +86,7 @@ const BussKnob = ({ value, min, max, defaultVal, ticks, size = 54, onChange, tit
         e.preventDefault();
     };
     const onWheel = (e) => {
+        if (!live) return;
         e.preventDefault();
         onChange(clampV(cur + (e.deltaY < 0 ? 1 : -1) * (max - min) / 50));
     };
@@ -112,7 +121,12 @@ const BussKnob = ({ value, min, max, defaultVal, ticks, size = 54, onChange, tit
     return (
         <svg width={S} height={S} viewBox={`0 0 ${S} ${S}`}
              role="img" aria-label={title}
-             style={{ display: 'block', touchAction: 'none', cursor: 'ns-resize' }}
+             style={{
+                 display: 'block', touchAction: 'none',
+                 cursor: live ? 'ns-resize' : 'default',
+                 filter: live ? undefined : 'grayscale(1) brightness(0.6)',
+                 opacity: live ? undefined : 0.7,
+             }}
              onPointerDown={onPointerDown} onWheel={onWheel}>
             <defs>
                 <radialGradient id={uid} cx="36%" cy="24%" r="82%">
@@ -350,14 +364,13 @@ const GrMeter = ({ posRef }) => {
  * other editor in the rack it takes no channel index — `idx` is accepted and
  * ignored so the panel can be opened the same way as its neighbours.
  */
-window.BussCompEditor = ({ onClose, oaPopped }) => {
+window.BussCompEditor = ({ onClose, oaPopped, oaHosted }) => {
     const [showHelp, setShowHelp] = React.useState(false);
     const panel = window.useOaPanel({
-        id: 'buss', title: 'MASTER BUSS — COMPRESSOR', copy: oaPopped,
+        id: 'buss', title: 'MASTER BUSS — COMPRESSOR', copy: oaPopped, hosted: oaHosted,
         render: () => <window.BussCompEditor onClose={onClose} oaPopped />,
     });
     const unit = window.useOaState('buss', 0);
-    const params = window.useOaParams('buss', 0);
     // Armed for a take: the bus is routed around the compressor entirely, so
     // the plate greys and stops taking knob moves that nothing would hear.
     const bypassed = window.useOaFxBypass();
@@ -380,7 +393,18 @@ window.BussCompEditor = ({ onClose, oaPopped }) => {
     const [full, setFull] = React.useState(true);
     React.useEffect(() => { setFull(window.oaBussFullDsp()); }, []);
 
-    const P = (k) => params.find((p) => p.key === k) || { min: 0, max: 1, def: 0, ticks: [], fmt: String, label: k };
+    // What controls this unit has, what their bounds are, and which of them may
+    // be written — all from the adapter, so the desk in the room and the desk on
+    // the network are the same desk. PLAN-18.12.
+    const surface = window.useOaConsoleSurface('buss', 0);
+
+    // The collapsed header's one-line reading. It took its formatters out of
+    // `params` and its values out of `unit`; the descriptor already carries the
+    // value formatted, so this is the same string with nothing hand-joined. A
+    // key the schema drops degrades to '—' rather than throwing in a header.
+    const summary = () => ['ratio', 'attack', 'release']
+        .map((k) => (surface.by[k] ? surface.by[k].display : '—'))
+        .join(' · ');
     const set = (k, v) => window.oaPluginSet('buss', 0, k, v);
     const on = !!unit.on;
 
@@ -425,22 +449,30 @@ window.BussCompEditor = ({ onClose, oaPopped }) => {
         }
     });
 
+    // ONE knob column, from ONE descriptor. This used to reach into `params`
+    // for the bounds, into `unit` for the value, and assume everything it was
+    // handed could be written. A key the plugin does not declare now draws
+    // NOTHING rather than a knob with invented bounds, and a key the adapter
+    // marks read-only — `mix`, deprecated so old presets still load — comes up
+    // engraved, greyed and inert instead of turning and being heard by nothing.
     const knob = (key, size) => {
-        const p = P(key);
+        const d = surface.by[key];
+        if (!d) return null;
         return (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px' }}>
                 <BussKnob
-                    value={unit[key]} min={p.min} max={p.max} defaultVal={p.def}
-                    ticks={p.ticks} size={size} title={`${p.label} — ${p.hint || ''}`}
-                    onChange={(v) => set(key, v)}
-                    label={p.label.toUpperCase()} display={p.fmt(unit[key])}
+                    value={d.value} min={d.min} max={d.max} defaultVal={d.def}
+                    ticks={d.ticks} size={size}
+                    title={d.writable ? d.label : `${d.label} — read-only`}
+                    onChange={d.writable ? d.set : undefined}
+                    label={d.label.toUpperCase()} display={d.display}
                 />
-                <Cut size={7} style={{ letterSpacing: '1.8px' }}>{p.label.toUpperCase()}</Cut>
+                <Cut size={7} style={{ letterSpacing: '1.8px' }}>{d.label.toUpperCase()}</Cut>
                 <div style={{
                     fontSize: '8.5px', color: window.OA_BUSS_COLOR, fontWeight: '700',
                     fontVariantNumeric: 'tabular-nums', opacity: 0.9
                 }}>
-                    {p.fmt(unit[key])}
+                    {d.display}
                 </div>
             </div>
         );
@@ -487,9 +519,9 @@ window.BussCompEditor = ({ onClose, oaPopped }) => {
                     across the whole mix
                 </span>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
-                    <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
+                    {panel.chrome && <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
                         title={panel.popTitle}
-                        style={{ padding: '4px 10px' }} />
+                        style={{ padding: '4px 10px' }} />}
                     {/* Help is a BUTTON rather than a standing paragraph: it is
                         read once and then in the way for ever, and the panel is
                         already tall enough to scroll. */}
@@ -502,7 +534,7 @@ window.BussCompEditor = ({ onClose, oaPopped }) => {
                         title="Back to how the mix sounded when the panel was opened"
                         style={{ padding: '4px 10px', border: 'none' }} />
                     {bypassed && <window.OaOutOfCircuit />}
-                    <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />
+                    {panel.chrome && <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />}
                 </div>
             </div>
 
@@ -692,7 +724,7 @@ window.BussCompEditor = ({ onClose, oaPopped }) => {
                             }}></span>
                             <span style={{ fontSize: '8.5px', color: '#8f9299', letterSpacing: '.8px', lineHeight: 1.35 }}>
                                 {on
-                                    ? `${P('ratio').fmt(unit.ratio)} · ${P('attack').fmt(unit.attack)} · ${P('release').fmt(unit.release)}`
+                                    ? summary()
                                     : 'OUT OF CIRCUIT'}
                             </span>
                         </div>
