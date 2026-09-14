@@ -281,7 +281,7 @@ const VuMeter = ({ posRef, mode }) => {
             {/* Sized in percent rather than pixels: the meter is the widest thing
                 on the plate, and on a small phone it has to give ground instead
                 of pushing the ratio and meter buttons off the line. */}
-            <svg width="100%" height="auto" viewBox={`0 0 ${W} ${H}`}
+            <svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`}
                  style={{ display: 'block', borderRadius: '2px', width: `${W}px`, maxWidth: '100%', height: 'auto' }}>
                 <defs>
                     <linearGradient id="vuface" x1="0" y1="0" x2="0" y2="1">

@@ -305,7 +305,7 @@ const GrMeter = ({ posRef }) => {
             {/* Sized in percent as well as pixels: the meter is the widest thing
                 on the plate, and on a small phone it has to give ground rather
                 than push the faceplate off the line. */}
-            <svg width="100%" height="auto" viewBox={`0 0 ${W} ${H}`}
+            <svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`}
                  style={{
                      display: 'block', borderRadius: '2px', width: `${W}px`, maxWidth: '100%', height: 'auto',
                      // The shadow the bezel casts onto the card behind it.
