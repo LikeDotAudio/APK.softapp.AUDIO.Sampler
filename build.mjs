@@ -173,7 +173,7 @@ const dirtySources = (files) => {
   try {
     // `-z`, because every path in this checkout contains a colon and a space
     // and git quotes those in the human form — the reader would get
-    // `"APK:DOCKERS/…/SAMPLE and PLAY/libControl/x.jsx"` with the quotes in it.
+    // `"APK:PODS/…/SAMPLE and PLAY/libControl/x.jsx"` with the quotes in it.
     const out = execFileSync('git', ['status', '--porcelain', '-z', '--', ...files],
                              { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
     // Paths come back relative to the repository root; this app's own prefix is

@@ -568,7 +568,7 @@ window.oaPumpPluginsOnce = pumpOnce;
  * agree with. What the tier is good for is the NUMBER: a period the rest of the
  * system already treats as canonical, that divides the hour, and that somebody
  * chose for exactly this range. See TIERS in
- * APK:DOCKERS/APK:BareMetal/backend/Core/heartbeat/src/main.rs — it is OFF by default there
+ * APK:PODS/APK:BareMetal/backend/Core/heartbeat/src/main.rs — it is OFF by default there
  * for this reason.
  *
  * WHY A CAP AND NOT A FASTER LOOP. Before this, `oaPlugin.js` pumped on every

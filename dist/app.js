@@ -2507,7 +2507,7 @@ window.oaPumpPluginsOnce = pumpOnce;
  * agree with. What the tier is good for is the NUMBER: a period the rest of the
  * system already treats as canonical, that divides the hour, and that somebody
  * chose for exactly this range. See TIERS in
- * APK:DOCKERS/APK:BareMetal/backend/Core/heartbeat/src/main.rs — it is OFF by default there
+ * APK:PODS/APK:BareMetal/backend/Core/heartbeat/src/main.rs — it is OFF by default there
  * for this reason.
  *
  * WHY A CAP AND NOT A FASTER LOOP. Before this, `oaPlugin.js` pumped on every
@@ -13558,7 +13558,7 @@ window.useSamplerSets = (setSampleNames, publishSample) => {
 // speak it and neither is ours to rename from here --
 //   · APK:OS/DataBus/reading/read-bus-event.js  files `Gui/DrumKit/{n}/sample`
 //     as a measurement, so the shell's bus reader would stop classifying it.
-//   · APK:DOCKERS/APK:BareMetal/backend/Core/orchestrator/src/services/spog_bridge.rs maps
+//   · APK:PODS/APK:BareMetal/backend/Core/orchestrator/src/services/spog_bridge.rs maps
 //     console strips onto `APK.audio/Gui/DrumKit/<pad>/eq/<key>` on the same
 //     prefix, so the EQ half would part company with the sample half.
 // Migrating is a three-tree change with retained state on the old prefix, not a

@@ -21,7 +21,7 @@
 // speak it and neither is ours to rename from here --
 //   · APK:OS/DataBus/reading/read-bus-event.js  files `Gui/DrumKit/{n}/sample`
 //     as a measurement, so the shell's bus reader would stop classifying it.
-//   · APK:DOCKERS/APK:BareMetal/backend/Core/orchestrator/src/services/spog_bridge.rs maps
+//   · APK:PODS/APK:BareMetal/backend/Core/orchestrator/src/services/spog_bridge.rs maps
 //     console strips onto `APK.audio/Gui/DrumKit/<pad>/eq/<key>` on the same
 //     prefix, so the EQ half would part company with the sample half.
 // Migrating is a three-tree change with retained state on the old prefix, not a
