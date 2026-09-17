@@ -43,3 +43,6 @@ package-lock.json
 /dist/*
 !/dist/gui.js
 !/dist/app.js
+# dist/fx.js is tracked for the reason gui.js is: APK:OS's sound pages load it
+# out of this folder as a package (PLAN-3315.01), and nothing builds it for them.
+!/dist/fx.js

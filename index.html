@@ -17,7 +17,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web Sampler & Sequencer</title>
-    
+
+    <!-- APK:OS's sound watchdog. When the APK:OS desktop frames this page on its
+         sound site it pings it every second and replaces it when it stops
+         answering, and this is what answers — and lends the bus hooks the
+         shell's broker, so a replaced Sampler comes back with its kit. Framed
+         by nothing, or served where APK:OS is not beside it, it does nothing
+         (and a 404 here is silent). Ahead of the bundle on purpose: it has to
+         be listening before the shell says hello. PLAN-3315.01. -->
+    <script src="../../APK:OS/Midi/site/agent/sound-agent.js"></script>
+
     <!-- React & ReactDOM -->
     <script src="./vendor/react.production.min.js"></script>
     <script src="./vendor/react-dom.production.min.js"></script>

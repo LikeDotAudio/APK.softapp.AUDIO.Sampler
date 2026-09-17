@@ -206,14 +206,6 @@ window.oaReverbProgramName = function (u) {
 // THE ROOM ITSELF
 // ---------------------------------------------------------------------------
 
-// How long a response has to be to hold everything the parameters ask for:
-// the silence in front, the swell, and the tail's fall to silence. Capped so a
-// runaway setting cannot ask for a hundred megabytes of buffer.
-const irSeconds = function (unit) {
-    const build = (unit.spread / 255) * (0.03 + (unit.size / 39) * 0.5);
-    const tail = unit.rtMid * Math.max(1, unit.rtLow) * 1.15;
-    return Math.min(14, unit.preDelay / 1000 + build + tail + 0.05);
-};
 
 // ---------------------------------------------------------------------------
 // Every room that has been drawn, kept under the settings that drew it.
@@ -262,13 +254,23 @@ window.oaClearImpulseCache = function () { if (irCache) irCache.clear(); };
  * as distinct slaps (early reflections), and those slaps multiply into a wash
  * that swells and then dies (the late tail).
  */
-const drawImpulse = function (ctx, unit) {
-    // Through oaSampleRate() rather than ctx.sampleRate: the response is built
-    // for whichever context asked, but a missing context must not turn every
-    // coefficient below into NaN and hand the convolver a buffer of silence.
-    const rate = window.oaSampleRate(ctx);
+// PURE, and on purpose: no `window`, no context, nothing from this file's
+// scope. It is the one function that runs in two places — here, when there is
+// no Worker (an offline render, a test), and inside a Worker made from its own
+// source text when there is one — so it takes the rate and the settings and
+// hands back two channels of samples. `irSeconds` is restated inside for the
+// same reason. PLAN-3315.01.
+const drawImpulseChannels = function (rate, unit) {
+    // How long a response has to be to hold everything the parameters ask for:
+    // the silence in front, the swell, and the tail's fall to silence. Capped
+    // so a runaway setting cannot ask for a hundred megabytes of buffer.
+    const irSeconds = function (u) {
+        const build = (u.spread / 255) * (0.03 + (u.size / 39) * 0.5);
+        const tail = u.rtMid * Math.max(1, u.rtLow) * 1.15;
+        return Math.min(14, u.preDelay / 1000 + build + tail + 0.05);
+    };
     const len = Math.max(1, Math.floor(rate * irSeconds(unit)));
-    const buf = ctx.createBuffer(2, len, rate);
+    const channels = [new Float32Array(len), new Float32Array(len)];
 
     const preS = Math.floor((unit.preDelay / 1000) * rate);
     const diff = unit.diffusion / 255;
@@ -303,7 +305,7 @@ const drawImpulse = function (ctx, unit) {
     const TAPS = 18;
 
     for (let ch = 0; ch < 2; ch++) {
-        const d = buf.getChannelData(ch);
+        const d = channels[ch];
 
         // --- the discrete bounces ---
         // The two sides get their own irrational spacing so the pattern never
@@ -360,7 +362,95 @@ const drawImpulse = function (ctx, unit) {
             prev = lp;
         }
     }
+    return channels;
+};
+
+const impulseBuffer = function (ctx, rate, channels) {
+    const buf = ctx.createBuffer(2, channels[0].length, rate);
+    // copyToChannel where it exists; a fake context in the tests hands back
+    // plain arrays from getChannelData, so the fallback is a copy by hand.
+    for (let ch = 0; ch < 2; ch++) {
+        if (buf.copyToChannel) buf.copyToChannel(channels[ch], ch);
+        else buf.getChannelData(ch).set(channels[ch]);
+    }
     return buf;
+};
+
+const drawImpulse = function (ctx, unit) {
+    // Through oaSampleRate() rather than ctx.sampleRate: the response is built
+    // for whichever context asked, but a missing context must not turn every
+    // coefficient below into NaN and hand the convolver a buffer of silence.
+    const rate = window.oaSampleRate(ctx);
+    return impulseBuffer(ctx, rate, drawImpulseChannels(rate, unit));
+};
+
+// ---------------------------------------------------------------------------
+// OFF THE MAIN THREAD. PLAN-3315.01.
+//
+// The cache above made a room you have heard before free. A room you have NOT
+// heard before is still a couple of million random numbers, and a fourteen
+// second tail is long enough to hold the page's main thread past a block — so
+// on a live context it is drawn in a Worker and handed to the convolver when it
+// arrives. The old room keeps sounding until then, which is what a hardware
+// unit does while it recomputes. An OfflineAudioContext, or a page with no
+// Worker, draws it inline exactly as before: an offline render must not
+// schedule the room it is about to render.
+// ---------------------------------------------------------------------------
+let irWorker = null;
+let irWorkerDead = false;
+let irNext = 1;
+const irWaiting = new Map();
+
+const impulseWorker = function () {
+    if (irWorker || irWorkerDead) return irWorker;
+    if (typeof Worker === 'undefined' || !window.Blob || !window.URL) { irWorkerDead = true; return null; }
+    try {
+        const src = 'const drawImpulseChannels = ' + drawImpulseChannels.toString() + ';\n'
+            + 'self.onmessage = function (e) {\n'
+            + '  const ch = drawImpulseChannels(e.data.rate, e.data.unit);\n'
+            + '  self.postMessage({ id: e.data.id, channels: ch }, [ch[0].buffer, ch[1].buffer]);\n'
+            + '};\n';
+        irWorker = new Worker(URL.createObjectURL(new Blob([src], { type: 'application/javascript' })));
+        irWorker.onmessage = function (e) {
+            const job = irWaiting.get(e.data.id);
+            if (!job) return;
+            irWaiting.delete(e.data.id);
+            job(e.data.channels);
+        };
+        irWorker.onerror = function () {
+            // A worker that cannot run is not a reason to have no reverb.
+            irWorkerDead = true;
+            irWorker = null;
+            const jobs = Array.from(irWaiting.values());
+            irWaiting.clear();
+            jobs.forEach(function (job) { job(null); });
+        };
+    } catch (e) {
+        irWorkerDead = true;
+        irWorker = null;
+    }
+    return irWorker;
+};
+
+/**
+ * The room for these settings, handed to `apply` — at once if it is cached or
+ * the context is offline, from a Worker if it has to be drawn on a live one.
+ */
+window.oaBuildImpulseLive = function (ctx, unit, apply) {
+    const rate = window.oaSampleRate(ctx);
+    const key = irCache ? irKey(rate, unit) : null;
+    const hit = key && irCache.get(key);
+    if (hit) { apply(hit); return; }
+
+    const worker = !ctx.startRendering ? impulseWorker() : null;
+    if (!worker) { apply(window.oaBuildImpulse(ctx, unit)); return; }
+
+    const id = irNext++;
+    irWaiting.set(id, function (channels) {
+        const buf = channels ? impulseBuffer(ctx, rate, channels) : drawImpulse(ctx, unit);
+        apply(key ? irCache.put(key, buf) : buf);
+    });
+    worker.postMessage({ id: id, rate: rate, unit: JSON.parse(JSON.stringify(unit)) });
 };
 
 /**
@@ -402,7 +492,7 @@ const reverbBus = function (ctx, u) {
         const convolver = ctx.createConvolver();
         const ret = ctx.createGain();
         convolver.normalize = true;
-        convolver.buffer = window.oaBuildImpulse(ctx, unit);
+        window.oaBuildImpulseLive(ctx, unit, function (buf) { convolver.buffer = buf; });
         ret.gain.value = unit.standby ? 0 : unit.ret;
         input.connect(convolver);
         convolver.connect(ret);
@@ -482,8 +572,10 @@ window.oaRefreshReverb = function (u, immediate) {
     if (pending[u]) clearTimeout(pending[u]);
     const build = function () {
         pending[u] = null;
-        bus.convolver.buffer = window.oaBuildImpulse(ctx, window.oaReverbUnit(u));
-        window.dispatchEvent(new CustomEvent('oa-reverb-rebuilt', { detail: { unit: u } }));
+        window.oaBuildImpulseLive(ctx, window.oaReverbUnit(u), function (buf) {
+            bus.convolver.buffer = buf;
+            window.dispatchEvent(new CustomEvent('oa-reverb-rebuilt', { detail: { unit: u } }));
+        });
     };
     if (immediate) build();
     else pending[u] = setTimeout(build, 90);

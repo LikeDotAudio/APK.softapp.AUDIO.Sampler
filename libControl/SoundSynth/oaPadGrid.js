@@ -103,3 +103,12 @@ window.oaSetPadLayout = function (key) {
 window.oaPadGrid = function () {
     return { cols: window.OA_PAD_COLS, rows: window.OA_PAD_ROWS, count: window.OA_PAD_COUNT };
 };
+
+// A HOST THAT NEEDS MORE UNITS THAN PADS says so here. APK:OS's desk keeps its
+// own band of effect units above the pads and has to widen OA_PAD_MAX before
+// the first effect sizes its arrays against it — which is now, between this
+// file and the next, inside one bundle it cannot stop halfway through. It used
+// to fetch these files one at a time and widen between them; it loads
+// `dist/fx.js` as a package instead, and hangs this hook on `window` first.
+// Nothing else sets it, so on this app's own page it is never called.
+if (typeof window.OA_AFTER_PAD_GRID === 'function') window.OA_AFTER_PAD_GRID();

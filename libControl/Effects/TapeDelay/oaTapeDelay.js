@@ -179,7 +179,36 @@ class OaTapeEcho extends AudioWorkletProcessor {
     return a + frac * (b - a);
   }
 
+  // THE GUARD — PLAN-3315.01. This runs on the context's render thread, and
+  // a throw in here used to end this node for the life of the context while a
+  // NaN in the state walked straight out of it into the master. Now a block
+  // that throws is a block of silence and the node lives, and a sample that is
+  // not a finite number — or is a denormal on its way to becoming one — leaves
+  // as zero. The DSP itself is render(), unchanged.
   process(inputs, outputs, params) {
+    let alive = true;
+    try {
+      alive = this.render(inputs, outputs, params);
+    } catch (e) {
+      this.faults = (this.faults || 0) + 1;
+      for (let o = 0; o < outputs.length; o++) {
+        for (let c = 0; c < outputs[o].length; c++) outputs[o][c].fill(0);
+      }
+      return true;
+    }
+    for (let o = 0; o < outputs.length; o++) {
+      for (let c = 0; c < outputs[o].length; c++) {
+        const ch = outputs[o][c];
+        for (let i = 0; i < ch.length; i++) {
+          const x = ch[i];
+          if (!Number.isFinite(x) || (x < 1e-30 && x > -1e-30)) ch[i] = 0;
+        }
+      }
+    }
+    return alive;
+  }
+
+  render(inputs, outputs, params) {
     const input = inputs[0];
     const output = outputs[0];
     if (!output || !output.length) return true;
@@ -304,26 +333,73 @@ const tapeModuleUrl = function () {
  * One entry point for both because they share the same answer: a context either
  * has AudioWorklet or it does not, and every bus wants to know before it builds.
  */
+// EACH MODULE IN ITS OWN try — PLAN-3315.01. The four used to be registered
+// in one block, so a single module that failed to compile or fetch took the
+// other three with it and every tape, compressor and gate on the context fell
+// back to native. Now each processor answers for itself: `ctx.__oaWorklets`
+// holds the verdict per processor name and `oaWorkletReady` is what a bus asks
+// before it builds, so the one that failed goes native and the rest do not.
+const OA_WORKLET_MODULES = [
+    ['oa-tape-echo', () => tapeModuleUrl()],
+    ['oa-limiter', () => window.oaCompModuleUrl && window.oaCompModuleUrl()],
+    ['oa-buss-comp', () => window.oaBussModuleUrl && window.oaBussModuleUrl()],
+    ['oa-gate', () => window.oaGateModuleUrl && window.oaGateModuleUrl()],
+];
+
 window.oaPrepareFx = function (ctx) {
     if (!ctx.__oaFxReady) {
         ctx.__oaFxReady = (async function () {
-            let ok = false;
-            try {
-                if (ctx.audioWorklet && window.AudioWorkletNode && window.Blob && window.URL) {
-                    await ctx.audioWorklet.addModule(tapeModuleUrl());
-                    if (window.oaCompModuleUrl) await ctx.audioWorklet.addModule(window.oaCompModuleUrl());
-                    if (window.oaBussModuleUrl) await ctx.audioWorklet.addModule(window.oaBussModuleUrl());
-                    if (window.oaGateModuleUrl) await ctx.audioWorklet.addModule(window.oaGateModuleUrl());
-                    ok = true;
+            ctx.__oaWorklets = ctx.__oaWorklets || {};
+            let any = false;
+            if (ctx.audioWorklet && window.AudioWorkletNode && window.Blob && window.URL) {
+                for (const [name, url] of OA_WORKLET_MODULES) {
+                    const src = url();
+                    if (!src) { ctx.__oaWorklets[name] = false; continue; }
+                    try {
+                        await ctx.audioWorklet.addModule(src);
+                        ctx.__oaWorklets[name] = true;
+                        any = true;
+                    } catch (e) {
+                        ctx.__oaWorklets[name] = false;
+                        console.warn('⚠️ [FX] worklet ' + name + ' unavailable, using its native chain:', e && e.message);
+                    }
                 }
-            } catch (e) {
-                console.warn('⚠️ [FX] worklet unavailable, using native chains:', e && e.message);
             }
-            ctx.__oaWorkletOk = ok;
-            return ok;
+            ctx.__oaWorkletOk = any;
+            return any;
         })();
     }
     return ctx.__oaFxReady;
+};
+
+/** Did THIS processor register on this context? */
+window.oaWorkletReady = function (ctx, name) {
+    return !!(ctx.__oaWorkletOk && (!ctx.__oaWorklets || ctx.__oaWorklets[name] !== false));
+};
+
+/**
+ * A worklet that dies anyway — a throw in its constructor, or anything the
+ * guard in process() did not catch — fires `processorerror` and then outputs
+ * silence for ever. Swapped for the native chain the moment it does, on the
+ * same bus, wired to the same place: the effect gets coarser and keeps
+ * working, which is the fallback every engine here already has for a worklet
+ * that could not be built in the first place.
+ *
+ * `makeNative` builds the replacement, `downstream` is where the engine's
+ * output went. PLAN-3315.01.
+ */
+window.oaSwapOnProcessorError = function (bus, label, makeNative, downstream) {
+    const node = bus && bus.engine && bus.engine.input;
+    if (!node || !window.AudioWorkletNode || !(node instanceof window.AudioWorkletNode)) return;
+    node.onprocessorerror = function () {
+        if (!bus.engine || bus.engine.input !== node) return;
+        console.warn('⚠️ [' + label + '] worklet processor failed, swapping in the native chain');
+        try { bus.input.disconnect(node); } catch (e) { /* already off */ }
+        try { node.disconnect(); } catch (e) { /* already off */ }
+        bus.engine = makeNative();
+        bus.input.connect(bus.engine.input);
+        bus.engine.output.connect(downstream);
+    };
 };
 
 // The same topology built from native nodes: drive → tape → two heads, one
@@ -434,7 +510,7 @@ const attachEngine = function (ctx, bus, u) {
     if (bus.engine) return;
     const unit = window.oaDelayUnit(u);
     try {
-        bus.engine = ctx.__oaWorkletOk ? workletEngine(ctx, unit) : nativeEngine(ctx, unit);
+        bus.engine = window.oaWorkletReady(ctx, 'oa-tape-echo') ? workletEngine(ctx, unit) : nativeEngine(ctx, unit);
     } catch (e) {
         console.warn('⚠️ [TapeDelay] worklet node failed, using native chain:', e && e.message);
         bus.engine = nativeEngine(ctx, unit);
@@ -445,6 +521,7 @@ const attachEngine = function (ctx, bus, u) {
     bus.chorus = window.oaChorusNode(ctx, unit.chorus);
     bus.engine.output.connect(bus.chorus.input);
     bus.chorus.output.connect(bus.ret);
+    window.oaSwapOnProcessorError(bus, 'TapeDelay', () => nativeEngine(ctx, unit), bus.chorus.input);
 };
 
 // ---------------------------------------------------------------------------

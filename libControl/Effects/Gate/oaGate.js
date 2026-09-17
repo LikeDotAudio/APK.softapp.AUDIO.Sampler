@@ -324,7 +324,36 @@ class OaGate extends AudioWorkletProcessor {
     this.port.postMessage({ gr: v, open: this.open ? 1 : 0 });
   }
 
+  // THE GUARD — PLAN-3315.01. This runs on the context's render thread, and
+  // a throw in here used to end this node for the life of the context while a
+  // NaN in the state walked straight out of it into the master. Now a block
+  // that throws is a block of silence and the node lives, and a sample that is
+  // not a finite number — or is a denormal on its way to becoming one — leaves
+  // as zero. The DSP itself is render(), unchanged.
   process(inputs, outputs, params) {
+    let alive = true;
+    try {
+      alive = this.render(inputs, outputs, params);
+    } catch (e) {
+      this.faults = (this.faults || 0) + 1;
+      for (let o = 0; o < outputs.length; o++) {
+        for (let c = 0; c < outputs[o].length; c++) outputs[o][c].fill(0);
+      }
+      return true;
+    }
+    for (let o = 0; o < outputs.length; o++) {
+      for (let c = 0; c < outputs[o].length; c++) {
+        const ch = outputs[o][c];
+        for (let i = 0; i < ch.length; i++) {
+          const x = ch[i];
+          if (!Number.isFinite(x) || (x < 1e-30 && x > -1e-30)) ch[i] = 0;
+        }
+      }
+    }
+    return alive;
+  }
+
+  render(inputs, outputs, params) {
     const output = outputs[0];
     if (!output || !output.length) return true;
     const outL = output[0];
@@ -573,13 +602,17 @@ const gateStrip = function (ctx, idx, dest) {
         // wire is synchronous and always available, so an unresolved worklet
         // falls back rather than leaving the channel silent while it waits —
         // which on an OfflineAudioContext would be the whole render.
-        bus.engine = ctx.__oaWorkletOk ? workletEngine(ctx, unit, bus) : nativeEngine(ctx);
+        bus.engine = window.oaWorkletReady && window.oaWorkletReady(ctx, 'oa-gate')
+            ? workletEngine(ctx, unit, bus) : nativeEngine(ctx);
     } catch (e) {
         console.warn('⚠️ [Gate] worklet node failed, passing through:', e && e.message);
         bus.engine = nativeEngine(ctx);
     }
     input.connect(bus.engine.input);
     bus.engine.output.connect(output);
+    if (window.oaSwapOnProcessorError) {
+        window.oaSwapOnProcessorError(bus, 'Gate', () => nativeEngine(ctx), output);
+    }
 
     if (ctx.createAnalyser) {
         const a = ctx.createAnalyser();
