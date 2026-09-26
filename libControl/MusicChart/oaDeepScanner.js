@@ -156,7 +156,9 @@ window.CHORD_TEMPLATES = (function() {
  * the resolution the section chunker and the chord timeline are drawn at;
  * shortening them changes the answer rather than the cost of getting it.
  */
-window.oaComputeFrameChroma = (function() {
+// A FACTORY, NAMED, so the scan worker below can build its own copy from this
+// function's text — an IIFE's closure is not in any function's toString().
+window.oaMakeFrameChroma = function() {
     // Kept between calls rather than allocated per frame: 718 frames of a
     // three-minute track is 718 pairs of 24,000-element arrays otherwise.
     let hannN = -1;
@@ -202,7 +204,8 @@ window.oaComputeFrameChroma = (function() {
         }
         return chroma;
     };
-})();
+};
+window.oaComputeFrameChroma = window.oaMakeFrameChroma();
 
 /**
  * Match a 12-bin chroma vector against chord templates
@@ -237,7 +240,7 @@ window.oaMatchChord = function(chroma) {
  *
  * `lyrics` is in the return value and is always `[]` — see the file header.
  */
-window.oaDeepScanAudio = async function(audioBuffer, onProgress) {
+window.oaDeepScanHere = async function(audioBuffer, onProgress) {
     if (!audioBuffer) return null;
 
     // TYPE-CHECKED RATHER THAN TRUTH-CHECKED. The parameter in this position
@@ -404,6 +407,104 @@ window.oaDeepScanAudio = async function(audioBuffer, onProgress) {
         // lands, `words` is where it writes.
         lyrics: { words: [] }
     };
+};
+
+/**
+ * THE SCAN RUNS IN A WORKER, NOT IN THE PAGE. PLAN-3315.01 step 9.
+ *
+ * `oaDeepScanHere` above is the scan, and it is unchanged; what changed is the
+ * thread. A three-minute song is ~1.3 s of Goertzel filters, an R128 pass, an
+ * onset envelope and a pitch search, and the yields above only chop that into
+ * 30 ms slices of the SAME thread the pads, the sequencer's booking and the
+ * sound agent's pong run on. In a Worker none of it is on that thread at all.
+ *
+ * The worker is built from the text of the functions themselves — no second
+ * copy of the arithmetic, so the two cannot drift — and handed the tables as
+ * data. Channel 0 goes across as a transferred copy; the page keeps its
+ * AudioBuffer. The result is the same object `oaDeepScanHere` returns (it is
+ * plain data, so it survives the structured clone), progress is relayed with
+ * the same `{ frame, totalFrames }` at the same points, and a worker that
+ * cannot be built or that fails falls back to scanning here, so a caller
+ * never learns which thread did the work. `window.OA_SCAN_IN_WORKER = false`
+ * forces the page path.
+ */
+window.OA_SCAN_KERNEL_FNS = [
+    'oaMakeFrameChroma', 'oaMatchChord', 'oaDeepScanHere',
+    'oaKWeightingBiquads', 'oaApplyBiquad', 'oaTruePeakDbtp', 'oaMeasureLoudnessR128',
+    'oaOnsetEnvelope', 'oaDetectOnsets', 'oaEstimateKey', 'oaEstimatePitch', 'oaPcmSha256'
+];
+window.OA_SCAN_KERNEL_DATA = ['NOTE_NAMES_12', 'OA_SCAN_YIELD_FRAMES', 'CHORD_TEMPLATES', 'OA_KEY_PROFILES'];
+
+/** The worker's whole source, or null if a kernel function is missing. */
+window.oaDeepScanWorkerSource = function() {
+    const fns = window.OA_SCAN_KERNEL_FNS;
+    if (fns.some((name) => typeof window[name] !== 'function')) return null;
+    return 'var window = self;\n' +
+        fns.map((name) => 'self.' + name + ' = ' + window[name].toString() + ';').join('\n') + '\n' +
+        'self.oaComputeFrameChroma = self.oaMakeFrameChroma();\n' +
+        'self.onmessage = function (e) {\n' +
+        '    var d = e.data;\n' +
+        '    Object.keys(d.data).forEach(function (k) { self[k] = d.data[k]; });\n' +
+        '    var pcm = d.pcm;\n' +
+        '    var buf = { sampleRate: d.sampleRate, duration: d.duration, length: pcm.length,\n' +
+        '                numberOfChannels: 1, getChannelData: function () { return pcm; } };\n' +
+        '    self.oaDeepScanHere(buf, function (p) { postMessage({ progress: p }); }).then(\n' +
+        '        function (r) { postMessage({ result: r }); },\n' +
+        '        function (err) { postMessage({ error: String((err && err.message) || err) }); });\n' +
+        '};\n';
+};
+
+window.oaDeepScanAudio = async function(audioBuffer, onProgress) {
+    if (!audioBuffer) return null;
+    const here = () => window.oaDeepScanHere(audioBuffer, onProgress);
+    if (window.OA_SCAN_IN_WORKER === false || typeof window.Worker !== 'function'
+        || !window.Blob || !window.URL || !window.URL.createObjectURL) return here();
+
+    const src = window.oaDeepScanWorkerSource();
+    if (!src) return here();
+    let worker;
+    try {
+        const url = window.URL.createObjectURL(new window.Blob([src], { type: 'application/javascript' }));
+        worker = new window.Worker(url);
+        window.URL.revokeObjectURL(url);
+    } catch (e) {
+        return here();
+    }
+
+    const report = typeof onProgress === 'function' ? onProgress : null;
+    const data = {};
+    window.OA_SCAN_KERNEL_DATA.forEach((name) => { data[name] = window[name]; });
+    const pcm = audioBuffer.getChannelData(0).slice();
+
+    return new Promise((resolve) => {
+        let done = false;
+        const finish = (value) => {
+            if (done) return;
+            done = true;
+            worker.terminate();
+            resolve(value);
+        };
+        const fallBack = (why) => {
+            if (done) return;
+            console.warn('⚠️ [Scan] the scan worker failed, scanning on the page instead:', why);
+            finish(here());
+        };
+        worker.onmessage = (e) => {
+            const msg = e.data || {};
+            if (msg.progress) { if (report) report(msg.progress); }
+            else if ('result' in msg) finish(msg.result);
+            else if (msg.error) fallBack(msg.error);
+        };
+        worker.onerror = (ev) => {
+            if (ev && ev.preventDefault) ev.preventDefault();
+            fallBack((ev && ev.message) || 'error');
+        };
+        try {
+            worker.postMessage({ pcm, sampleRate: audioBuffer.sampleRate, duration: audioBuffer.duration, data }, [pcm.buffer]);
+        } catch (e) {
+            fallBack((e && e.message) || e);
+        }
+    });
 };
 
 /**

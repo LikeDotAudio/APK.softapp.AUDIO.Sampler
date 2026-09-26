@@ -10,6 +10,68 @@
 // interfaces, and every name they are known by remains the property of its owner.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// THE CLOCK TICKS FROM THE AUDIO THREAD. PLAN-3315.01 step 9.
+//
+// A processor with no inputs that posts one message every ~TICK_MS of
+// rendered audio. Its ticks are counted in the context's own frames, so they
+// come exactly as fast as the context plays — never clamped the way a timer
+// is, and silent while the context is not running, when there is nothing to
+// book against anyway. The BOOKING stays on the page: an AudioNode can only be
+// made on the main thread, so what moved is the thing that says "book now",
+// not the booking. The Worker ticker below stays as the watchdog at a slow
+// rate, because a suspended context renders nothing, and `pass()` is what
+// resumes it.
+const OA_SEQ_CLOCK_SRC = `
+class OaSeqClock extends AudioWorkletProcessor {
+  constructor(options) {
+    super();
+    const ms = (options && options.processorOptions && options.processorOptions.ms) || 25;
+    this.every = Math.max(1, Math.round((ms / 1000) * sampleRate / 128));
+    this.n = 0;
+    this.run = false;
+    this.port.onmessage = (e) => { this.run = !!(e.data && e.data.run); this.n = 0; };
+  }
+  process() {
+    try {
+      if (this.run && ++this.n >= this.every) { this.n = 0; this.port.postMessage(0); }
+    } catch (e) { /* a tick missed is the watchdog's to cover */ }
+    return true;
+  }
+}
+registerProcessor('oa-seq-clock', OaSeqClock);
+`;
+
+// The module is registered once per context; each sequencer builds its own
+// clock node on its first play. Resolves to the node, or to null where there
+// is no AudioWorklet — the Worker ticker then carries the clock alone, at full
+// rate, as it always did.
+const oaSeqClockNode = async (ctx, ms) => {
+    if (!ctx.audioWorklet || !window.AudioWorkletNode || !window.Blob || !window.URL) return null;
+    try {
+        if (!ctx.__oaSeqClockModule) {
+            const url = URL.createObjectURL(new Blob([OA_SEQ_CLOCK_SRC], { type: 'application/javascript' }));
+            ctx.__oaSeqClockModule = ctx.audioWorklet.addModule(url)
+                .catch((e) => { ctx.__oaSeqClockModule = null; throw e; });
+        }
+        await ctx.__oaSeqClockModule;
+        const node = new AudioWorkletNode(ctx, 'oa-seq-clock', {
+            numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [1],
+            processorOptions: { ms },
+        });
+        // Pulled by the destination through a silent gain, so the graph keeps
+        // rendering it.
+        const sink = ctx.createGain();
+        sink.gain.value = 0;
+        node.connect(sink);
+        sink.connect(ctx.destination);
+        node.__oaSink = sink;
+        return node;
+    } catch (e) {
+        console.warn('⚠️ [SEQ] audio-thread clock unavailable, the Worker ticker carries it:', e && e.message);
+        return null;
+    }
+};
+
 window.useSeqScheduler = (
     bpmRef, stepsRef, mutesRef, trackVolRef, trackPanRef, 
     recordingRef, clickVolRef, toneTrackRef, toneRootRef,
@@ -24,6 +86,12 @@ window.useSeqScheduler = (
     // Traded against edit latency: a step you toggle is heard within this window.
     const scheduleAheadTime = 0.4; // s
     const TICK_MS = 25;
+    // The Worker's rate once the audio-thread clock is ticking: often enough
+    // to resume a suspended context and book the notes it had missed within
+    // the cushion above, rarely enough to be no second clock.
+    const WATCHDOG_MS = 200;
+    const clockRef = React.useRef(null);
+    const runningRef = React.useRef(false);
 
     // The clock runs on a Worker thread, NOT requestAnimationFrame.
     // rAF is starved by anything busy on the main thread — a big React render, a
@@ -216,6 +284,27 @@ window.useSeqScheduler = (
     const scheduler = (setCurrentStep, songRef, setSongPos, applySongEntry, songItemsRef, libraryRef, nextPatternRef) => {
         const tick = () => pass(setCurrentStep, songRef, setSongPos, applySongEntry, songItemsRef, libraryRef, nextPatternRef);
         tick();   // book the first notes immediately
+        runningRef.current = true;
+
+        // The audio-thread clock, when this context can have one. Until it is
+        // ticking, and wherever it cannot, the Worker below is the clock.
+        const ctx = getAudioCtx();
+        const clock = (clockRef.current && clockRef.current.context === ctx)
+            ? Promise.resolve(clockRef.current)
+            : oaSeqClockNode(ctx, TICK_MS);
+        clock.then((node) => {
+            if (!node) return;
+            if (clockRef.current !== node) { dropClock(); clockRef.current = node; }
+            if (!runningRef.current) return;   // stopped while it was being built
+            node.port.onmessage = tick;
+            node.port.postMessage({ run: true });
+            // A processor that dies hands the clock back to the Worker, at full rate.
+            node.onprocessorerror = () => {
+                if (clockRef.current === node) dropClock();
+                if (runningRef.current && workerRef.current) workerRef.current.postMessage({ cmd: 'start', ms: TICK_MS });
+            };
+            if (workerRef.current) workerRef.current.postMessage({ cmd: 'start', ms: WATCHDOG_MS });
+        });
 
         if (typeof Worker !== 'undefined') {
             if (!workerRef.current) workerRef.current = makeTicker();
@@ -229,7 +318,22 @@ window.useSeqScheduler = (
         }
     };
 
+    // The clock node is PARKED between plays like the Worker, and only let go
+    // on unmount — or when the context it was built on is not this one.
+    const dropClock = () => {
+        const node = clockRef.current;
+        clockRef.current = null;
+        if (!node) return;
+        node.port.onmessage = null;
+        try { node.disconnect(); if (node.__oaSink) node.__oaSink.disconnect(); } catch (e) { /* already off */ }
+    };
+
     const stopScheduler = () => {
+        runningRef.current = false;
+        if (clockRef.current) {
+            clockRef.current.port.postMessage({ run: false });
+            clockRef.current.port.onmessage = null;
+        }
         if (workerRef.current) {
             workerRef.current.postMessage({ cmd: 'stop' });
             workerRef.current.onmessage = null;
@@ -249,6 +353,7 @@ window.useSeqScheduler = (
     // thread and its Blob URL behind, and mounting it again makes another.
     const disposeScheduler = () => {
         stopScheduler();
+        dropClock();
         if (workerRef.current) {
             workerRef.current.terminate();
             workerRef.current = null;

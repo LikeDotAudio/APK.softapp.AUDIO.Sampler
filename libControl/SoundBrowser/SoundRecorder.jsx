@@ -19,11 +19,73 @@
  * writing the blocks down. Every recorder that folds those together makes you
  * throw away a take to find out you were 20dB too quiet.
  *
- * Capture is raw float blocks off a ScriptProcessor rather than MediaRecorder.
+ * Capture is raw float blocks off an AudioWorklet rather than MediaRecorder.
  * MediaRecorder would hand back lossy WebM/Opus; a sample gets pitched and
  * chopped, so it is worth the bytes to keep the PCM and write a real WAV.
+ *
+ * THE TAP IS A WORKLET, NOT A ScriptProcessor. PLAN-3315.01 step 9. A
+ * ScriptProcessor's callback runs on the page's main thread, so a busy page
+ * dropped blocks out of a take. The worklet collects OA_REC_BLOCK frames per
+ * channel on the audio thread and posts each block whole, transferred; the
+ * page does exactly what the ScriptProcessor callback did with it — meter it,
+ * keep it if recording, count it against the length cap.
  */
 const OA_REC_BLOCK = 4096;
+
+const OA_REC_TAP_SRC = `
+class OaRecTap extends AudioWorkletProcessor {
+  constructor(options) {
+    super();
+    this.ch = (options && options.processorOptions && options.processorOptions.channels) || 1;
+    this.block = (options && options.processorOptions && options.processorOptions.block) || 4096;
+    this.fresh();
+  }
+  fresh() {
+    this.bufs = [];
+    for (let c = 0; c < this.ch; c++) this.bufs.push(new Float32Array(this.block));
+    this.fill = 0;
+  }
+  process(inputs, outputs) {
+    try {
+      const input = inputs[0] || [];
+      const n = (outputs[0] && outputs[0][0]) ? outputs[0][0].length : 128;
+      let i = 0;
+      while (i < n) {
+        const take = Math.min(n - i, this.block - this.fill);
+        for (let c = 0; c < this.ch; c++) {
+          const src = input[c] || input[0];
+          const dst = this.bufs[c];
+          for (let k = 0; k < take; k++) {
+            const v = src ? src[i + k] : 0;
+            dst[this.fill + k] = Number.isFinite(v) ? v : 0;
+          }
+        }
+        this.fill += take;
+        i += take;
+        if (this.fill >= this.block) {
+          const out = this.bufs;
+          this.port.postMessage(out, out.map((b) => b.buffer));
+          this.fresh();
+        }
+      }
+    } catch (e) {
+      this.fresh();
+    }
+    return true;
+  }
+}
+registerProcessor('oa-rec-tap', OaRecTap);
+`;
+
+// One module per context, registered the first time an input is opened.
+const oaRecTapReady = (ctx) => {
+    if (!ctx.__oaRecTap) {
+        const url = URL.createObjectURL(new Blob([OA_REC_TAP_SRC], { type: 'application/javascript' }));
+        ctx.__oaRecTap = ctx.audioWorklet.addModule(url)
+            .catch((e) => { ctx.__oaRecTap = null; throw e; });
+    }
+    return ctx.__oaRecTap;
+};
 
 const oaFmtTime = (sec) => {
     const s = Math.max(0, sec);
@@ -74,7 +136,7 @@ window.SoundRecorder = ({ onSaved }) => {
     const teardown = React.useCallback(() => {
         const n = nodesRef.current;
         if (n) {
-            n.proc.onaudioprocess = null;
+            n.proc.port.onmessage = null;
             try { n.src.disconnect(); n.gain.disconnect(); n.proc.disconnect(); n.sink.disconnect(); n.monitor.disconnect(); } catch (e) {}
         }
         nodesRef.current = null;
@@ -111,12 +173,21 @@ window.SoundRecorder = ({ onSaved }) => {
             const settings = (track && track.getSettings && track.getSettings()) || {};
             const ch = Math.max(1, Math.min(2, settings.channelCount || 1));
 
+            if (!ctx.audioWorklet || !window.AudioWorkletNode) {
+                throw new Error('this browser has no AudioWorklet, which recording needs');
+            }
+            await oaRecTapReady(ctx);
             const src = ctx.createMediaStreamSource(stream);
             const g = ctx.createGain(); g.gain.value = gainRef.current;
-            const proc = ctx.createScriptProcessor(OA_REC_BLOCK, ch, ch);
-            // A ScriptProcessor only runs while its output is routed somewhere,
-            // so it feeds a silent gain node — the meters would otherwise sit
-            // dead at the bottom of the scale.
+            const proc = new AudioWorkletNode(ctx, 'oa-rec-tap', {
+                numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [ch],
+                channelCount: ch, channelCountMode: 'explicit', channelInterpretation: 'speakers',
+                processorOptions: { channels: ch, block: OA_REC_BLOCK },
+            });
+            // The tap feeds a silent gain node, as the ScriptProcessor it
+            // replaced had to: a node pulled by the destination is a node the
+            // graph keeps rendering, whatever the browser's rule for an
+            // output-less worklet happens to be.
             const sink = ctx.createGain(); sink.gain.value = 0;
             const mon = ctx.createGain(); mon.gain.value = monitor ? 1 : 0;
 
@@ -125,11 +196,11 @@ window.SoundRecorder = ({ onSaved }) => {
             g.connect(mon); mon.connect(ctx.destination);
 
             const maxFrames = window.OA_REC_MAX_SECONDS * ctx.sampleRate;
-            proc.onaudioprocess = (e) => {
-                const inb = e.inputBuffer;
-                const n = inb.length;
+            proc.port.onmessage = (e) => {
+                const blocks = e.data;
+                const n = blocks[0].length;
                 for (let c = 0; c < ch; c++) {
-                    const d = inb.getChannelData(c);
+                    const d = blocks[c];
                     let peak = 0, sum = 0;
                     for (let i = 0; i < n; i++) {
                         const v = d[i], a = v < 0 ? -v : v;
@@ -137,9 +208,9 @@ window.SoundRecorder = ({ onSaved }) => {
                         sum += v * v;
                     }
                     levelsRef.current[c] = { peak, rms: Math.sqrt(sum / n) };
-                    // getChannelData hands back a view onto a buffer the graph
-                    // reuses next block, so the copy is not optional.
-                    if (recordingRef.current) chunksRef.current[c].push(new Float32Array(d));
+                    // Each block arrives as its own transferred buffer, which the
+                    // worklet never touches again — so it is kept, not copied.
+                    if (recordingRef.current) chunksRef.current[c].push(d);
                 }
                 if (recordingRef.current) {
                     framesRef.current += n;

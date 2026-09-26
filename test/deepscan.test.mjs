@@ -43,6 +43,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import vm from 'node:vm';
 
 import { createWorld, BACKEND_SOURCES } from './harness.mjs';
 
@@ -439,6 +440,78 @@ describe('oaDeepScanAudio — the progress the scan already knows', () => {
         // passing one gets the behaviour it always had rather than a TypeError.
         const legacy = await w.window.oaDeepScanAudio(tone(w.ctx, 20), { musicality: {} });
         assert.deepEqual(legacy, withCb, 'a stray object in the callback slot is ignored');
+        w.cleanup();
+    });
+});
+
+/**
+ * THE SCAN IN A WORKER GIVES THE SAME ANSWER AS THE SCAN ON THE PAGE.
+ * PLAN-3315.01 step 9 moved `oaDeepScanAudio` off the page's thread: the
+ * worker is built from the text of the kernel functions and handed the tables
+ * as data. This worker is the real generated source, run in its own V8 context
+ * with only what a DedicatedWorkerGlobalScope has, and every message crosses
+ * a structured clone — so a kernel function that reached for something the
+ * page has and a worker does not, or a result that does not survive the
+ * clone, fails here rather than on a bench.
+ */
+describe('oaDeepScanAudio — the scan runs in a worker', () => {
+    const tone = (ctx, seconds, rate = 8000) => {
+        const buf = ctx.createBuffer(1, Math.floor(rate * seconds), rate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = 0.5 * Math.sin(2 * Math.PI * 220 * (i / rate)) + 0.3 * Math.sin(2 * Math.PI * 277.2 * (i / rate));
+        return buf;
+    };
+
+    // A Worker that runs the generated source — the same text the page puts
+    // in the Blob — in a context of its own.
+    const workerClass = (made) => class FakeWorker {
+        constructor() {
+            const g = { postMessage: (m) => made.replies.push(Object.keys(m)[0]) && setImmediate(() => this.onmessage && this.onmessage({ data: structuredClone(m) })),
+                        setTimeout, clearTimeout, crypto: globalThis.crypto, console };
+            g.self = g;
+            vm.createContext(g);
+            vm.runInContext(made.src, g);
+            this.g = g;
+            made.count++;
+        }
+        postMessage(m, transfer) { setImmediate(() => this.g.onmessage({ data: structuredClone(m, { transfer }) })); }
+        terminate() { this.terminated = true; }
+    };
+
+    test('the worker path returns what the page path returns, and relays the same progress', async () => {
+        const w = await createWorld({ sources: BACKEND_SOURCES });
+        w.window.OA_SCAN_YIELD_FRAMES = 4;
+        const buf = tone(w.ctx, 20);
+
+        w.window.OA_SCAN_IN_WORKER = false;
+        const seenHere = [];
+        const here = await w.window.oaDeepScanAudio(buf, (p) => seenHere.push(p));
+
+        const made = { count: 0, replies: [], src: w.window.oaDeepScanWorkerSource() };
+        assert.ok(made.src && /self\.oaDeepScanHere = /.test(made.src), 'the worker source is built from the kernel');
+        w.window.OA_SCAN_IN_WORKER = true;
+        w.window.Worker = workerClass(made);
+        const seenThere = [];
+        const there = await w.window.oaDeepScanAudio(buf, (p) => seenThere.push(p));
+
+        assert.equal(made.count, 1, 'the scan went to a worker');
+        assert.equal(made.replies.filter((k) => k === 'result').length, 1, 'and the worker answered it');
+        assert.ok(!made.replies.includes('error'), 'without falling back to the page');
+        assert.ok(here.chords.length > 0 && here.notes.length > 0, 'the fixture is a scan with something in it');
+        assert.deepEqual(JSON.parse(JSON.stringify(there)), JSON.parse(JSON.stringify(here)));
+        assert.deepEqual(seenThere, seenHere);
+        w.cleanup();
+    });
+
+    test('a worker that cannot be built falls back to the page, with the same answer', async () => {
+        const w = await createWorld({ sources: BACKEND_SOURCES });
+        const buf = tone(w.ctx, 8);
+        w.window.OA_SCAN_IN_WORKER = false;
+        const here = await w.window.oaDeepScanAudio(buf);
+        w.window.OA_SCAN_IN_WORKER = true;
+        w.window.Worker = class { constructor() { throw new Error('no workers here'); } };
+        const fallback = await w.window.oaDeepScanAudio(buf);
+        assert.deepEqual(fallback, here);
         w.cleanup();
     });
 });

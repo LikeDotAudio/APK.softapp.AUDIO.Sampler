@@ -38,7 +38,7 @@ import { dirname, join } from 'node:path';
 import { createWorld } from './harness.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const SHELL_CLOCK = join(HERE, '../../../APK:OS/Midi/heartbeat/heartbeat-clock.js');
+const SHELL_CLOCK = join(HERE, '../../../../OS/Midi/heartbeat/heartbeat-clock.js');
 
 /** A world with a clock the test moves, and a plugin that counts passes. */
 async function world_with_a_countable_plugin() {
