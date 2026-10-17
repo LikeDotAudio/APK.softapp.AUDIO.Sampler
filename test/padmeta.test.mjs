@@ -190,7 +190,7 @@ const analyzerSidecar = () => JSON.parse(readFileSync(ANALYZER_PEAK, 'utf8'));
  */
 const PEAK_SIDECAR_SCHEMA = JSON.parse(readFileSync(
     join(dirname(fileURLToPath(import.meta.url)),
-         '../../../SCANALYZER_SUITE/Scanalyzer.Like.audio/Web_Front/src/lensPeakSidecarSchema.json'), 'utf8'));
+         '../../../SCANALYZER_SUITE/SCANALYZER.Like.audio/Web_Front/src/lensPeakSidecarSchema.json'), 'utf8'));
 
 /**
  * The subset of JSON Schema `lensPeakSidecarSchema.json` actually uses, applied
