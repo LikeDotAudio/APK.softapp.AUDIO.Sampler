@@ -7,12 +7,14 @@ Extracts beat markers, root keys, pitch maps, and chunk/slice mappings from audi
 
 THIS DOES NOT WRITE A FORMAT OF ITS OWN. What it drops beside the audio is the
 ANALYZER's `.PEAK` — the document `sample_analyzer_rs` writes and
-`APK:Softapps/SCAN/Web_Front/src/analyzerPeakSchema.json` types — carrying 2 of
+`Softapps/SCANALYZER_SUITE/SCANALYZER.Like.audio/Web_Front/src/analyzerPeakSchema.json`
+types — carrying 2 of
 its 10 groups, in the analyzer's own spelling. It shares an extension with the
 Scanalyzer's downloaded `peak-lens-sidecar` and shares NO field with it; the
 enumeration of all four `.PEAK` documents is in that schema's `$comment`.
 
-`Scananalyzers/Musical/note_map.rs` IS THIS FILE, IN RUST, AND IT ALREADY RUNS.
+`Softapps/PROCESSOR/PROCESSOR.SampleAnalyzer/src/Scananalyzers/Musical/note_map.rs`
+IS THIS FILE, IN RUST, AND IT ALREADY RUNS.
 The analyzer emits the same `musicality.note_root_key_beat_marker_map` — 164 of
 the 346 records in the 147 tracked `.PEAK` carry one — so this CLI is the second
 implementation of a measurement the library already has. It survives because it
