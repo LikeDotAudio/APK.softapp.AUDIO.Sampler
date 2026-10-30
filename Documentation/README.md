@@ -13,3 +13,7 @@ The documentation for `AUDIO.Sampler`, in the same lanes as the APK.audio monore
 | [💡Notes and Ideas](%F0%9F%92%A1Notes%20and%20Ideas/INDEX.md) | 0 | Loose notes and ideas not yet filed. |
 | [📌Changelogs](%F0%9F%93%8CChangelogs/INDEX.md) | 1 | What changed, release by release. |
 <!-- /wiki:lanes -->
+
+<!-- wiki:smoke -->
+**Smoke test** — ✅ PASS 2/2 since 2026-10-30 12:50 EDT — [results](%F0%9F%A7%A9Manual%20and%20Artifacts/SMOKE.md)
+<!-- /wiki:smoke -->
