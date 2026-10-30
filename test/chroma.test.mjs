@@ -32,8 +32,12 @@
  *
  *   THE BUDGET CASE IS TWO-SIDED AND DELIBERATELY LOOSE. 12 s over a synthetic
  *   three-minute 48 kHz buffer sits about 2.4x above what the fast path
- *   measures here and well under what the naive one did, so it catches the
- *   regression without going red because the machine was busy. The claim that
+ *   measures here and well under what the naive one did. It is 12 s of this
+ *   process's CPU time (`process.cpuUsage`), NOT of the wall clock: on a busy
+ *   bench (load average 50–70, 2026-10-30) the same scan took 13–34 s of wall
+ *   clock while costing the same ~5 s of CPU, and a budget a busy machine can
+ *   fail is a flaky gate, not a regression check. The naive chromagram is
+ *   CPU-bound, so it still blows this budget on an idle machine. The claim that
  *   the tab can PAINT is not a timing claim at all and is asserted beside it
  *   over the SAME scan — a three-minute scan is five seconds of `npm test` and
  *   two cases would have paid for it twice. A self-rescheduling ticker counts
@@ -128,18 +132,21 @@ describe('oaDeepScanAudio — a three-minute song does not own the thread', () =
         let running = true;
         const tick = () => { if (running) { turns++; setTimeout(tick, 0); } };
 
-        const t0 = Date.now();
+        // CPU time, not wall time: what the scan COSTS, which a loaded machine
+        // stretches out but cannot inflate (see the header).
+        const cpu0 = process.cpuUsage();
         const scanning = w.window.oaDeepScanAudio(buf);
         setTimeout(tick, 0);
         const scan = await scanning;
-        const elapsed = Date.now() - t0;
+        const used = process.cpuUsage(cpu0);
+        const elapsed = Math.round((used.user + used.system) / 1000);
         running = false;
 
         // 718 sounding frames is what the plan measured on this buffer shape;
         // asserting it means a budget met by scanning LESS reads as a failure.
         assert.equal(scan.notes.length, 718);
         assert.ok(elapsed < 12000,
-            `a three-minute scan took ${elapsed} ms. The naive per-bin DFT this replaced `
+            `a three-minute scan cost ${elapsed} ms of CPU. The naive per-bin DFT this replaced `
             + 'spent 17.7 s of that in the chromagram alone (PLAN-801.01).');
         assert.ok(turns >= 10,
             `the scan surrendered the thread ${turns} time(s). It yields every `
