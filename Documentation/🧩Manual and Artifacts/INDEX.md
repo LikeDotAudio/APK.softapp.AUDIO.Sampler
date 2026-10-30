@@ -7,5 +7,6 @@ How to use it and how it is built.
 <!-- wiki:index -->
 | Page | What |
 |---|---|
-| [ARCHITECTURE_NOTES.md](ARCHITECTURE_NOTES.md) | Architecture Notes & Technical Specs — AUDIO.Sampler |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Architecture — AUDIO.Sampler |
+| [SMOKE.md](SMOKE.md) | Smoke test — AUDIO.Sampler |
 <!-- /wiki:index -->

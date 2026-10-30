@@ -23,7 +23,7 @@ An independent Git repository, registered as a submodule of APK.audio at
 |---|---|
 | `index.html` | The app page: loads APK:OS's sound agent (if beside it), React from `vendor/`, then `dist/app.js` |
 | `libControl/` | The source — `.jsx` and plain `window`-global `.js` modules, no imports: `App/` (app shell, `mqttBus.js`, theme, mocks), `Pads/`, `Sequencer/`, `SoundBrowser/`, `SoundSynth/` (shared kit, sample rate, pad grid), `Mixer/`, `MusicChart/` (lenses, deep scan), `Effects/` (BussCompressor, Chorus, Compressor, Drive, DrumSynth, Equalizer, FxBus, Gate, PluginHost, Reverb, TapeDelay), `Ui/`, `Header/`, `Footer/` |
-| `sources.json` / `sources.gui.json` / `sources.fx.json` | The ordered source lists of the three bundles (106 / 20 / 24 files). The GUI and FX lists must stay subsequences of `sources.json` |
+| `sources.json` / `sources.gui.json` / `sources.fx.json` | The ordered source lists of the three bundles (106 / 18 / 22 files). The GUI and FX lists must stay subsequences of `sources.json` |
 | `build.mjs`, `build.sh` | The build (below) |
 | `dist/app.js`, `dist/gui.js`, `dist/fx.js` | The three bundles — **tracked**; `dist/precache.json` is generated and ignored |
 | `test/` | `node --test` suite (`*.test.mjs`), a fake React/Web Audio harness, `cases.baseline.json` (the case floor) |
@@ -32,7 +32,8 @@ An independent Git repository, registered as a submodule of APK.audio at
 | `SampleLibrary/` | Demo samples (`APK 404` … `APK 484` kits, two demo tracks) with `.PEAK` analyzer sidecars and `sample_cloud_manifest.json` |
 | `extract_note_root_beat_map.py` | CLI: root key / beat-marker / chunk map for one audio file, merged into its `.PEAK` sidecar |
 | `Gui_Frames/4_Console/100_Sampler/Sampler.json` | A frame description in APK:OS's `Gui_Frames` vocabulary; nothing in this repository reads it |
-| `Documentation/` | Notes, issues, and `Changelog/Audit/Performance_Tab_UI_Mockup.html` (a static UI mockup) |
+| `.github/workflows/test.yml` | CI: `npm test` and `npm run check` on push / pull request |
+| `Documentation/` | The wiki (principles, architecture, delivery, audits) and `📌Changelogs/Audit/Performance_Tab_UI_Mockup.html` (a static UI mockup) |
 
 ### Who else loads it
 APK:OS does not carry effects of its own. `WEB.OsApi/SRC/server.py` (`SOUND_SITE_PACKAGES`) and
@@ -40,8 +41,9 @@ APK:OS does not carry effects of its own. `WEB.OsApi/SRC/server.py` (`SOUND_SITE
 the **host** page takes `dist/fx.js` (engines only), the **mixer** page takes React + `dist/fx.js` +
 `dist/gui.js` (engines and faceplates), the **midi** page takes React + `dist/app.js` (the whole
 Sampler). A page must not hold both `app.js` and `fx.js` — the second load re-registers every plugin.
-The placeholder repos `AUDIO.Reverb`, `AUDIO.TapeDelay`, `AUDIO.Sequencer`, `AUDIO.SoundBrowser` and
-`AUDIO.SoundSynth` point here for their code.
+The placeholder repos `AUDIO.Mixer`, `AUDIO.Mixer.PluginHost`, `AUDIO.PROCESS.*`, `AUDIO.Reverb`,
+`AUDIO.SYNTH.Drum`, `AUDIO.TapeDelay`, `AUDIO.Sequencer`, `AUDIO.SoundBrowser`, `AUDIO.SoundSynth` and
+`MIDI.DRUM.pads` point here for their code.
 
 ---
 
@@ -58,9 +60,10 @@ The placeholder repos `AUDIO.Reverb`, `AUDIO.TapeDelay`, `AUDIO.Sequencer`, `AUD
 * **Check**: `npm run check` (`node build.mjs --check [app|gui|fx]`) hashes the sources against the
   committed bundles and exits 1 if any is stale. Checked 2026-10-30: all three up to date.
 * **Test**: `npm test` — `test/check_case_floor.mjs` (every `test/*.test.mjs` under `node --test`, held
-  to the case/suite/file floor in `test/cases.baseline.json`) then `test/padmeta.test.mjs`. Checked
-  2026-10-30: 300 cases / 52 suites / 20 files against a floor of 293/50/20, plus 12 pad-metadata
-  cases, all passing.
+  to the case/suite/file floor in `test/cases.baseline.json`, 307 / 54 / 21) then
+  `test/padmeta.test.mjs`. `test/manifests.test.mjs` holds the three bundle lists to one order and the
+  service worker's shell list to tracked files. `.github/workflows/test.yml` runs `npm test` and
+  `npm run check` on every push and pull request.
 * **Sidecar CLI**: `python3 extract_note_root_beat_map.py <audio file>` — needs `numpy` and `ffmpeg`.
   It writes the analyzer's `.PEAK` shape beside the audio and, when a full analyzer sidecar is already
   there, merges the map into it rather than overwriting it.
@@ -122,7 +125,7 @@ The principles this app follows, and where the code shows them:
 ---
 
 ## 📚 Documentation
-See [`Documentation/README.md`](Documentation/README.md).
+The wiki: [`Documentation/README.md`](Documentation/README.md) — principles, architecture, delivery, audits.
 
 <!-- wiki:smoke -->
 **Smoke test** — ✅ PASS 2/2 since 2026-10-30 12:51 EDT — [results](Documentation/%F0%9F%A7%A9Manual%20and%20Artifacts/SMOKE.md)
