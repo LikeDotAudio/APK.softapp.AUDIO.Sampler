@@ -396,10 +396,33 @@ const compile = (files, out, mark) => {
   parts.push('})();');
 
   mkdirSync('dist', { recursive: true });
-  const bundle = parts.join('\n');
+
+  // A REBUILD THAT CHANGES NO BYTE KEEPS ITS VERSION. `versionFor` keys the
+  // release stamp to the last commit of the sources AND this script, while the
+  // content stamp hashes only the sources — so a comment-only commit to
+  // build.mjs moved OA_GUI_BUILD_VERSION / OA_FX_BUILD_VERSION and left
+  // dist/gui.js and dist/fx.js dirty with nothing else in them changed
+  // (LOOSE-audio-sampler-running-npm-run: V20260916.0048 -> V20261030.1659).
+  // So the bundle is compared with the version line set aside: identical
+  // otherwise, the committed version stands and the file is not rewritten. A
+  // script edit that DOES change the output still takes the new version.
+  const versionLine = parts[3];
+  let bundle = parts.join('\n');
+  if (existsSync(out)) {
+    const prev = readFileSync(out, 'utf8');
+    const lines = prev.split('\n');
+    const prevVersionLine = lines[BANNER.split('\n').length + 2];
+    if (prevVersionLine !== versionLine
+        && prevVersionLine?.startsWith(`window.${BUNDLE_MARKS[mark].versionGlobal}="`)) {
+      parts[3] = prevVersionLine;
+      const kept = parts.join('\n');
+      if (kept === prev) bundle = kept; else parts[3] = versionLine;
+    }
+  }
+  const shownVersion = parts[3].slice(parts[3].indexOf('"') + 1, parts[3].lastIndexOf('"'));
   writeFileSync(out, bundle);
 
-  console.log(`✓ ${out}  ${jsx} jsx + ${plain} js  ${kb(bytesIn)} in -> ${kb(bundle.length)} out  [${BUNDLE_MARKS[mark].stamp}] ${BUNDLE_MARKS[mark].version}`);
+  console.log(`✓ ${out}  ${jsx} jsx + ${plain} js  ${kb(bytesIn)} in -> ${kb(bundle.length)} out  [${BUNDLE_MARKS[mark].stamp}] ${shownVersion}`);
 };
 
 compile(SOURCES, OUT, 'OA_BUILD_STAMP');
