@@ -347,7 +347,7 @@ window.LensesView = ({ audioBuffer, filename, padIdx }) => {
     // integrated loudness figures, beat markers — downloaded by a person as
     // `<name>.PERF.json`. `.apk.scripts/build_perf_sidecar.py` writes something
     // else: a `<name>.PERF` committed beside the sample, carrying a short-term
-    // LUFS TRAJECTORY typed by `SCAN/Web_Front/src/perfSchema.json`.
+    // LUFS TRAJECTORY typed by `Softapps/SCANALYZER_SUITE/SCANALYZER.Like.audio/Web_Front/src/perfSchema.json`.
     //
     // `format` and `schema_version` are here so that distinction survives
     // contact with a reader. `.PEAK` shipped without a version, changed shape,
@@ -368,7 +368,7 @@ window.LensesView = ({ audioBuffer, filename, padIdx }) => {
     // AND THERE IS NOW SOMETHING ON THE OTHER END OF THAT VERSION. A version is
     // a promise to a validator, and for two releases this one was made to
     // nobody: `perfSchema.json` types the OTHER `.PERF` and nothing typed this.
-    // `SCAN/Web_Front/src/lensPerfExportSchema.json` does, beside it and beside
+    // `Softapps/SCANALYZER_SUITE/SCANALYZER.Like.audio/Web_Front/src/lensPerfExportSchema.json` does, beside it and beside
     // the `.PEAK` one, so all three descriptions of these colliding extensions
     // sit in one folder. `.apk.scripts/check_lens_exports.py` renders this
     // component, clicks this button, and validates the bytes; the schema pins
@@ -556,7 +556,7 @@ window.LensesView = ({ audioBuffer, filename, padIdx }) => {
     // THERE ARE TWO `.PEAK` FORMATS AND THIS IS THE SECOND ONE. The 147 files
     // tracked under `SampleLibrary/` are the ANALYZER's — grouped `metadata` /
     // `classification` / `envelope` / `spectral_features`, written by
-    // `sample_analyzer_rs` and read by `SCAN/Web_Front/src/peakSchema.ts` —
+    // `sample_analyzer_rs` and read by `Softapps/SCANALYZER_SUITE/SCANALYZER.Like.audio/Web_Front/src/peakSchema.ts` —
     // and this one shares the extension with them and not one group name. The
     // extension cannot tell them apart, so `format` does. `App.jsx`'s global
     // drop accepts either.

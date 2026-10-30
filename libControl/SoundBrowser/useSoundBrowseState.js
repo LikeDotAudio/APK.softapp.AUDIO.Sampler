@@ -136,7 +136,7 @@ window.useSoundBrowseState = () => {
             const text = await file.text();
             setCloudData(JSON.parse(text));
         } catch (e) {
-            setCloudErr('No sample_cloud_data.PEAK found. Run the analyzer on this folder: cargo run --manifest-path "APK:Softapps/SCAN/sample_analyzer_rs/Cargo.toml"');
+            setCloudErr('No sample_cloud_data.PEAK found. Run the analyzer on this folder: cargo run --manifest-path "APK:Softapps/SCANALYZER_SUITE/SCANALYZER.Like.audio/sample_analyzer_rs/Cargo.toml"');
             setCloudData(null);
         }
     };
