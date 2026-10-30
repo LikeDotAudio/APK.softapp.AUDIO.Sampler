@@ -1,0 +1,31 @@
+# Part of the APK.audio project — http://APK.audio — made by Anthony Kuzub
+# MIT Licence. Free, for everyone, for ever. Full text in LICENSE at the root.
+#
+# The Sampler's gate, on every push and pull request: the suite with its case
+# floor (npm test → test/check_case_floor.mjs, which includes
+# test/manifests.test.mjs) and the three committed bundles held to their
+# sources (build.mjs --check). It builds nothing and commits nothing — the
+# bundles in dist/ are committed by whoever edited the sources, and the
+# monorepo's own workflow publishes them as they stand (see build.sh).
+#
+# fetch-depth 0: build.mjs stamps OA_BUILD_VERSION from the last commit that
+# touched a source, and a shallow clone would read a different commit and call
+# every bundle stale.
+name: test
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run check

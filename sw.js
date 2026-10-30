@@ -14,7 +14,8 @@
  * Service worker. build.mjs writes ./dist/precache.json — the whole machine —
  * but that file is a DECLARED DROP and never published, so on apk.audio the
  * fetch below 404s and the four-entry shell list stands in: the site WARMS UP
- * as samples are played. check_sampler_service_worker.mjs holds it there.
+ * as samples are played. test/manifests.test.mjs holds the shell list to files
+ * git tracks; nothing in this repo registers the worker in a real browser.
  */
 const CACHE = 'sampler-v4';
 

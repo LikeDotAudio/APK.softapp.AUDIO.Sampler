@@ -9,8 +9,8 @@
  * Header: check_case_floor.mjs
  * Purpose: Run the suite AND hold its size to a committed floor, so that
  *   "nothing broke" cannot be mistaken for "nothing ran".
- * Description: This is what `npm test` runs, therefore what `check.sh`'s sampler
- *   lane runs, and — since PLAN-584.01 — what `build.mjs`'s runTests() spawns
+ * Description: This is what `npm test` runs, therefore what
+ *   .github/workflows/test.yml runs, and — since PLAN-584.01 — what `build.mjs`'s runTests() spawns
  *   too. It spawns `node --test` over every `test/*.test.mjs`, passes the output
  *   through untouched, and then compares the reported case and suite counts
  *   against `test/cases.baseline.json`.
@@ -24,8 +24,8 @@
  *   back anywhere; a floor only floors the entry point that goes through it.
  *
  *   IT EXISTS BECAUSE A GLOB-DRIVEN SUITE CANNOT TELL "NOTHING TO RUN" FROM
- *   "NOTHING BROKEN". `run_sampler` in check.sh already carries that sentence
- *   about the `--check` fallback it removed — a bench with a fresh `dist/` ran
+ *   "NOTHING BROKEN". `run_sampler` in the monorepo's old check.sh (deleted
+ *   2026-09-10) carried that sentence about the `--check` fallback it removed — a bench with a fresh `dist/` ran
  *   0 of 145 cases and reported PASS. The runner it was replaced with has the
  *   same hole one level down: the suite is whatever the directory listing
  *   finds, so a `.test.mjs` deleted, renamed to `.mjs`, or moved out of `test/`

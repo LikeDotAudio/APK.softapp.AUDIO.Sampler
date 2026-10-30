@@ -28,8 +28,9 @@
  * Sources stay as .jsx and are edited normally; only the output is generated.
  *
  * The test gate below runs test/check_case_floor.mjs, which is exactly what
- * `npm test` and check.sh's sampler lane run — the build gate and the check
- * lane are ONE assertion, floor included, not two that can drift apart.
+ * `npm test` and this repo's workflow (.github/workflows/test.yml) run — the
+ * build gate and the CI lane are ONE assertion, floor included, not two that
+ * can drift apart.
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -54,7 +55,7 @@ const OUT = 'dist/app.js';
 // already provide, and the shell loads it ON TOP of the DSP it already has.
 //
 // sources.gui.json must stay a SUBSEQUENCE of sources.json — same dependency
-// order, fewer files — which check_mixer_dsp.mjs asserts.
+// order, fewer files — which test/manifests.test.mjs asserts.
 const GUI_SOURCES = JSON.parse(readFileSync('sources.gui.json', 'utf8'));
 const GUI_OUT = 'dist/gui.js';
 
@@ -76,11 +77,11 @@ const check = process.argv.includes('--check');
 // WHICH bundle --check is asked about. Both are in the repository now and both
 // are published — `dist/gui.js` because APK:OS loads the faceplates out of the
 // checkout, `dist/app.js` because PLAN-364.01 put this app's own page on
-// apk.audio — so the unnamed form is the one a gate wants, and check.sh runs
-// it. The named form is kept for the case the argument was invented for: a
+// apk.audio — so the unnamed form is the one a gate wants, and the workflow
+// runs it. The named form is kept for the case the argument was invented for: a
 // tree that deliberately holds only one of the two.
 //
-//   node build.mjs --check        both, and what check.sh runs
+//   node build.mjs --check        all three, and what the workflow runs
 //   node build.mjs --check gui    one of them, by name
 //
 // Named, never inferred from what happens to be on disk: "the file is not
@@ -110,7 +111,7 @@ if (check && checkOnly !== undefined && !['app', 'gui', 'fx'].includes(checkOnly
 // warning every time so it cannot quietly become the normal way to build.
 //
 // ONE RUNNER, ONE FLOOR. This spawns test/check_case_floor.mjs — the same thing
-// `npm test` runs, and therefore the same thing check.sh's sampler lane runs —
+// `npm test` runs, and therefore the same thing the workflow runs —
 // rather than `node --test` over its own directory listing. It used to do its
 // own discovery with identical glob semantics and no floor under it, so the two
 // entry points disagreed about what a green suite was: measured 2026-09-07 at

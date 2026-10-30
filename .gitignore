@@ -35,7 +35,7 @@ package-lock.json
 # builds this app, and the loop the paragraph above remembers was closed
 # anyway when OA_BUILD_VERSION stopped reading the clock and started reading
 # the last commit that touched a source. `node build.mjs --check` is what
-# holds both committed bundles to those sources; `check.sh sampler` runs it.
+# holds the committed bundles to those sources; .github/workflows/test.yml runs it.
 #
 # dist/precache.json stays untracked. It is generated too, but --check does not
 # gate it, and sw.js already falls back to a four-entry shell list when the

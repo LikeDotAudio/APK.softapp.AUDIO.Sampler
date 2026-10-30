@@ -22,16 +22,17 @@
 # ignores the rest of dist/ and then names those two as exceptions, with the
 # argument for it; read it there rather than here.
 #
-# Nothing rebuilds them for you. This repository has no workflow; the one that
-# publishes it is the parent APK.audio repository's .github/workflows/ci.yml,
+# Nothing rebuilds them for you. This repository's workflow
+# (.github/workflows/test.yml) only TESTS — npm test and build.mjs --check —
+# and commits nothing; the one that publishes it is the parent APK.audio repository's .github/workflows/ci.yml,
 # whose own header says it verifies nothing on purpose: one FTPS session that uploads the files as they stand IN THE
 # CHECKOUT. No build step runs there. So the bytes on https://apk.audio/ are
 # the bytes somebody committed, and a session that edits a .jsx, runs this
 # script and commits only the source ships yesterday's bundle.
 #
-# `npm run check` (build.mjs --check) hashes the sources against both bundles
-# and says which is stale; the repository's own `npm run check:js` calls it.
-# Run it before you push, because nothing downstream will.
+# `npm run check` (build.mjs --check) hashes the sources against the bundles
+# and says which is stale. Run it before you push: the workflow will go red
+# on a stale bundle, but only after the push.
 set -euo pipefail
 cd "$(dirname "$0")"
 
