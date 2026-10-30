@@ -22,9 +22,9 @@
 # ignores the rest of dist/ and then names those two as exceptions, with the
 # argument for it; read it there rather than here.
 #
-# Nothing rebuilds them for you. The only workflow in this repository is
-# .github/workflows/ci.yml, whose own header says it verifies nothing on
-# purpose: one FTPS session that uploads the files as they stand IN THE
+# Nothing rebuilds them for you. This repository has no workflow; the one that
+# publishes it is the parent APK.audio repository's .github/workflows/ci.yml,
+# whose own header says it verifies nothing on purpose: one FTPS session that uploads the files as they stand IN THE
 # CHECKOUT. No build step runs there. So the bytes on https://apk.audio/ are
 # the bytes somebody committed, and a session that edits a .jsx, runs this
 # script and commits only the source ships yesterday's bundle.

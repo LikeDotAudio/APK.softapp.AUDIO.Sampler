@@ -14,19 +14,19 @@ package-lock.json
 
 .crawler/
 
-# Build output. Generated from the sources in sources.json by build.mjs, and
-# built fresh by CI on every push to main (.github/workflows/deploy.yml), which
-# then uploads it to the site. Deliberately NOT tracked: when it was, CI pushed
-# a "Build: recompile dist/" commit after every push, which landed on top of
-# whatever you were doing and turned the next push into a merge.
+# Build output. Generated from the sources in sources.json by build.mjs. It
+# used to be built by CI on every push and left untracked, because a tracked
+# dist/ made CI push a "Build: recompile dist/" commit after every push. No CI
+# builds this app any more (this repository has no workflow), so the three
+# bundles named below are tracked and everything else in dist/ is not.
 #
 # Run ./build.sh after editing anything under libControl/ to refresh your local
 # copy — a fresh clone has no dist/ until you do.
 #
 # THE TWO EXCEPTIONS ARE dist/gui.js AND dist/app.js, AND THEY ARE TRACKED FOR
 # THE REASON KAD'S dist IS. APK:OS does not carry effects of its own:
-# Mixer/dsp/load-sampler-gui.js loads the FACEPLATES out of this folder, and
-# .apk.scripts/deploy.py publishes it, so a checkout without gui.js is nine
+# OS/Mixer/dsp/sampler-package.js loads the FACEPLATES out of this folder, and
+# the parent repository's ci.yml publishes it, so a checkout without gui.js is nine
 # Audio & DSP windows drawing "has no engine in this window" — which is what
 # apk.audio drew until 2026-09-06. dist/app.js is this app's OWN bundle, loaded
 # by its own index.html, and PLAN-364.01 put that page on the site: untracked,
