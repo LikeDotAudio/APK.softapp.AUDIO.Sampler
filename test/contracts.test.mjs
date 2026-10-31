@@ -20,11 +20,14 @@
  *
  *   WS-07 — the brand accent. `tokens/brand.json` is the vendored copy of
  *   `contracts/tokens/brand.json` (byte-identical, also held by the monorepo's
- *   `check.sh webtokens`). Every place a static file has to spell the accent
- *   out — oaTheme.js's default, index.html's `--accent` / `--accent-rgb` /
- *   theme-color, manifest.json's theme_color, the picker's default swatch —
- *   must equal it, and no other source may name the hex (they read
- *   `window.oaAccent()` / `oaAccentRgba()` / `var(--accent)` instead).
+ *   `check.sh webtokens`), as is `vendor/apk-contracts/apk-tokens.css`. Only
+ *   manifest.json (JSON, read by the OS before any page) still spells the
+ *   accent out, and must equal it. index.html's `--accent` / `--accent-rgb` are
+ *   `var(--apk-accent)` / `var(--apk-accent-rgb)` from that sheet, its
+ *   theme-color is filled from it, oaTheme.js's default reads it (or
+ *   APKContracts.ACCENT), the picker's default swatch is that default — and no
+ *   source names the hex (they read `window.oaAccent()` / `oaAccentRgba()` /
+ *   `var(--accent)` instead). LOOSE-brand-leftovers.
  */
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -93,27 +96,39 @@ describe('WS-07: the accent is brand.json\'s', () => {
         assert.equal(read('tokens/brand.json'), readFileSync(join(monorepo, 'contracts/tokens/brand.json'), 'utf8'));
     });
 
-    test('every static copy of the accent equals brand.json', () => {
-        const theme = loadSourcePlain('libControl/App/oaTheme.js');
-        assert.equal(theme.OA_ACCENT_DEFAULT.toLowerCase(), hex, 'oaTheme.js OA_ACCENT_DEFAULT');
-        assert.deepEqual(theme.OA_ACCENT_RGB, rgb, 'oaTheme.js OA_ACCENT_RGB');
+    test('the vendored apk-tokens.css is the monorepo\'s, byte for byte', { skip }, () => {
+        assert.equal(read('vendor/apk-contracts/apk-tokens.css'),
+            readFileSync(join(monorepo, 'contracts/generated/web/apk-tokens.css'), 'utf8'));
+    });
+
+    test('every reading of the accent comes from the token', () => {
+        // The vendored sheet states brand.json's accent; the page reads it from there.
+        const css = read('vendor/apk-contracts/apk-tokens.css');
+        assert.equal((css.match(/--apk-accent:\s*(#[0-9a-fA-F]{6})/) || [])[1]?.toLowerCase(), hex, 'apk-tokens.css --apk-accent');
+        assert.equal((css.match(/--apk-accent-rgb:\s*([\d,\s]+);/) || [])[1]?.replace(/\s/g, ''), rgb.join(','), 'apk-tokens.css --apk-accent-rgb');
         const html = read('index.html');
-        assert.equal((html.match(/name="theme-color"\s+content="([^"]+)"/) || [])[1]?.toLowerCase(), hex, 'index.html theme-color');
-        assert.equal((html.match(/--accent:\s*(#[0-9a-fA-F]{6})/) || [])[1]?.toLowerCase(), hex, 'index.html --accent');
-        assert.equal((html.match(/--accent-rgb:\s*([\d,\s]+);/) || [])[1]?.replace(/\s/g, ''), rgb.join(','), 'index.html --accent-rgb');
+        assert.match(html, /href="\.\/vendor\/apk-contracts\/apk-tokens\.css"/, 'index.html links the tokens');
+        assert.match(html, /--accent:\s*var\(--apk-accent\);/, 'index.html --accent');
+        assert.match(html, /--accent-rgb:\s*var\(--apk-accent-rgb\);/, 'index.html --accent-rgb');
         assert.equal(JSON.parse(read('manifest.json')).theme_color.toLowerCase(), hex, 'manifest.json theme_color');
-        assert.match(read('libControl/Sequencer/SeqControls.jsx'), new RegExp(`hex: '${hex}', name: 'Orange — the default'`, 'i'),
+        // oaTheme.js takes its default from the sheet's --apk-accent, else APKContracts.ACCENT.
+        const code = read('libControl/App/oaTheme.js');
+        const viaCss = {};
+        new Function('window', 'getComputedStyle', 'document', code)(viaCss,
+            () => ({ getPropertyValue: (n) => (n === '--apk-accent' ? ` ${brand.accent.hex}` : '') }), { documentElement: {} });
+        assert.equal(viaCss.OA_ACCENT_DEFAULT, hex, 'oaTheme.js reads --apk-accent');
+        assert.deepEqual(viaCss.OA_ACCENT_RGB, rgb, 'oaTheme.js OA_ACCENT_RGB');
+        const viaScript = { APKContracts: { ACCENT: brand.accent.hex } };
+        new Function('window', code)(viaScript);
+        assert.equal(viaScript.OA_ACCENT_DEFAULT, hex, 'oaTheme.js falls back to APKContracts.ACCENT');
+        assert.match(read('libControl/Sequencer/SeqControls.jsx'), /hex: window\.OA_ACCENT_DEFAULT, name: 'Orange — the default'/,
             'the picker\'s default swatch');
     });
 
     test('no other source spells the accent out', () => {
-        const allowed = new Set(['libControl/App/oaTheme.js', 'libControl/Sequencer/SeqControls.jsx']);
         const lit = new RegExp(`${hex}|rgba?\\(\\s*${rgb.join('\\s*,\\s*')}`, 'i');
-        const offenders = JSON.parse(read('sources.json'))
-            .filter((f) => !allowed.has(f))
-            .filter((f) => lit.test(read(f).replace(/^\s*\/\/.*$/gm, '')));
+        const offenders = [...JSON.parse(read('sources.json')), 'index.html']
+            .filter((f) => lit.test(read(f)));
         assert.deepEqual(offenders, [], 'read window.oaAccent() / oaAccentRgba() / var(--accent) instead');
-        // The swatch file may name the default hex once, as the picker's entry, and nothing else.
-        assert.equal((read('libControl/Sequencer/SeqControls.jsx').match(new RegExp(hex, 'gi')) || []).length, 1);
     });
 });

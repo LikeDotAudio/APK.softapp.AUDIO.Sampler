@@ -13,7 +13,7 @@
 // A few one-click hues beside the picker. A colour well takes two taps and a
 // system dialog on a phone, which is a lot of ceremony for "try it in blue".
 const THEME_SWATCHES = [
-    { hex: '#f4902c', name: 'Orange — the default' },
+    { hex: window.OA_ACCENT_DEFAULT, name: 'Orange — the default' },
     { hex: '#4aa3ff', name: 'Blue' },
     { hex: '#3ecf8e', name: 'Green' },
     { hex: '#c77dff', name: 'Violet' },
@@ -358,7 +358,7 @@ window.SeqControls = ({
                     label="↺ Default"
                     onClick={() => window.oaSetAccent(window.OA_ACCENT_DEFAULT)}
                     disabled={accent.toLowerCase() === window.OA_ACCENT_DEFAULT}
-                    title={`Back to ${window.OA_ACCENT_DEFAULT} — rgb(244, 144, 44)`}
+                    title={`Back to ${window.OA_ACCENT_DEFAULT} — rgb(${window.OA_ACCENT_RGB.join(', ')})`}
                     style={{ padding: '5px 10px' }}
                 />
                 <span style={{ fontSize: '10px', color: '#777' }}>

@@ -23,11 +23,22 @@
 // so every load comes back at the default below and a stale theme can never
 // outlive the session that chose it.
 
-// = contracts/tokens/brand.json accent, vendored as tokens/brand.json; the
-// literal is held to it by test/contracts.test.mjs (WS-07), as are the other
-// copies a static file needs (index.html, manifest.json, SeqControls' swatch).
-window.OA_ACCENT_DEFAULT = '#f4902c';        // rgb(244, 144, 44)
-window.OA_ACCENT_RGB = [1, 3, 5].map((i) => parseInt(window.OA_ACCENT_DEFAULT.slice(i, i + 2), 16));
+// = contracts/tokens/brand.json accent, never spelled here. The page links
+// vendor/apk-contracts/apk-tokens.css (APK:OS, which loads dist/gui.js into its
+// own scope, links its own copy), so the default is that sheet's --apk-accent; a
+// page that loaded the contract's script instead has it as APKContracts.ACCENT.
+// test/contracts.test.mjs (WS-07) holds both readings to tokens/brand.json.
+window.OA_ACCENT_DEFAULT = (function () {
+    try {
+        const v = getComputedStyle(document.documentElement).getPropertyValue('--apk-accent').trim();
+        if (v) return v.toLowerCase();
+    } catch (e) { /* no DOM here: a test or a worker */ }
+    const c = window.APKContracts;
+    return c && c.ACCENT ? String(c.ACCENT).toLowerCase() : '';
+})();
+window.OA_ACCENT_RGB = /^#[0-9a-f]{6}$/i.test(window.OA_ACCENT_DEFAULT)
+    ? [1, 3, 5].map((i) => parseInt(window.OA_ACCENT_DEFAULT.slice(i, i + 2), 16))
+    : [0, 0, 0];
 
 // The computed accent as a real colour string, for canvas work. Read on demand
 // rather than cached: the value changes under us whenever the picker moves.

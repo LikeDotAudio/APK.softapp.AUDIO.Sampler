@@ -34,7 +34,17 @@
 
     <!-- Progressive Web App Settings -->
     <link rel="manifest" href="./manifest.json">
-    <meta name="theme-color" content="#f4902c">
+    <!-- The brand and state tokens (contracts/generated/web, vendored by
+         .apk.scripts/vendor_contract_web.py and held to it by check.sh webtokens):
+         --accent below is --apk-accent, never spelled here. -->
+    <link rel="stylesheet" href="./vendor/apk-contracts/apk-tokens.css">
+    <!-- The OS reads this meta, not the page's CSS, so it is filled from the token
+         as soon as the stylesheet above has applied (a script waits for it). -->
+    <meta name="theme-color" content="">
+    <script>
+        document.querySelector('meta[name="theme-color"]').setAttribute('content',
+            getComputedStyle(document.documentElement).getPropertyValue('--apk-accent').trim());
+    </script>
     <link rel="icon" href="./ICON and LOGO/favicon.ico">
     <link rel="apple-touch-icon" href="./ICON and LOGO/icon-192.png">
     <link rel="apple-touch-startup-image" href="./ICON and LOGO/splash.png">
@@ -87,8 +97,8 @@
                rewrites this on :root at runtime; everything below is derived
                from it, so one property changes the entire page. Deliberately
                NOT persisted — the app comes back up orange on every load. */
-            --accent: #f4902c;
-            --accent-rgb: 244, 144, 44;   /* the same colour, for rgba() glows */
+            --accent: var(--apk-accent);
+            --accent-rgb: var(--apk-accent-rgb);   /* the same colour, for rgba() glows */
             --text: #e8e8e8;
             --muted: #888a8d;
             --on: var(--accent);
