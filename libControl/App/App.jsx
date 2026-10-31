@@ -280,7 +280,8 @@
         // into a store the widgets are already reading — it does not decide
         // what the app shows on load, and blocking the paint on a socket that
         // may not answer would make a bench-only feature everybody's problem.
-        // On a non-local origin `oaConnectBus` returns without fetching a byte.
+        // Where the shared helper finds no broker (a public origin) it
+        // resolves null and mqtt.js is never fetched.
         if (window.oaConnectBus) window.oaConnectBus();
 
         // The worker is this page's own — it precaches `./sw.js`, `./index.html`

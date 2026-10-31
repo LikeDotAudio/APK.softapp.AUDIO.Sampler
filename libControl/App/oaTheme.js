@@ -23,7 +23,11 @@
 // so every load comes back at the default below and a stale theme can never
 // outlive the session that chose it.
 
+// = contracts/tokens/brand.json accent, vendored as tokens/brand.json; the
+// literal is held to it by test/contracts.test.mjs (WS-07), as are the other
+// copies a static file needs (index.html, manifest.json, SeqControls' swatch).
 window.OA_ACCENT_DEFAULT = '#f4902c';        // rgb(244, 144, 44)
+window.OA_ACCENT_RGB = [1, 3, 5].map((i) => parseInt(window.OA_ACCENT_DEFAULT.slice(i, i + 2), 16));
 
 // The computed accent as a real colour string, for canvas work. Read on demand
 // rather than cached: the value changes under us whenever the picker moves.
@@ -50,7 +54,7 @@ window.oaAccentMix = function (amount) {
 // `amount` lightens (>0) or darkens (<0) first, as oaAccentMix does.
 window.oaAccentRgba = function (amount, alpha) {
     const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(window.oaAccentMix(amount || 0));
-    if (!m) return `rgba(244,144,44,${alpha})`;
+    if (!m) return `rgba(${window.OA_ACCENT_RGB.join(',')},${alpha})`;
     return `rgba(${parseInt(m[1], 16)},${parseInt(m[2], 16)},${parseInt(m[3], 16)},${alpha})`;
 };
 

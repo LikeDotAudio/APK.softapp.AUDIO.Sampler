@@ -7,7 +7,7 @@ Extracts beat markers, root keys, pitch maps, and chunk/slice mappings from audi
 
 THIS DOES NOT WRITE A FORMAT OF ITS OWN. What it drops beside the audio is the
 ANALYZER's `.PEAK` — the document `sample_analyzer_rs` writes and
-`Softapps/SCANALYZER_SUITE/SCANALYZER.Like.audio/Web_Front/src/analyzerPeakSchema.json`
+`Softapps/PROCESSOR/PROCESSOR.SampleAnalyzer/schema/peak.schema.json`
 types — carrying 2 of
 its 10 groups, in the analyzer's own spelling. It shares an extension with the
 Scanalyzer's downloaded `peak-lens-sidecar` and shares NO field with it; the

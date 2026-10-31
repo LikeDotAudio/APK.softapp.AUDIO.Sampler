@@ -280,7 +280,8 @@ window.LensesView = ({ audioBuffer, filename, padIdx }) => {
         // rendered as a measurement, which is the one thing a lens must not do.
         if (scanData && scanData.musicality && measured(scanData.musicality.pitchHz)) {
             const hz = scanData.musicality.pitchHz;
-            ctx.strokeStyle = '#f4902c';
+            // The live accent (oaTheme.js), so the theme picker reaches the canvas too.
+            ctx.strokeStyle = window.oaAccent();
             ctx.lineWidth = 2;
             ctx.beginPath();
             const normPitchY = midY - (Math.log2(hz / 110) * 15);
@@ -289,7 +290,7 @@ window.LensesView = ({ audioBuffer, filename, padIdx }) => {
             ctx.stroke();
 
             // Pitch label
-            ctx.fillStyle = '#f4902c';
+            ctx.fillStyle = window.oaAccent();
             ctx.font = '10px monospace';
             const keyPart = scanData.musicality.key ? ` (${scanData.musicality.key})` : '';
             ctx.fillText(`Pitch: ${hz.toFixed(1)} Hz${keyPart}`, 10, normPitchY - 4);

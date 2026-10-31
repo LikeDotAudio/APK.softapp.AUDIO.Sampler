@@ -168,7 +168,7 @@ const pythonSidecar = () => ({
  *
  * A REAL FILE AND NOT A FIXTURE, because a fixture written from a reading of
  * `Core/peak.rs` agrees with the source and not with the library. The corpus is
- * 147 `.PEAK` and 346 records; `analyzerPeakSchema.json` types it and
+ * 147 `.PEAK` and 346 records; PROCESSOR.SampleAnalyzer's `schema/peak.schema.json` types it and
  * `.apk.scripts/check_peak_formats.py` gates it (PLAN-907.01).
  *
  * NO SKIP IF IT IS MISSING. The path is tracked; a test that quietly passes over

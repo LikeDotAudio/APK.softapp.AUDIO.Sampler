@@ -27,7 +27,8 @@ An independent Git repository, registered as a submodule of APK.audio at
 | `build.mjs`, `build.sh` | The build (below) |
 | `dist/app.js`, `dist/gui.js`, `dist/fx.js` | The three bundles — **tracked**; `dist/precache.json` is generated and ignored |
 | `test/` | `node --test` suite (`*.test.mjs`), a fake React/Web Audio harness, `cases.baseline.json` (the case floor) |
-| `vendor/` | `react`, `react-dom` (production builds) and `mqtt.min.js`; versions, sources and sha256 in `vendor/VENDOR.json` |
+| `vendor/` | `react`, `react-dom` (production builds); versions, sources and sha256 in `vendor/VENDOR.json`. No mqtt.js: the shared bus helper carries the one copy |
+| `tokens/brand.json` | Vendored `contracts/tokens/brand.json`; every static copy of the accent is held to it by `test/contracts.test.mjs` |
 | `exports.json` | The bundle contract: the `window.*` names each bundle gives APK:OS, the plugins fx registers, the API version (= `package.json`), what the page takes from APK:OS. Held by `test/exports.test.mjs` |
 | `sw.js`, `manifest.json`, `ICON and LOGO/` | Progressive Web App: service worker, manifest, icons |
 | `SampleLibrary/` | Demo samples (`APK 404` … `APK 484` kits, two demo tracks) with `.PEAK` analyzer sidecars and `sample_cloud_manifest.json` |
@@ -75,9 +76,11 @@ The placeholder repos `AUDIO.Mixer`, `AUDIO.Mixer.PluginHost`, `AUDIO.PROCESS.*`
 `oaBusSubscribe`. LocalStorage (`mqtt_cache_<topic>`) is always the store; a broker, when there is one,
 is a second writer into it.
 
-* **Where it dials**: only from a local origin (`localhost`, `127.0.0.1`, `file:`, `192.168.*`, `10.*`)
-  to `ws://<page host>:9001` (`wss` under https), or to `localStorage['oa_bus_url']` if set. On the
-  public site it never dials, and `vendor/mqtt.min.js` is only fetched when it does.
+* **Where it dials**: wherever the shared softapp helper `window.APKBus` (`/FrontEnd/shared/apk-bus.js`,
+  WEB.Frontend-Assets) finds a broker, in the shell's seed order: `localStorage['oa_bus_url']`, the
+  shell's broker when framed, the same-origin `/mqtt` gateway door. No port is guessed. On a public
+  origin, or a host that does not serve the helper, it never dials and no mqtt.js is fetched. Framed
+  on the OS desk, the sound agent's port client is used instead.
 * **Publishes** (retained, JSON): `APK.audio/Gui/DrumKit/<pad>/sample` (pad assignments),
   `APK.audio/Gui/DrumSets`, `APK.audio/Gui/SoundFavorites`, and under
   `APK.audio/Gui/Sequencer/<label>/` — `pattern`, `song`, `library`, `mutes`, `solos`, `trackVol`,
@@ -95,8 +98,8 @@ The principles this app follows, and where the code shows them:
   reached a broker behaves exactly as one that has. — `libControl/App/mqttBus.js` (header)
 * **Do not reach for what is not there.** Off a bench it does not dial a broker (mixed content, a
   console full of red, for nothing), and it does not download the 330 KB MQTT client. "Am I on a
-  bench?" is answered in one place. — `libControl/App/mqttBus.js` (`oaIsLocalOrigin`, `oaBusUrl`,
-  `withMqttLib`)
+  bench?" is answered in one place, and "which broker?" by the shared helper. — `libControl/App/mqttBus.js`
+  (`oaIsLocalOrigin`, `oaBusUrl`, `withBusLib`)
 * **State is retained; echoes are not sent.** Every publish is retained, because a tab opened later
   must show the move; an inbound value is applied without being published back, so two tabs agree
   instead of shouting. — `libControl/App/mqttBus.js` (`publishState`, `inboundTopics`)

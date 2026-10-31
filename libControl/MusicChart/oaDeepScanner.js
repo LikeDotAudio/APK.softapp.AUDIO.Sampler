@@ -585,7 +585,7 @@ window.oaChopSongToPads = function(buffer, filename, chartOrMapData) {
  *                           wide. This is the one PLAN-800.01 did not know about,
  *                           and it is the one the library is made of: 164 of the
  *                           346 records in the 147 tracked `.PEAK` carry it.
- *                           `analyzerPeakSchema.json` types it.
+ *                           PROCESSOR.SampleAnalyzer `schema/peak.schema.json` types it.
  *
  * `SamplerEditor` reads `entry.noteMap.{global_root_note, global_bpm,
  * total_beats, total_chunks, beat_markers, chunk_maps}` and hands the last two

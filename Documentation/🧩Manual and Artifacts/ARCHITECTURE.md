@@ -58,7 +58,13 @@ loads exactly the OS files `consumes` declares. `test/page.test.mjs` runs `index
 chain the same way and fails on a script error or a page that does not mount the App.
 
 Third-party copies in `vendor/` are listed with version, source and sha256 in `vendor/VENDOR.json`
-(mqtt.js 5.10.1, React/ReactDOM 18.3.1), held by `test/manifests.test.mjs`.
+(React/ReactDOM 18.3.1), held by `test/manifests.test.mjs`. mqtt.js is not vendored here (WS-05).
+
+Two monorepo contracts are pinned by `test/contracts.test.mjs`: every `oaTopics` topic equals
+`Topics.gui.state(...)` from `contracts/generated/web/apk-contracts.mjs` and parses as `guiState`
+(skipped, with the reason, in a standalone clone), and every static copy of the accent equals the
+vendored `tokens/brand.json` (= `contracts/tokens/brand.json`); canvas and inline styles read
+`window.oaAccent()` / `oaAccentRgba()`.
 
 ## Source map (`libControl/`)
 
@@ -82,12 +88,12 @@ reverb is a convolution reverb whose program parameters are drawn into the impul
 ## Bus
 
 `libControl/App/mqttBus.js` provides `useMqttState`, `useMqttMessages`, `useMqttPublish`,
-`oaBusSubscribe`. Only on a local origin (or with `localStorage['oa_bus_url']`) it connects, first to
-`ws(s)://<host>:9001` (`window.oaBusUrl`, which the OS sound agent redefines when framed). The client:
-the shared softapp helper `window.APKBus` (`/FrontEnd/shared/apk-bus.js`, WEB.Frontend-Assets — the
-one vendored mqtt.js, failover to the saved override / shell broker / same-origin `/mqtt`) when it is
-on the page or served; `window.mqtt` directly when the OS sound agent supplied it; this repo's
-`vendor/mqtt.min.js` only where the helper is not served (the standalone host).
+`oaBusSubscribe`. It reaches a broker only through the shared softapp helper `window.APKBus`
+(`/FrontEnd/shared/apk-bus.js`, WEB.Frontend-Assets), which owns the seed order (`oa_bus_url`, the
+shell's broker when framed, the same-origin `/mqtt` gateway door; nothing on a public origin) and the
+one vendored mqtt.js. `window.oaBusUrl` names a broker only when one was named (the saved override, or
+the OS sound agent's `apk-sound-port://shell`, whose `window.mqtt` port client is then used directly).
+Where the helper is not served (the standalone host) there is no bus and the local store is the app.
 
 Every topic is built by `libControl/App/oaTopics.js` (`window.oaTopics`) and every payload has a
 declared shape there (`window.OA_BUS_PAYLOADS`, checked by `window.oaBusPayloadProblem(topic, payload)`).

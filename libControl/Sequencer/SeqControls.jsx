@@ -273,22 +273,22 @@ window.SeqControls = ({
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr style={{ background: swing === 50 ? 'rgba(244,144,44,0.15)' : 'transparent', borderBottom: '1px solid #282828' }}>
+                                <tr style={{ background: swing === 50 ? window.oaAccentRgba(0, 0.15) : 'transparent', borderBottom: '1px solid #282828' }}>
                                     <td style={{ padding: '4px', fontWeight: 'bold' }}>50%</td>
                                     <td style={{ padding: '4px' }}>Straight Grid</td>
                                     <td style={{ padding: '4px' }}>Equal length downbeat & upbeat (1:1)</td>
                                 </tr>
-                                <tr style={{ background: swing >= 54 && swing <= 62 ? 'rgba(244,144,44,0.15)' : 'transparent', borderBottom: '1px solid #282828' }}>
+                                <tr style={{ background: swing >= 54 && swing <= 62 ? window.oaAccentRgba(0, 0.15) : 'transparent', borderBottom: '1px solid #282828' }}>
                                     <td style={{ padding: '4px', fontWeight: 'bold' }}>54-62%</td>
                                     <td style={{ padding: '4px' }}>Light / MPC Swing</td>
                                     <td style={{ padding: '4px' }}>Subtle upbeat delay (House & Hip-Hop bounce)</td>
                                 </tr>
-                                <tr style={{ background: swing === 66 ? 'rgba(244,144,44,0.15)' : 'transparent', borderBottom: '1px solid #282828' }}>
+                                <tr style={{ background: swing === 66 ? window.oaAccentRgba(0, 0.15) : 'transparent', borderBottom: '1px solid #282828' }}>
                                     <td style={{ padding: '4px', fontWeight: 'bold' }}>66%</td>
                                     <td style={{ padding: '4px' }}>Perfect Triplet</td>
                                     <td style={{ padding: '4px' }}>2/3 downbeat : 1/3 upbeat (Blues Shuffle)</td>
                                 </tr>
-                                <tr style={{ background: swing >= 75 ? 'rgba(244,144,44,0.15)' : 'transparent' }}>
+                                <tr style={{ background: swing >= 75 ? window.oaAccentRgba(0, 0.15) : 'transparent' }}>
                                     <td style={{ padding: '4px', fontWeight: 'bold' }}>75%</td>
                                     <td style={{ padding: '4px' }}>Hard Swing</td>
                                     <td style={{ padding: '4px' }}>3/4 downbeat : 1/4 upbeat (Dotted note timing)</td>

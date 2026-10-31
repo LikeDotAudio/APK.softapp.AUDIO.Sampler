@@ -39,7 +39,7 @@ const openBus = async () => {
         publish(topic, text) { published.push({ topic, text }); },
         subscribe() {},
     };
-    window.localStorage.setItem('oa_bus_url', 'ws://oa-test:9001');
+    window.localStorage.setItem('oa_bus_url', 'ws://oa-test/mqtt');
     window.mqtt = { connect: () => client };
     window.oaConnectBus();
     handlers.connect();
@@ -175,11 +175,11 @@ describe('the shared bus helper path (WEB.Frontend-Assets /FrontEnd/shared/apk-b
         const { window } = w;
         const bus = fakeApkBus();
         window.APKBus = bus.api;
-        window.localStorage.setItem('oa_bus_url', 'ws://oa-test:9001');
+        window.localStorage.setItem('oa_bus_url', 'ws://oa-test/mqtt');
         window.oaConnectBus();
         await w.flush();
         assert.equal(bus.calls.connect.length, 1, 'APKBus.connect was not called once');
-        assert.equal(bus.calls.connect[0].brokerUrl, 'ws://oa-test:9001');
+        assert.equal(bus.calls.connect[0].brokerUrl, 'ws://oa-test/mqtt');
         assert.equal(bus.calls.connect[0].shareShell, false);
 
         // A widget bound to one exact topic, and a raw wildcard over it.
@@ -197,6 +197,47 @@ describe('the shared bus helper path (WEB.Frontend-Assets /FrontEnd/shared/apk-b
         bus.deliver(window.oaTopics.seq('Pattern Sequencer', 'masterVol'), { value: 0.2 });
         assert.equal(wild, 1, 'one packet matching two of our filters was delivered more than once');
         assert.equal(seq.rerender().masterVol, 0.2, 'an inbound value did not reach the widget');
+        w.cleanup();
+    });
+
+    /** The script tags oaConnectBus appended, by src. */
+    const scriptsOf = (window) => window.document.documentElement.children
+        .filter((c) => c.tagName === 'SCRIPT');
+
+    test('with no broker named, the helper is loaded and chooses — no port guess, no own mqtt.js (WS-05)', async () => {
+        const r = makeReact();
+        const w = await createWarmWorld({ sources: ALL_SOURCES, React: r.React });
+        const { window } = w;
+        window.location = { hostname: 'apk-gateway.example', host: 'apk-gateway.example', protocol: 'https:' };
+        window.localStorage.removeItem('oa_bus_url');
+        assert.equal(window.oaBusUrl(), null, 'oaBusUrl guessed a broker');
+        window.oaConnectBus();
+        const tags = scriptsOf(window);
+        assert.deepEqual(tags.map((t) => t.src), ['/FrontEnd/shared/apk-bus.js']);
+
+        const bus = fakeApkBus();
+        window.APKBus = bus.api;
+        tags[0].onload();
+        await w.flush();
+        assert.equal(bus.calls.connect.length, 1, 'APKBus.connect was not called once');
+        assert.equal('brokerUrl' in bus.calls.connect[0], false, 'a broker was chosen for APKBus');
+        assert.equal(bus.calls.connect[0].shareShell, false);
+        w.cleanup();
+    });
+
+    test('where the helper is not served there is no bus, and no mqtt.js is fetched', async () => {
+        const r = makeReact();
+        const w = await createWarmWorld({ sources: ALL_SOURCES, React: r.React });
+        const { window } = w;
+        window.localStorage.setItem('oa_bus_url', 'ws://oa-test/mqtt');
+        window.oaConnectBus();
+        const tags = scriptsOf(window);
+        assert.equal(tags.length, 1);
+        tags[0].onerror();
+        await w.flush();
+        assert.deepEqual(scriptsOf(window).map((t) => t.src), ['/FrontEnd/shared/apk-bus.js'],
+            'a second script (an own mqtt.js) was fetched after the helper failed');
+        assert.equal(window.oaBusClient, undefined, 'a client appeared with no helper');
         w.cleanup();
     });
 });

@@ -31,9 +31,12 @@
 // WHY IT DOES NOT DIAL OUT ON THE PUBLIC SITE. A `ws://` from a page served
 // over https is blocked as mixed content, and one to a broker that is not there
 // fails on every load — a console full of red on the published app, in exchange
-// for nothing, because there is no broker on that host to find. So the dial is
-// attempted only where a broker plausibly is: a local origin, or an explicit
-// override somebody set on purpose. See `oaBusUrl`.
+// for nothing, because there is no broker on that host to find. WHICH broker,
+// and whether there is one at all, is not decided here: the shared softapp helper
+// `window.APKBus` (`/FrontEnd/shared/apk-bus.js`) answers it with the shell's
+// seed order — the saved `oa_bus_url`, the shell's broker when framed, the
+// same-origin `/mqtt` gateway door when the site declares one (or the host is a
+// bench), and nothing on a public origin. See `oaConnectBus`.
 
 const globalStore = {};
 const globalListeners = {};
@@ -61,20 +64,11 @@ const subscribed = new Set();
 const rawSubscriptions = [];
 
 // ---------------------------------------------------------------------------
-// Where the broker is, and whether to look for one at all.
-//
-// `ws://<page host>:9001` is the same answer `OS.brokerUrl()` seeds with in the
-// shell — 9001 is mosquitto's websocket listener on this bench — so the sampler
-// and the shell come up on the same broker without being told about each other.
-// A stored override wins, which is how a bench with the broker on another box
-// says so without a rebuild.
-// AM I ON A BENCH? One answer, in one place. The broker is not the only thing
-// this page has that the published site does not: `useSoundBrowseState.js`
-// lists two demo songs the upload set deliberately drops (PLAN-387.01), and
-// the question it has to ask — is this origin a bench, or is it apk.audio? —
-// is the same question. This used to be four lines inside `oaBusUrl` and a
-// second copy was the obvious next move; a predicate two files disagree about
-// is how one surface hides a thing the other still offers.
+// AM I ON A BENCH? One answer, in one place, for the page's OTHER bench-only
+// offers — `useSoundBrowseState.js` lists two demo songs the upload set
+// deliberately drops (PLAN-387.01), and asks this. It is NOT the bus's question
+// any more (2026-10-30 SDK audit, WS-05): a gateway hostname is not an RFC 1918
+// literal, and the broker behind it was unreachable while the bus asked this.
 //
 // No `location` at all means no page: the test harness boots this bundle in a
 // stub world, and a headless build has no bench. Not-a-bench is the correct
@@ -92,20 +86,19 @@ window.oaIsLocalOrigin = function () {
         || /^192\.168\./.test(host) || /^10\./.test(host);
 };
 
+// The broker somebody NAMED for this page, or null — and null is not "no bus",
+// it is "let APKBus choose". Today the only name is the saved `oa_bus_url`
+// override (which APKBus would take anyway; naming it keeps it first). The OS
+// sound agent (APK:OS/Midi/site/agent/sound-agent.js) redefines this global
+// when the desk frames the page, to name its MessagePort client; `exports.json`
+// lists it for that reason. No port is guessed here: the old websocket-port guess
+// reached whichever broker held that port on the machine the BROWSER runs on.
 window.oaBusUrl = function () {
     try {
         const override = localStorage.getItem('oa_bus_url');
         if (override) return override;
     } catch (e) { /* private mode: no override, not an error */ }
-
-    // Answering "nowhere" off a bench is correct rather than defensive — the
-    // same answer the published site gets, reached one step earlier.
-    if (!window.oaIsLocalOrigin()) return null;
-
-    const where = window.location;
-    const host = where.hostname;
-    const scheme = where.protocol === 'https:' ? 'wss' : 'ws';
-    return `${scheme}://${host || '127.0.0.1'}:9001`;
+    return null;
 };
 
 function publishState(topic, value) {
@@ -198,29 +191,22 @@ function applyInbound(topic, text) {
     }
 }
 
-// mqtt.js is fetched only when there is somewhere to connect to, and that is
-// the point rather than an optimisation. It is 330 KB — larger than this app's
-// entire compiled bundle — and the published site has no broker to spend it on.
-// A static <script> tag would put it in every visitor's precache to enable a
-// connection that can never succeed there. So it is pulled on a local origin
-// and nowhere else, which also keeps it out of `dist/precache.json`.
-//
-// THE SHARED HELPER FIRST (2026-10-30 audit). Under the APK portal and on
-// apk.audio, WEB.Frontend-Assets serves the one softapp bus helper at
-// `/FrontEnd/shared/apk-bus.js` (window.APKBus), which carries the ONE vendored
-// mqtt.js beside it, failover across the brokers it knows (the URL this file
-// chose first, then the saved override, the shell's broker, the same-origin
-// `/mqtt` gateway door), subscriptions restated on every reconnect. So the
-// order is:
+// THE SHARED HELPER IS THE ONLY WAY ONTO A BROKER (2026-10-30 SDK audit, WS-05).
+// Under the APK portal and on apk.audio, WEB.Frontend-Assets serves the one
+// softapp bus helper at `/FrontEnd/shared/apk-bus.js` (window.APKBus). It owns
+// the three decisions this file used to make for itself: which broker (the
+// shell's seed order, above), whether to dial at all (a public origin gets
+// null, and mqtt.js — 330 KB, larger than this app's bundle — is never fetched
+// there), and which mqtt.js (the ONE vendored copy beside it, or the shell's).
+// This repo no longer carries an mqtt.js of its own. So the order is:
 //   1. `window.APKBus` already on the page — use it.
-//   2. `window.mqtt` already on the page — the OS sound agent's port client
-//      when the desk frames this page, or a test's fake. Used directly, as
-//      before: the agent's client is a MessagePort shim, not a broker URL.
-//   3. load `/FrontEnd/shared/apk-bus.js`; where it is not served (the
-//      standalone Sampler.Like.audio host) fall back to `./vendor/mqtt.min.js`,
-//      this repo's own copy (vendor/VENDOR.json), exactly as before.
+//   2. `window.mqtt` already on the page AND a broker named for it — the OS
+//      sound agent's port client when the desk frames this page (it names
+//      `apk-sound-port://shell` through `oaBusUrl`), or a test's fake. Used
+//      directly: the agent's client is a MessagePort shim, not a broker URL.
+//   3. load `/FrontEnd/shared/apk-bus.js`. Where it is not served, there is no
+//      bus, and the local store is the whole story — as on any static host.
 const SHARED_BUS_HELPER = '/FrontEnd/shared/apk-bus.js';
-const OWN_MQTT = './vendor/mqtt.min.js';
 
 function loadScript(src, onload, onerror) {
     const tag = document.createElement('script');
@@ -230,15 +216,15 @@ function loadScript(src, onload, onerror) {
     (document.head || document.documentElement).appendChild(tag);
 }
 
-/** then(APKBus) with the shared helper, or then(null) with window.mqtt. */
-function withBusLib(then) {
+/** then(APKBus) with the shared helper, or then(null) for a named window.mqtt. */
+function withBusLib(named, then) {
     if (window.APKBus) return then(window.APKBus);
-    if (window.mqtt) return then(null);
+    if (window.mqtt && named) return then(null);
     loadScript(SHARED_BUS_HELPER,
-        () => (window.APKBus ? then(window.APKBus) : loadScript(OWN_MQTT, () => then(null), noLib)),
-        () => loadScript(OWN_MQTT, () => then(null), noLib));
+        () => (window.APKBus ? then(window.APKBus) : noLib()),
+        noLib);
 }
-const noLib = () => console.warn('[sampler] no mqtt client — bus stays local');
+const noLib = () => console.log('[sampler] no shared bus helper on this host — bus stays local');
 
 /**
  * An APKBus link with the face of an mqtt.js client, so everything below —
@@ -282,28 +268,30 @@ function wireClient(client, url) {
 }
 
 window.oaConnectBus = function () {
-    const url = window.oaBusUrl();
-    if (!url) return null; // not a bench — the local store is the whole story
+    const named = window.oaBusUrl();
 
-    withBusLib((APKBus) => {
+    withBusLib(named, (APKBus) => {
         if (APKBus) {
             // Our own session (shareShell: false), as this app always had: it
             // publishes retained state of its own and must not borrow the
-            // shell's will or client id.
-            APKBus.connect({ brokerUrl: url, shareShell: false, reconnectPeriod: 5000 })
-                .then((link) => { if (link) wireClient(linkAsClient(link), url); })
+            // shell's will or client id. A named broker goes first; with none,
+            // APKBus walks the shell's seed order, and resolves null where
+            // this page has no broker.
+            const opts = { shareShell: false, reconnectPeriod: 5000 };
+            if (named) opts.brokerUrl = named;
+            APKBus.connect(opts)
+                .then((link) => { if (link) wireClient(linkAsClient(link), link.url || named || 'APKBus'); })
                 .catch((e) => console.warn('[sampler] no bus —', e));
             return;
         }
-        if (!window.mqtt) return;
         let client;
         try {
-            client = window.mqtt.connect(url, { reconnectPeriod: 5000 });
+            client = window.mqtt.connect(named, { reconnectPeriod: 5000 });
         } catch (e) {
             console.warn('[sampler] no bus —', e);
             return;
         }
-        wireClient(client, url);
+        wireClient(client, named);
     });
     return null; // the client does not exist yet; `window.oaBusClient` is the handle
 };
