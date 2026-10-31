@@ -1,0 +1,26 @@
+{
+  "_comment": "Third-party code copied into vendor/, with where it came from and its sha256, held by test/manifests.test.mjs. The copies are deliberate: Sampler.Like.audio is published standalone and must run with nothing beside it. When served under the APK portal the same versions are carried by WEB.Frontend-Assets (/FrontEnd/vendor/: mqtt.min.js 5.10.1, React 18.3.1 development builds) and APK:OS (OS/vendor/mqtt.min.js, byte-identical to this one) — measured 2026-10-30. To update: replace the file, set version/source/sha256 here, run npm test.",
+  "files": {
+    "mqtt.min.js": {
+      "package": "mqtt",
+      "version": "5.10.1",
+      "source": "https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js",
+      "sha256": "5d8cb17e5180d0a31ecac9ce7fd78b47c93af6403770f7380e4749d206e95a5a",
+      "loadedBy": "libControl/App/mqttBus.js (withMqttLib, lazily, only when a broker URL is known)"
+    },
+    "react.production.min.js": {
+      "package": "react",
+      "version": "18.3.1",
+      "source": "https://unpkg.com/react@18.3.1/umd/react.production.min.js",
+      "sha256": "fdcf370235e8dba96fa785ca87c62a0e6b1be792fc44608466943880c4bfa8b4",
+      "loadedBy": "index.html; APK:OS sound.modules.json packages mixer and midi"
+    },
+    "react-dom.production.min.js": {
+      "package": "react-dom",
+      "version": "18.3.1",
+      "source": "https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js",
+      "sha256": "e087e06fac038189dc95374d6e36a671d27eb0db5231f1e357875cbd76471757",
+      "loadedBy": "index.html; APK:OS sound.modules.json packages mixer and midi"
+    }
+  }
+}

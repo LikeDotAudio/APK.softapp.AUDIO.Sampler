@@ -23,7 +23,7 @@ window.useSeqMenus = () => {
             const prev = window.OA_DRUM_SAMPLES[trkIdx] || {};
             window.oaSetDrumSample(trkIdx, buf, { name: file.name, pitch: prev.pitch, loop: prev.loop, fade: prev.fade, offset: 0, folder: (meta && meta.folder) || '' });
             setTrackVer((v) => v + 1);
-            if (trackPublish) trackPublish(`APK.audio/Gui/DrumKit/${trkIdx}/sample`, { name: file.name, folder: (meta && meta.folder) || '' });
+            if (trackPublish) trackPublish(window.oaTopics.drumKitSample(trkIdx), { name: file.name, folder: (meta && meta.folder) || '' });
         } catch (e) { console.error('🛑 [Sequencer] load track sample:', e); }
     };
 

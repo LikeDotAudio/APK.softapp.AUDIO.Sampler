@@ -7,7 +7,8 @@
 
 // The console end of the SPOG bridge — where a strip's EQ trim lands.
 //
-// WHAT THIS OWNS: one subscription, `APK.audio/Gui/DrumKit/+/eq/+`, and the
+// WHAT THIS OWNS: one subscription, `APK.audio/Gui/DrumKit/+/eq/+` (spelt by
+// `libControl/App/oaTopics.js`, with its payload shape), and the
 // hop from a message on it to `oaSetEq`. Nothing else.
 //
 // WHAT IT MUST NOT DO:
@@ -28,18 +29,15 @@
 // data-file edit at the one end that knows about consoles.
 
 (function () {
-    /** The three named bands a SPOG strip can reach, by the topic segment. */
-    const BANDS = { hiGain: true, midGain: true, loGain: true };
-
-    /** `APK.audio/Gui/DrumKit/<pad>/eq/<key>` → `{ pad, key }`, or null. */
+    /**
+     * `APK.audio/Gui/DrumKit/<pad>/eq/<key>` → `{ pad, key }`, or null. The
+     * grammar (and the three named bands a SPOG strip can reach) is
+     * `oaTopics.parseDrumKitEq`'s; whether the pad exists on this kit is ours.
+     */
     function parse(topic) {
-        const parts = String(topic || '').split('/');
-        // APK.audio / Gui / DrumKit / <pad> / eq / <key>
-        if (parts.length !== 6 || parts[4] !== 'eq') return null;
-        const pad = Number(parts[3]);
-        if (!isFinite(pad) || pad < 0 || pad >= window.OA_PAD_MAX) return null;
-        if (!BANDS[parts[5]]) return null;
-        return { pad: pad, key: parts[5] };
+        const at = window.oaTopics.parseDrumKitEq(topic);
+        if (!at || at.pad >= window.OA_PAD_MAX) return null;
+        return { pad: at.pad, key: at.band };
     }
 
     window.oaEqBridgeApply = function (topic, message) {
@@ -60,7 +58,7 @@
 
     window.oaEqBridgeStart = function () {
         if (!window.oaBusSubscribe) return null;
-        return window.oaBusSubscribe('APK.audio/Gui/DrumKit/+/eq/+', window.oaEqBridgeApply);
+        return window.oaBusSubscribe(window.oaTopics.DRUM_KIT_EQ_ALL, window.oaEqBridgeApply);
     };
 
     window.oaEqBridgeStart();

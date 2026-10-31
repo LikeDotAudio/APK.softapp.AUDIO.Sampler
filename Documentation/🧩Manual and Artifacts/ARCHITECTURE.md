@@ -29,7 +29,7 @@ dependency order**. `build.mjs`:
 
 | Bundle | List | Files | Who loads it |
 |---|---|---:|---|
-| `dist/app.js` | `sources.json` | 106 | `index.html` (this app); the OS **midi** sound page |
+| `dist/app.js` | `sources.json` | 107 | `index.html` (this app); the OS **midi** sound page |
 | `dist/fx.js` | `sources.fx.json` | 22 | the OS **host** and **mixer** sound pages — engines only |
 | `dist/gui.js` | `sources.gui.json` | 18 | the OS **mixer** sound page, on top of `fx.js` — faceplates only |
 
@@ -37,11 +37,34 @@ dependency order**. `build.mjs`:
 
 A page must never hold both `app.js` and `fx.js`: the second load re-registers every plugin.
 
+## The bundle contract (`exports.json`)
+
+APK:OS loads the bundles by path (`OS/system/sound.modules.json`) and reads `window.*` names off
+them. `exports.json` is that API, written down:
+
+* per bundle, the `globals` it must define when loaded **alone** (`app` also `includes` fx's and
+  gui's), and for `fx` the plugin ids it must register (`comp drive gate eq reverb delay chorus
+  drumsynth buss`, the list `OS/Mixer/dsp/sampler-package.js` checks);
+* `version` — package.json's semver. Removing/renaming a name is a major bump, adding one minor.
+  Each bundle announces it as `window.OA_FX_API` / `OA_GUI_API` / `OA_APP_API` (written by
+  `build.mjs`; `exports.json` is part of every bundle's stamp, so a bump without a rebuild is a
+  stale bundle). A consumer pins on the major;
+* `consumes` — what the page takes from APK:OS (`Midi/site/agent/sound-agent.js`, loaded first by a
+  relative URL; it redefines `window.oaBusUrl` when the desk frames the page).
+
+`test/exports.test.mjs` boots each committed bundle alone in a fresh fake window
+(`test/bootScripts.mjs`) and checks every name, the plugins, the API global, and that `index.html`
+loads exactly the OS files `consumes` declares. `test/page.test.mjs` runs `index.html`'s own script
+chain the same way and fails on a script error or a page that does not mount the App.
+
+Third-party copies in `vendor/` are listed with version, source and sha256 in `vendor/VENDOR.json`
+(mqtt.js 5.10.1, React/ReactDOM 18.3.1), held by `test/manifests.test.mjs`.
+
 ## Source map (`libControl/`)
 
 | Folder | Holds |
 |---|---|
-| `App/` | App shell, `mqttBus.js` (bus + LocalStorage store), theme, mocks |
+| `App/` | App shell, `mqttBus.js` (bus + LocalStorage store), `oaTopics.js` (topics + payload shapes), theme, mocks |
 | `Pads/` | Pad grid, MIDI/keyboard input, pitch wheel, kit sets, per-pad state |
 | `Sequencer/` | Steps, song arranger, transport |
 | `SoundBrowser/` | Library browser |
@@ -59,15 +82,30 @@ reverb is a convolution reverb whose program parameters are drawn into the impul
 ## Bus
 
 `libControl/App/mqttBus.js` provides `useMqttState`, `useMqttMessages`, `useMqttPublish`,
-`oaBusSubscribe`. Only on a local origin (or with `localStorage['oa_bus_url']`) it connects to
-`ws(s)://<host>:9001`.
+`oaBusSubscribe`. Only on a local origin (or with `localStorage['oa_bus_url']`) it connects, first to
+`ws(s)://<host>:9001` (`window.oaBusUrl`, which the OS sound agent redefines when framed). The client:
+the shared softapp helper `window.APKBus` (`/FrontEnd/shared/apk-bus.js`, WEB.Frontend-Assets — the
+one vendored mqtt.js, failover to the saved override / shell broker / same-origin `/mqtt`) when it is
+on the page or served; `window.mqtt` directly when the OS sound agent supplied it; this repo's
+`vendor/mqtt.min.js` only where the helper is not served (the standalone host).
 
-| Topic | Direction |
-|---|---|
-| `APK.audio/Gui/DrumKit/<pad>/sample` | publish (retained) + read |
-| `APK.audio/Gui/DrumSets`, `APK.audio/Gui/SoundFavorites` | shared state |
-| `APK.audio/Gui/Sequencer/<label>/{pattern,song,library,mutes,solos,trackVol,trackPan,masterVol,clickVol}` | shared state |
-| `APK.audio/Gui/DrumKit/+/eq/+` | subscribe (`Effects/Equalizer/oaEqBridge.js`) |
+Every topic is built by `libControl/App/oaTopics.js` (`window.oaTopics`) and every payload has a
+declared shape there (`window.OA_BUS_PAYLOADS`, checked by `window.oaBusPayloadProblem(topic, payload)`).
+`test/payloads.test.mjs` drives the real hooks through a fake broker and holds every publish to its
+shape. A shape change that removes or retypes a field is an API change (bump `exports.json` version).
+
+| Topic | Payload | Direction |
+|---|---|---|
+| `APK.audio/Gui/DrumKit/<pad>/sample` | `{ name, folder }` | publish (retained) + read |
+| `APK.audio/Gui/DrumKit/<pad>/eq/<hiGain\|midGain\|loGain>` | `{ value }` dB (bare number accepted) | subscribe (`Effects/Equalizer/oaEqBridge.js`) |
+| `APK.audio/Gui/DrumSets` | `{ items: { <name>: Array<null \| { name, folder?, pitch?, loop?, fade?, offset?, url? }> } }` | shared state |
+| `APK.audio/Gui/SoundFavorites` | `{ items: [{ name, folder }] }` | shared state |
+| `APK.audio/Gui/Sequencer/<label>/pattern` | `{ grid: number[][], bpm, steps, swing?, toneTrack?, toneRoot? }` | shared state |
+| `…/Sequencer/<label>/{clickVol,masterVol}` | `{ value }` | shared state |
+| `…/Sequencer/<label>/{mutes,solos}` · `{trackVol,trackPan}` | `{ items: boolean[] }` · `{ items: number[] }` | shared state |
+| `…/Sequencer/<label>/{library,song}` | `{ items: [] }` | shared state |
+
+`<label>` is the sequencer's name with every run of non-alphanumerics as `_` (`oaTopics.seqSegment`).
 
 ## Offline
 

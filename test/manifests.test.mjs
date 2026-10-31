@@ -104,3 +104,26 @@ describe("the service worker's install fallback", () => {
         assert.equal(tracked, '', 'precache.json is tracked: the published site would precache the whole machine');
     });
 });
+
+describe('the vendored third-party files (vendor/VENDOR.json)', () => {
+    const manifest = list('vendor/VENDOR.json');
+
+    test('every file in vendor/ is recorded, with a version and a source', () => {
+        const onDisk = execFileSync('git', ['ls-files', 'vendor'], { cwd: ROOT, encoding: 'utf8' })
+            .split('\n').filter((f) => f.endsWith('.js')).map((f) => f.slice('vendor/'.length));
+        const unrecorded = onDisk.filter((f) => !manifest.files[f]);
+        assert.deepEqual(unrecorded, [], 'vendored without a VENDOR.json entry');
+        for (const [f, e] of Object.entries(manifest.files)) {
+            assert.match(e.version, /^\d+\.\d+\.\d+/, `${f}: no version`);
+            assert.match(e.source, /^https:\/\//, `${f}: no source URL`);
+        }
+    });
+
+    test('each file is the bytes VENDOR.json says it is', async () => {
+        const { createHash } = await import('node:crypto');
+        for (const [f, e] of Object.entries(manifest.files)) {
+            const sha = createHash('sha256').update(readFileSync(path.join(ROOT, 'vendor', f))).digest('hex');
+            assert.equal(sha, e.sha256, `vendor/${f} changed without its VENDOR.json entry`);
+        }
+    });
+});

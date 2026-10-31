@@ -80,7 +80,7 @@ window.useSoundBrowseState = () => {
 
     // Favorites
     const loadFavs = () => { try { return JSON.parse(window.localStorage.getItem('oaSoundFavs')) || []; } catch (e) { return []; } };
-    const [favState, setFavState] = window.useMqttState('APK.audio/Gui/SoundFavorites', { items: loadFavs() });
+    const [favState, setFavState] = window.useMqttState(window.oaTopics.SOUND_FAVORITES, { items: loadFavs() });
     const favorites = (favState && favState.items) || [];
     React.useEffect(() => { try { localStorage.setItem('oaSoundFavs', JSON.stringify(favorites)); } catch (e) {} }, [favState]);
     

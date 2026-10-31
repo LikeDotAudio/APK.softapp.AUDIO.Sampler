@@ -479,7 +479,7 @@ const FACTORY_SETS = {
 window.useSamplerSets = (setSampleNames, publishSample) => {
     const loadDrumSets = () => { try { return JSON.parse(window.localStorage.getItem('oaDrumSets')) || {}; } catch (e) { return {}; } };
     
-    const [setsState, setSetsState] = window.useMqttState('APK.audio/Gui/DrumSets', { items: loadDrumSets() });
+    const [setsState, setSetsState] = window.useMqttState(window.oaTopics.DRUM_SETS, { items: loadDrumSets() });
     
     const userSets = (setsState && setsState.items) || {};
     const sets = Object.assign({}, FACTORY_SETS, userSets);

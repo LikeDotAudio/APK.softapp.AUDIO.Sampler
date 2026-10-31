@@ -204,39 +204,106 @@ function applyInbound(topic, text) {
 // A static <script> tag would put it in every visitor's precache to enable a
 // connection that can never succeed there. So it is pulled on a local origin
 // and nowhere else, which also keeps it out of `dist/precache.json`.
-function withMqttLib(then) {
-    if (window.mqtt) return then();
+//
+// THE SHARED HELPER FIRST (2026-10-30 audit). Under the APK portal and on
+// apk.audio, WEB.Frontend-Assets serves the one softapp bus helper at
+// `/FrontEnd/shared/apk-bus.js` (window.APKBus), which carries the ONE vendored
+// mqtt.js beside it, failover across the brokers it knows (the URL this file
+// chose first, then the saved override, the shell's broker, the same-origin
+// `/mqtt` gateway door), subscriptions restated on every reconnect. So the
+// order is:
+//   1. `window.APKBus` already on the page — use it.
+//   2. `window.mqtt` already on the page — the OS sound agent's port client
+//      when the desk frames this page, or a test's fake. Used directly, as
+//      before: the agent's client is a MessagePort shim, not a broker URL.
+//   3. load `/FrontEnd/shared/apk-bus.js`; where it is not served (the
+//      standalone Sampler.Like.audio host) fall back to `./vendor/mqtt.min.js`,
+//      this repo's own copy (vendor/VENDOR.json), exactly as before.
+const SHARED_BUS_HELPER = '/FrontEnd/shared/apk-bus.js';
+const OWN_MQTT = './vendor/mqtt.min.js';
+
+function loadScript(src, onload, onerror) {
     const tag = document.createElement('script');
-    tag.src = './vendor/mqtt.min.js';
-    tag.onload = () => then();
-    tag.onerror = () => console.warn('[sampler] no mqtt client — bus stays local');
-    document.head.appendChild(tag);
+    tag.src = src;
+    tag.onload = onload;
+    tag.onerror = onerror;
+    (document.head || document.documentElement).appendChild(tag);
+}
+
+/** then(APKBus) with the shared helper, or then(null) with window.mqtt. */
+function withBusLib(then) {
+    if (window.APKBus) return then(window.APKBus);
+    if (window.mqtt) return then(null);
+    loadScript(SHARED_BUS_HELPER,
+        () => (window.APKBus ? then(window.APKBus) : loadScript(OWN_MQTT, () => then(null), noLib)),
+        () => loadScript(OWN_MQTT, () => then(null), noLib));
+}
+const noLib = () => console.warn('[sampler] no mqtt client — bus stays local');
+
+/**
+ * An APKBus link with the face of an mqtt.js client, so everything below —
+ * `publishState`, `subscribeOnce`, the connect handler — is the same code on
+ * both paths. Messages arrive per subscription on a link; one packet that
+ * matches two of our filters (a widget's exact topic and a bridge's wildcard)
+ * is delivered once, as mqtt.js's single `message` event delivered it.
+ */
+function linkAsClient(link) {
+    let lastPacket = null;
+    const deliver = (topic, text, packet) => {
+        if (packet && packet === lastPacket) return;
+        lastPacket = packet || null;
+        applyInbound(topic, text);
+    };
+    return {
+        link,
+        get connected() { return link.connected; },
+        publish: (topic, text, opts) => link.publish(topic, text, opts),
+        subscribe: (filter) => { link.subscribe(filter, deliver); },
+        on(event, fn) {
+            // 'message' is per-subscription on a link (deliver, above).
+            if (event === 'connect' || event === 'error' || event === 'close') link.on(event, fn);
+            return this;
+        },
+    };
+}
+
+function wireClient(client, url) {
+    busClient = client;
+    busClient.on('connect', () => {
+        console.log('[sampler] bus up —', url);
+        // Everything already on screen, now that there is somewhere to say it.
+        for (const topic of Object.keys(globalStore)) subscribeOnce(topic);
+        // And every filter a non-React module asked for before the dial.
+        for (const sub of rawSubscriptions) subscribeOnce(sub.filter);
+    });
+    busClient.on('message', (topic, payload) => applyInbound(topic, payload.toString()));
+    busClient.on('error', (err) => console.warn('[sampler] bus error —', err && err.message));
+    window.oaBusClient = busClient;
 }
 
 window.oaConnectBus = function () {
     const url = window.oaBusUrl();
     if (!url) return null; // not a bench — the local store is the whole story
 
-    withMqttLib(() => {
+    withBusLib((APKBus) => {
+        if (APKBus) {
+            // Our own session (shareShell: false), as this app always had: it
+            // publishes retained state of its own and must not borrow the
+            // shell's will or client id.
+            APKBus.connect({ brokerUrl: url, shareShell: false, reconnectPeriod: 5000 })
+                .then((link) => { if (link) wireClient(linkAsClient(link), url); })
+                .catch((e) => console.warn('[sampler] no bus —', e));
+            return;
+        }
         if (!window.mqtt) return;
+        let client;
         try {
-            busClient = window.mqtt.connect(url, { reconnectPeriod: 5000 });
+            client = window.mqtt.connect(url, { reconnectPeriod: 5000 });
         } catch (e) {
             console.warn('[sampler] no bus —', e);
             return;
         }
-
-        busClient.on('connect', () => {
-            console.log('[sampler] bus up —', url);
-            // Everything already on screen, now that there is somewhere to say it.
-            for (const topic of Object.keys(globalStore)) subscribeOnce(topic);
-            // And every filter a non-React module asked for before the dial.
-            for (const sub of rawSubscriptions) subscribeOnce(sub.filter);
-        });
-        busClient.on('message', (topic, payload) => applyInbound(topic, payload.toString()));
-        busClient.on('error', (err) => console.warn('[sampler] bus error —', err.message));
-
-        window.oaBusClient = busClient;
+        wireClient(client, url);
     });
     return null; // the client does not exist yet; `window.oaBusClient` is the handle
 };

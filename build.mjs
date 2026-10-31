@@ -169,9 +169,15 @@ const fingerprintOf = (files) => {
   for (const f of files) h.update(f).update(readFileSync(f));
   return h.digest('hex').slice(0, 16);
 };
-const stamp = fingerprintOf(SOURCES);
-const guiStamp = fingerprintOf(GUI_SOURCES);
-const fxStamp = fingerprintOf(FX_SOURCES);
+// THE BUNDLE CONTRACT (exports.json) is an input of every bundle: each one
+// announces the contract's version as `window.<apiGlobal>`, so a version bump
+// there is a stale bundle here until it is rebuilt -- the same red a source
+// edit gives. test/exports.test.mjs holds the names it lists.
+const EXPORTS_FILE = 'exports.json';
+const EXPORTS = JSON.parse(readFileSync(EXPORTS_FILE, 'utf8'));
+const stamp = fingerprintOf([...SOURCES, EXPORTS_FILE]);
+const guiStamp = fingerprintOf([...GUI_SOURCES, EXPORTS_FILE]);
+const fxStamp = fingerprintOf([...FX_SOURCES, EXPORTS_FILE]);
 
 // WHICH OF THIS BUNDLE'S SOURCES ARE UNCOMMITTED, and therefore whose the red is.
 //
@@ -302,9 +308,9 @@ const fxVersion = versionFor([...FX_SOURCES, 'build.mjs', 'sources.fx.json']);
 
 // Each bundle's stamp and version, and the global its version goes out under.
 const BUNDLE_MARKS = {
-  OA_BUILD_STAMP: { stamp, version, versionGlobal: 'OA_BUILD_VERSION' },
-  OA_GUI_BUILD_STAMP: { stamp: guiStamp, version: guiVersion, versionGlobal: 'OA_GUI_BUILD_VERSION' },
-  OA_FX_BUILD_STAMP: { stamp: fxStamp, version: fxVersion, versionGlobal: 'OA_FX_BUILD_VERSION' },
+  OA_BUILD_STAMP: { stamp, version, versionGlobal: 'OA_BUILD_VERSION', api: EXPORTS.bundles.app.apiGlobal },
+  OA_GUI_BUILD_STAMP: { stamp: guiStamp, version: guiVersion, versionGlobal: 'OA_GUI_BUILD_VERSION', api: EXPORTS.bundles.gui.apiGlobal },
+  OA_FX_BUILD_STAMP: { stamp: fxStamp, version: fxVersion, versionGlobal: 'OA_FX_BUILD_VERSION', api: EXPORTS.bundles.fx.apiGlobal },
 };
 
 // ---------------------------------------------------------------------------
@@ -357,6 +363,10 @@ const compile = (files, out, mark) => {
     // `OA_BUILD_VERSION` and belongs to the app bundle, so the app keeps that
     // name and the GUI bundle takes its own.
     `window.${BUNDLE_MARKS[mark].versionGlobal}="${BUNDLE_MARKS[mark].version}";`,
+    // The CONTRACT version (exports.json), which a consumer pins on; the
+    // release stamp above only says when. After the version line on purpose:
+    // the keep-the-committed-version logic below reads that line by position.
+    `window.${BUNDLE_MARKS[mark].api}="${EXPORTS.version}";`,
     '(function(){"use strict";',
   ];
 

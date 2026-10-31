@@ -15,8 +15,9 @@
 // pad's sample assignment off this machine.
 //
 // WHY THE TOPIC IS `APK.audio/Gui/DrumKit/<pad>/sample` AND NOT `APK.audio/Gui/Display/…`
-// The app's display.json declares `APK.audio/Gui/Display/Sampler`, which is the shell's
-// grammar for a window. This is not that: it is a per-pad assignment, and the
+// `APK.audio/Gui/Display/<id>` is the shell's grammar for a window (the app's
+// display.json declared one until 2026-10-30 and nothing ever published on it,
+// so it went). This is not that: it is a per-pad assignment, and the
 // grammar is DELIBERATE because two things outside this application already
 // speak it and neither is ours to rename from here --
 //   · APK:OS/DataBus/reading/read-bus-event.js  files `Gui/DrumKit/{n}/sample`
@@ -25,7 +26,8 @@
 //     console strips onto `APK.audio/Gui/DrumKit/<pad>/eq/<key>` on the same
 //     prefix, so the EQ half would part company with the sample half.
 // Migrating is a three-tree change with retained state on the old prefix, not a
-// rename. The manifest's `topic` names the WINDOW; this names the PADS.
+// rename. A window topic would name the WINDOW; this names the PADS. Every
+// topic and its payload shape: libControl/App/oaTopics.js.
 
 window.useSamplerState = (setSampleNames) => {
     const [toneRoot, setToneRoot] = React.useState(null);
@@ -44,8 +46,15 @@ window.useSamplerState = (setSampleNames) => {
     const kitMeta = React.useMemo(() => {
         const m = {};
         for (let i = 0; i < window.OA_PAD_COUNT; i++) {
-            const raw = mqttMessages[`APK.audio/Gui/DrumKit/${i}/sample`];
-            if (raw) { try { const o = JSON.parse(raw); if (o && o.name) m[i] = o; } catch (e) {} }
+            // ALREADY PARSED: mqttBus.js `applyInbound` stores the JSON value,
+            // not the text. This used to JSON.parse it a second time, which
+            // throws on an object, so a kit published on the bus never reached
+            // "restore" (found by test/payloads.test.mjs). A string is still
+            // read, for a hand-published message.
+            const raw = mqttMessages[window.oaTopics.drumKitSample(i)];
+            let o = raw;
+            if (typeof raw === 'string') { try { o = JSON.parse(raw); } catch (e) { o = null; } }
+            if (o && typeof o === 'object' && o.name) m[i] = o;
         }
         return m;
     }, [mqttMessages]);
@@ -66,7 +75,7 @@ window.useSamplerState = (setSampleNames) => {
     
     const mqttPublish = window.useMqttPublish ? window.useMqttPublish() : null;
     const publishSample = (idx, name, folder) => {
-        if (mqttPublish) mqttPublish(`APK.audio/Gui/DrumKit/${idx}/sample`, { name, folder: folder || '' });
+        if (mqttPublish) mqttPublish(window.oaTopics.drumKitSample(idx), { name, folder: folder || '' });
     };
 
     const handleFile = async (index, file, meta) => {

@@ -1,0 +1,41 @@
+{
+  "_comment": "THE BUNDLE CONTRACT. What another repo may rely on in dist/fx.js, dist/gui.js and dist/app.js: the window.* names each bundle must define when it is loaded ALONE (APK:OS loads them by path from OS/system/sound.modules.json: host = fx; mixer = React + fx + gui; midi = React + app), the plugin ids fx must register, and the API version each bundle announces as window.<apiGlobal>. Held by test/exports.test.mjs, which boots each built bundle in a fresh fake window and checks every name. `version` is package.json's and is a semver: removing or renaming a name below, or changing what it does, is a MAJOR bump; adding a name is a MINOR one. A consumer pins by reading window.OA_FX_API / OA_GUI_API / OA_APP_API (or this file) and refusing a different major. `consumes` is the other direction: what this repo's page takes from APK:OS, so that dependency is written down and tested too. Names here were measured against APK:OS on 2026-10-30 (Mixer/dsp/*, Midi/pads, Midi/sequencer, Midi/site/agent).",
+  "version": "1.1.0",
+  "bundles": {
+    "fx": {
+      "file": "dist/fx.js",
+      "apiGlobal": "OA_FX_API",
+      "plugins": ["comp", "drive", "gate", "eq", "reverb", "delay", "chorus", "drumsynth", "buss"],
+      "globals": [
+        "oaNewAudioContext", "OA_PAD_MAX", "oaPadGrid", "OA_SLOT",
+        "oaPlugin", "oaPluginFrame", "oaPluginLayout", "oaPluginParams", "oaPluginParamSpecs",
+        "oaPluginPresets", "oaPluginState", "oaPluginSet", "oaPluginPreset", "oaPluginSubscribe",
+        "oaPluginOnFrame", "oaPluginAttach", "oaDisconnectAll",
+        "oaReverbInput", "oaReverbSend", "oaSetReverb", "oaMuteReverb", "oaSetReverbSend",
+        "OA_DELAY_UNITS", "oaMuteDelay", "oaDelayInput", "oaDelaySend", "oaSetDelay", "oaSetDelaySend",
+        "OA_DRIVE_MODES", "oaDriveActive", "oaDriveNode",
+        "oaGateActive", "oaGateInput",
+        "oaEqActive", "oaEqNode",
+        "OA_COMP_RATIOS", "OA_COMP_METERS", "oaCompActive", "oaCompInput",
+        "oaMasterWarm"
+      ]
+    },
+    "gui": {
+      "file": "dist/gui.js",
+      "apiGlobal": "OA_GUI_API",
+      "globals": [
+        "CompressorEditor", "DriveEditor", "GateEditor", "EqEditor",
+        "VarcRemote", "TapeDelayEditor", "ChorusEditor", "BussCompEditor"
+      ]
+    },
+    "app": {
+      "file": "dist/app.js",
+      "apiGlobal": "OA_APP_API",
+      "includes": ["fx", "gui"],
+      "globals": ["Pads", "Sequencer", "oaBusUrl", "oaTopics", "OA_BUS_PAYLOADS", "oaBusPayloadProblem"]
+    }
+  },
+  "consumes": {
+    "APK:OS/Midi/site/agent/sound-agent.js": "the OS sound watchdog; index.html loads it first, by the relative URL ../../../APK:OS/Midi/site/agent/sound-agent.js (relative on purpose: it resolves against wherever the portal mounts APK:Softapps beside APK:OS, which is the one layout the watchdog exists for; the OS frames this page on its sound site at that same path). It redefines window.oaBusUrl to the shell's port when framed; a 404 is silent and the page runs alone."
+  }
+}

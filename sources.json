@@ -1,6 +1,7 @@
 [
   "libControl/App/oaTheme.js",
   "libControl/App/mqttBus.js",
+  "libControl/App/oaTopics.js",
   "libControl/App/Mocks.jsx",
   "libControl/Header/Header.jsx",
   "libControl/Footer/Footer.jsx",
