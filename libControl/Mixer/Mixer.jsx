@@ -53,11 +53,34 @@ const Mixer = () => {
         // The Sequencer's track names open the same editor — the Mixer hosts it
         // because it is always mounted, and the panel portals to <body>.
         const onOpen = (e) => { if (e.detail && e.detail.idx != null) { setDrivePad(null); setCompPad(null); setSynthPad(e.detail.idx); } };
+        // A deep link (oaDeepLink.js) asks for one faceplate by plugin id; every
+        // other editor closes, as a click on a strip button does.
+        const onFx = (e) => {
+            const d = e.detail || {};
+            const u = d.unit != null ? d.unit : 0;
+            setSynthPad(null); setDrivePad(null); setCompPad(null); setSamplerPad(null);
+            setEqPad(null); setGatePad(null); setVarcUnit(null); setTapeUnit(null);
+            setChorusUnit(null); setBussOpen(false);
+            switch (d.plugin) {
+                case 'reverb': setVarcUnit(u); break;
+                case 'delay': setTapeUnit(u); break;
+                case 'chorus': setChorusUnit(u); break;
+                case 'buss': setBussOpen(true); break;
+                case 'drumsynth': setSynthPad(u); break;
+                case 'comp': setCompPad(u); break;
+                case 'eq': setEqPad(u); break;
+                case 'gate': setGatePad(u); break;
+                case 'drive': setDrivePad(u); break;
+                default: break;
+            }
+        };
         window.addEventListener('oa-sample-changed', onSample);
         window.addEventListener('oa-open-synth', onOpen);
+        window.addEventListener('oa-open-fx', onFx);
         return () => {
             window.removeEventListener('oa-sample-changed', onSample);
             window.removeEventListener('oa-open-synth', onOpen);
+            window.removeEventListener('oa-open-fx', onFx);
         };
     }, []);
     const hasSample = (i) => !!(window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[i] && window.OA_DRUM_SAMPLES[i].buffer);

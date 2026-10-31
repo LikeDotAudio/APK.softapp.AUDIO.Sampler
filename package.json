@@ -1,7 +1,7 @@
 {
   "name": "sampler-like-audio",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Build tooling for SAMPLER.LIKE.AUDIO — compiles libControl/**/*.jsx into dist/app.js",
   "license": "MIT",
   "author": "Anthony P. Kuzub (https://Sampler.Like.audio)",

@@ -42,3 +42,10 @@ Tested: `npm test` (floor runner: 324 cases, 59 suites, 24 files, all pass; floo
 - **Schema citations repointed** (handoff from S01) — `oaDeepScanner.js`, `extract_note_root_beat_map.py` and `test/padmeta.test.mjs` now cite PROCESSOR.SampleAnalyzer `schema/peak.schema.json` instead of the moved `analyzerPeakSchema.json`.
 
 Tested: `npm test` (332 cases / 61 suites / 25 files, floor raised), `node build.mjs`, `npm run check`.
+
+### Follow-ups from other batches (2026-10-30)
+
+- **Shared pitch detector** (handoff from S02, for CAPTURE.guitarTuner #1) — `oaEstimatePitch` now uses `window.PitchDetect.autoCorrelate` from `/FrontEnd/shared/pitch-detect.js` (WEB.Frontend-Assets `1fa0fe5e`), loaded once when the page is served under `/APK:Softapps/`; the standalone host, the scan worker and tests use `oaAutoCorrelateLocal`, a copy of the same algorithm. The estimator keeps its 55–1000 Hz range, clarity floor and 16-window median. `test/pitch.test.mjs` asserts identical results from both on six buffers, and from `oaEstimatePitch` with and without `window.PitchDetect`. The worker kernel list carries the detector (`deepscan.test.mjs` worker = page).
+- **Deep links** (handoff from S04) — `libControl/App/oaDeepLink.js`: `index.html#/<view>` opens `pads`, `sequencer`, `song`, `browser`, `lenses`, `mixer`, `plugins`, or one effect faceplate (`reverb`, `tapedelay`, `chorus`, `buss`, `drumsynth`, `compressor`, `eq`, `gate`, `drive`), on load and on `hashchange`, through the existing `oa-open-tab` and a new `oa-open-fx` that `Mixer.jsx` answers. Declared in `exports.json` (`bundles.app.deepLinks`; API 1.1.0 → 1.2.0, a minor bump for added names). `test/deeplink.test.mjs` checks the list, the events, that each effect link opens its editor in the Mixer, and that the built page follows the hash on load. The AUDIO.* pointer tiles (S04) link these addresses.
+
+Tested: `npm test` (347 cases / 63 suites / 27 files, floor raised), `node build.mjs`, `npm run check`.

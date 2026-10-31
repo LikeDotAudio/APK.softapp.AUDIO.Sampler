@@ -22,8 +22,8 @@ An independent Git repository, registered as a submodule of APK.audio at
 | Path | What it is |
 |---|---|
 | `index.html` | The app page: loads APK:OS's sound agent (if beside it), React from `vendor/`, then `dist/app.js` |
-| `libControl/` | The source — `.jsx` and plain `window`-global `.js` modules, no imports: `App/` (app shell, `mqttBus.js`, `oaTopics.js` — every topic and payload shape, theme, mocks), `Pads/`, `Sequencer/`, `SoundBrowser/`, `SoundSynth/` (shared kit, sample rate, pad grid), `Mixer/`, `MusicChart/` (lenses, deep scan), `Effects/` (BussCompressor, Chorus, Compressor, Drive, DrumSynth, Equalizer, FxBus, Gate, PluginHost, Reverb, TapeDelay), `Ui/`, `Header/`, `Footer/` |
-| `sources.json` / `sources.gui.json` / `sources.fx.json` | The ordered source lists of the three bundles (107 / 18 / 22 files). The GUI and FX lists must stay subsequences of `sources.json` |
+| `libControl/` | The source — `.jsx` and plain `window`-global `.js` modules, no imports: `App/` (app shell, `mqttBus.js`, `oaTopics.js` — every topic and payload shape, `oaDeepLink.js` — `index.html#/<view>` deep links, theme, mocks), `Pads/`, `Sequencer/`, `SoundBrowser/`, `SoundSynth/` (shared kit, sample rate, pad grid), `Mixer/`, `MusicChart/` (lenses, deep scan), `Effects/` (BussCompressor, Chorus, Compressor, Drive, DrumSynth, Equalizer, FxBus, Gate, PluginHost, Reverb, TapeDelay), `Ui/`, `Header/`, `Footer/` |
+| `sources.json` / `sources.gui.json` / `sources.fx.json` | The ordered source lists of the three bundles (108 / 18 / 22 files). The GUI and FX lists must stay subsequences of `sources.json` |
 | `build.mjs`, `build.sh` | The build (below) |
 | `dist/app.js`, `dist/gui.js`, `dist/fx.js` | The three bundles — **tracked**; `dist/precache.json` is generated and ignored |
 | `test/` | `node --test` suite (`*.test.mjs`), a fake React/Web Audio harness, `cases.baseline.json` (the case floor) |
@@ -120,7 +120,7 @@ The principles this app follows, and where the code shows them:
 * **An instrument, not a document.** Text selection and the touch callout are off everywhere except
   input fields, so a press-and-hold plays a pad. — `index.html`
 * **Homage, not affiliation.** Faceplates echo classic hardware; the licence header on 100 of the
-  107 bundled sources says there is no affiliation. — the file headers, `build.sh`, `index.html`
+  108 bundled sources says there is no affiliation. — the file headers, `build.sh`, `index.html`
 * **Where it does not hold:** Soft Apps law 2 says the bus is the only door out and an app does not read
   another app's files. APK:OS's sound pages load this repository's `dist/*.js` by path
   (`WEB.OsApi/SRC/server.py`, `OS/Mixer/dsp/sampler-package.js`): the engines are shared as files,

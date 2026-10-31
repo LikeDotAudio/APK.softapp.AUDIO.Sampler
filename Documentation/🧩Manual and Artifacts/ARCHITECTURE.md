@@ -29,7 +29,7 @@ dependency order**. `build.mjs`:
 
 | Bundle | List | Files | Who loads it |
 |---|---|---:|---|
-| `dist/app.js` | `sources.json` | 107 | `index.html` (this app); the OS **midi** sound page |
+| `dist/app.js` | `sources.json` | 108 | `index.html` (this app); the OS **midi** sound page |
 | `dist/fx.js` | `sources.fx.json` | 22 | the OS **host** and **mixer** sound pages — engines only |
 | `dist/gui.js` | `sources.gui.json` | 18 | the OS **mixer** sound page, on top of `fx.js` — faceplates only |
 
@@ -112,6 +112,24 @@ shape. A shape change that removes or retypes a field is an API change (bump `ex
 | `…/Sequencer/<label>/{library,song}` | `{ items: [] }` | shared state |
 
 `<label>` is the sequencer's name with every run of non-alphanumerics as `_` (`oaTopics.seqSegment`).
+
+## Deep links
+
+`index.html#/<view>` opens the page on one panel (`libControl/App/oaDeepLink.js`, on load and on
+`hashchange`): `pads`, `sequencer`, `song`, `browser` (sound browser), `lenses`, `mixer`, `plugins`
+(pads + mixer), and the effect faceplates in the Mixer — `reverb`, `tapedelay`, `chorus`, `buss`,
+`drumsynth`, `compressor`, `eq`, `gate`, `drive` (unit / pad 0). It raises tabs through `oa-open-tab`
+and opens a faceplate through `oa-open-fx` (Mixer.jsx), so no panel reads the URL. The list is
+declared in `exports.json` (`bundles.app.deepLinks`) because the AUDIO.* launcher tiles link to it;
+`test/deeplink.test.mjs` holds it, and that each effect link really opens its editor.
+
+## Pitch detection
+
+`oaEstimatePitch` (`MusicChart/oaScanMeasure.js`) runs the shared detector
+`window.PitchDetect.autoCorrelate` (`/FrontEnd/shared/pitch-detect.js`, WEB.Frontend-Assets), loaded
+when the page is served under `/APK:Softapps/`; elsewhere (standalone host, the scan worker, tests)
+`oaAutoCorrelateLocal`, the same algorithm, answers. `test/pitch.test.mjs` holds the two identical.
+On top of it the estimator keeps its own refusals: 55–1000 Hz, a clarity floor, the median of 16 windows.
 
 ## Offline
 

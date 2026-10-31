@@ -406,22 +406,94 @@ window.oaEstimateKey = function(chromaSum) {
     return bestName ? { key: bestName, confidence: Math.round(bestScore * 100) / 100 } : null;
 };
 
+// ONE PITCH DETECTOR FOR THE WHOLE SITE (2026-10-30 audit, handoff from S02).
+// WEB.Frontend-Assets serves the shared detector at /FrontEnd/shared/pitch-detect.js
+// (window.PitchDetect.autoCorrelate — the guitar tuner's, tested there). Where the
+// page is served under the portal or apk.audio it is loaded once, here, and used.
+// The standalone Sampler.Like.audio host does not serve it, so this file carries the
+// SAME algorithm as `oaAutoCorrelateLocal`, and test/pitch.test.mjs holds the two to
+// identical answers on the same buffers. Change the shared one first, then this copy.
+const OA_SHARED_PITCH = '/FrontEnd/shared/pitch-detect.js';
+
+/** Autocorrelation with parabolic peak interpolation: Hz, or -1 (too quiet / no peak). */
+window.oaAutoCorrelateLocal = function (buffer, sampleRate) {
+    const SIZE = buffer.length;
+    let rms = 0;
+    for (let i = 0; i < SIZE; i++) rms += buffer[i] * buffer[i];
+    rms = Math.sqrt(rms / SIZE);
+    if (rms < 0.01) return -1;
+
+    let r1 = 0, r2 = SIZE - 1;
+    for (let i = 0; i < SIZE / 2; i++) {
+        if (Math.abs(buffer[i]) < 0.2) { r1 = i; break; }
+    }
+    for (let i = 1; i < SIZE / 2; i++) {
+        if (Math.abs(buffer[SIZE - i]) < 0.2) { r2 = SIZE - i; break; }
+    }
+
+    const slice = buffer.slice(r1, r2);
+    const L = slice.length;
+    const correlations = new Float32Array(L);
+    for (let tau = 0; tau < L; tau++) {
+        for (let i = 0; i < L - tau; i++) correlations[tau] += slice[i] * slice[i + tau];
+    }
+
+    let d = 0;
+    while (d < L - 1 && correlations[d] > correlations[d + 1]) d++;
+    let maxval = -1, maxpos = -1;
+    for (let i = d; i < L; i++) {
+        if (correlations[i] > maxval) { maxval = correlations[i]; maxpos = i; }
+    }
+    if (maxpos <= 0) return -1;
+
+    let T0 = maxpos;
+    if (maxpos < L - 1) {
+        const y1 = correlations[maxpos - 1], y2 = correlations[maxpos], y3 = correlations[maxpos + 1];
+        const a = (y1 + y3 - 2 * y2) / 2;
+        const b = (y3 - y1) / 2;
+        if (a !== 0) T0 = maxpos - b / (2 * a);
+    }
+    return sampleRate / T0;
+};
+
+/** The shared detector when the page has it, this copy when it does not. */
+window.oaAutoCorrelate = function (buffer, sampleRate) {
+    const shared = window.PitchDetect;
+    return (shared && typeof shared.autoCorrelate === 'function')
+        ? shared.autoCorrelate(buffer, sampleRate)
+        : window.oaAutoCorrelateLocal(buffer, sampleRate);
+};
+
+// Fetched only where it is served: under the portal's APK:Softapps tree (the bench
+// and apk.audio). A page anywhere else (the standalone host, a test) keeps the copy.
+(function loadSharedPitch() {
+    const where = window.location;
+    if (window.PitchDetect || !where || typeof where.pathname !== 'string') return;
+    if (!/\/APK(:|%3A)Softapps\//i.test(where.pathname)) return;
+    try {
+        const tag = document.createElement('script');
+        tag.src = OA_SHARED_PITCH;
+        tag.onerror = () => { /* not served here: the local copy answers */ };
+        (document.head || document.documentElement).appendChild(tag);
+    } catch (e) { /* no DOM: the local copy answers */ }
+})();
+
 /**
  * A fundamental in Hz, and how far off equal temperament it sits, in cents.
  *
- * Autocorrelation over a bounded set of windows spread through the file rather
- * than every frame — a 0.5 s window at 48 kHz costs 20 million multiplies per
- * lag sweep, and sixteen honest samples of a track answer the same question as
- * four hundred. A window whose autocorrelation peak is under `CLARITY` is
- * DISCARDED rather than reported: an unpitched frame has no fundamental, and
- * the median of a set that includes its noise is not a pitch either.
+ * The shared detector (`oaAutoCorrelate`, above) over a bounded set of windows
+ * spread through the file rather than every frame — sixteen honest samples of a
+ * track answer the same question as four hundred. A window is DISCARDED rather
+ * than reported when the detector finds nothing, when its answer is outside
+ * 55–1000 Hz, or when the autocorrelation at that period is under `CLARITY` of
+ * the window's energy: an unpitched frame has no fundamental, and the median of
+ * a set that includes its noise is not a pitch either.
  *
  * `null` when no window cleared it.
  */
 window.oaEstimatePitch = function(pcm, sampleRate) {
     const CLARITY = 0.5;
     const MIN_HZ = 55, MAX_HZ = 1000;
-    const minLag = Math.max(2, Math.floor(sampleRate / MAX_HZ));
     const maxLag = Math.ceil(sampleRate / MIN_HZ);
     const win = Math.min(pcm.length, Math.max(2048, maxLag * 2));
     if (pcm.length < win || maxLag >= win) return null;
@@ -429,6 +501,7 @@ window.oaEstimatePitch = function(pcm, sampleRate) {
     const WINDOWS = 16;
     const span = Math.max(1, Math.floor((pcm.length - win) / WINDOWS));
     const estimates = [];
+    const cut = (a, b) => (pcm.subarray ? pcm.subarray(a, b) : Float32Array.from(pcm.slice(a, b)));
 
     for (let w = 0; w < WINDOWS; w++) {
         const start = w * span;
@@ -439,15 +512,14 @@ window.oaEstimatePitch = function(pcm, sampleRate) {
         if (energy <= 0) continue;
         if (Math.sqrt(energy / win) < 0.01) continue;   // the scanner's own noise floor
 
-        let best = 0, bestLag = 0;
-        for (let lag = minLag; lag <= maxLag; lag++) {
-            let acc = 0;
-            for (let i = start; i < start + win - lag; i++) acc += pcm[i] * pcm[i + lag];
-            const norm = acc / (win - lag);
-            if (norm > best) { best = norm; bestLag = lag; }
-        }
-        const clarity = best / (energy / win);
-        if (bestLag > 0 && clarity >= CLARITY) estimates.push(sampleRate / bestLag);
+        const hz = window.oaAutoCorrelate(cut(start, start + win), sampleRate);
+        if (!(hz >= MIN_HZ && hz <= MAX_HZ)) continue;
+
+        const lag = Math.round(sampleRate / hz);
+        let acc = 0;
+        for (let i = start; i < start + win - lag; i++) acc += pcm[i] * pcm[i + lag];
+        const clarity = (acc / (win - lag)) / (energy / win);
+        if (clarity >= CLARITY) estimates.push(hz);
     }
 
     if (!estimates.length) return null;

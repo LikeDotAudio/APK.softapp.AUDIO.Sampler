@@ -431,7 +431,10 @@ window.oaDeepScanHere = async function(audioBuffer, onProgress) {
 window.OA_SCAN_KERNEL_FNS = [
     'oaMakeFrameChroma', 'oaMatchChord', 'oaDeepScanHere',
     'oaKWeightingBiquads', 'oaApplyBiquad', 'oaTruePeakDbtp', 'oaMeasureLoudnessR128',
-    'oaOnsetEnvelope', 'oaDetectOnsets', 'oaEstimateKey', 'oaEstimatePitch', 'oaPcmSha256'
+    'oaOnsetEnvelope', 'oaDetectOnsets', 'oaEstimateKey',
+    // The pitch detector the estimator calls. A worker has no window.PitchDetect,
+    // so oaAutoCorrelate answers with the local copy there — the same algorithm.
+    'oaAutoCorrelateLocal', 'oaAutoCorrelate', 'oaEstimatePitch', 'oaPcmSha256'
 ];
 window.OA_SCAN_KERNEL_DATA = ['NOTE_NAMES_12', 'OA_SCAN_YIELD_FRAMES', 'CHORD_TEMPLATES', 'OA_KEY_PROFILES'];
 

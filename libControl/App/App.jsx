@@ -166,7 +166,16 @@
             React.useEffect(() => {
                 const open = (e) => { const t = e.detail && e.detail.tab; if (t) toggleTab(t); };
                 window.addEventListener('oa-open-tab', open);
-                return () => window.removeEventListener('oa-open-tab', open);
+                // DEEP LINKS (oaDeepLink.js): `index.html#/mixer`, `#/reverb`, … open
+                // that panel — on load, and whenever the hash changes. Children's
+                // effects run first, so the Mixer is already listening for oa-open-fx.
+                const follow = () => { if (window.oaApplyDeepLink && window.location) window.oaApplyDeepLink(window.location.hash); };
+                follow();
+                window.addEventListener('hashchange', follow);
+                return () => {
+                    window.removeEventListener('oa-open-tab', open);
+                    window.removeEventListener('hashchange', follow);
+                };
             }, []);
 
             // Explicit dismissal (e.g. the Editor's ✕) — the tab bar itself never closes.
