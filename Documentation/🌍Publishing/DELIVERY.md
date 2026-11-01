@@ -49,3 +49,6 @@ Tested: `npm test` (332 cases / 61 suites / 25 files, floor raised), `node build
 - **Deep links** (handoff from S04) — `libControl/App/oaDeepLink.js`: `index.html#/<view>` opens `pads`, `sequencer`, `song`, `browser`, `lenses`, `mixer`, `plugins`, or one effect faceplate (`reverb`, `tapedelay`, `chorus`, `buss`, `drumsynth`, `compressor`, `eq`, `gate`, `drive`), on load and on `hashchange`, through the existing `oa-open-tab` and a new `oa-open-fx` that `Mixer.jsx` answers. Declared in `exports.json` (`bundles.app.deepLinks`; API 1.1.0 → 1.2.0, a minor bump for added names). `test/deeplink.test.mjs` checks the list, the events, that each effect link opens its editor in the Mixer, and that the built page follows the hash on load. The AUDIO.* pointer tiles (S04) link these addresses.
 
 Tested: `npm test` (347 cases / 63 suites / 27 files, floor raised), `node build.mjs`, `npm run check`.
+
+## Releases
+- **Released `2.0.0`, tag `v2.0.0`** (2026-11-01, ROAD-3452, the owner's V2) — no SDK pin; every manifest says 2.0.0; GitHub release `v2.0.0`.
