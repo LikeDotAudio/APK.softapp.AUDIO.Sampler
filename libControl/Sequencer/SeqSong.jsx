@@ -53,7 +53,11 @@ window.SeqSong = ({ songPos, song, togglePlayback, playSong, setSongItems, setSo
             try {
                 parsed = window.oaParseSongFile(String(reader.result));
             } catch (err) {
-                window.alert(`Could not import: ${err.message}`);
+                if (window.APKSoftapp) window.APKSoftapp.showProblem('bad_input', {
+                    subject: file.name, detail: 'could not import: ' + String((err && err.message) || err),
+                    fix: ['Import a song file this Sampler exported (⭳ Export); a hand-edited one must still be valid JSON.'],
+                    onRetry: () => importFile(file) });
+                else window.alert(`Could not import: ${err.message}`);
                 return;
             }
             const { library: merged, renamed } = window.oaMergePatterns(library, parsed.patterns);
@@ -88,6 +92,11 @@ window.SeqSong = ({ songPos, song, togglePlayback, playSong, setSongItems, setSo
                 (parsed.song.length ? ` and a ${parsed.song.length}-part song.` : '.') +
                 (restored.length ? `\n\nRestored: ${restored.join(', ')}.` : '') +
                 (state.sampleNote ? `\n\n${state.sampleNote}` : '') + note);
+        };
+        reader.onerror = () => {
+            if (window.APKSoftapp) window.APKSoftapp.showProblem('file_unreadable', {
+                subject: file.name, detail: String((reader.error && reader.error.message) || 'the file could not be read'),
+                onRetry: () => importFile(file) });
         };
         reader.readAsText(file);
     };

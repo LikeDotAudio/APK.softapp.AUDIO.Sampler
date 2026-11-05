@@ -493,6 +493,10 @@ const precache = [
   './vendor/react.production.min.js',
   './vendor/react-dom.production.min.js',
   './vendor/apk-contracts/apk-tokens.css',
+  './vendor/apk-contracts/apk-contracts.global.js',
+  './vendor/apk-softapp/apk-softapp.js',
+  './vendor/apk-table/apk-table.js',
+  './vendor/apk-table/apk-table.css',
   ...walk('ICON and LOGO').map((p) => `./${p}`),
   ...(existsSync('SampleLibrary') ? walk('SampleLibrary') : [])
     .filter((p) => vocabulary.oaIsFindableAudio(p))

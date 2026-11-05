@@ -110,7 +110,10 @@ describe('the vendored third-party files (vendor/VENDOR.json)', () => {
 
     test('every file in vendor/ is recorded, with a version and a source', () => {
         const onDisk = execFileSync('git', ['ls-files', 'vendor'], { cwd: ROOT, encoding: 'utf8' })
-            .split('\n').filter((f) => f.endsWith('.js')).map((f) => f.slice('vendor/'.length));
+            .split('\n').filter((f) => f.endsWith('.js')).map((f) => f.slice('vendor/'.length))
+            // First-party APK copies (apk-table, apk-softapp, apk-contracts) are not third-party:
+            // vendor_shared_web.py / vendor_contract_web.py make them and check.sh webshared / webtokens hold them.
+            .filter((f) => !/^apk-(table|softapp|contracts)\//.test(f));
         const unrecorded = onDisk.filter((f) => !manifest.files[f]);
         assert.deepEqual(unrecorded, [], 'vendored without a VENDOR.json entry');
         for (const [f, e] of Object.entries(manifest.files)) {

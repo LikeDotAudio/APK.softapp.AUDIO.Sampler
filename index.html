@@ -178,6 +178,40 @@
 
     <!-- Mount App -->
     <!-- Everything: the sources in sources.json, compiled ahead of time by build.mjs -->
+    <!-- The SDK (vendored; check.sh webtokens / webshared): ? help (F1), and a failure
+         (MIDI refused, a file that will not decode, a blocked pop-out) says what happened / why / do this. -->
+    <script src="./vendor/apk-contracts/apk-contracts.global.js"></script>
+    <script src="./vendor/apk-softapp/apk-softapp.js"></script>
+    <script>
+        if (window.APKSoftapp) window.APKSoftapp.describe({
+            name: 'Sampler.Like.Audio',
+            does: 'A drum sampler and 16-step sequencer in the browser: sixteen velocity pads, chop and pitch, a song arranger, a channel-strip mixer with effects, and a sound browser.',
+            inputs: [
+                { name: 'Samples', from: 'the bundled SampleLibrary, a folder you choose in the sound browser, or an audio file dropped on the page', kind: 'audio' },
+                { name: '.PEAK sidecar', from: 'dropped with the audio (else the Sampler scans the file itself)' },
+                { name: 'Microphone / line', from: 'the sound browser recorder (asks permission)', kind: 'audio' },
+                { name: 'MIDI keyboard / pads', from: 'Web MIDI inputs (asks permission); notes play pads, the wheel bends pitch', kind: 'midi' },
+                { name: 'Song file', from: '⭱ Import in the song arranger' },
+                { name: 'Strip EQ trims', from: 'bus', kind: 'bus', topic: 'APK.audio/Gui/DrumKit/<pad>/eq/<band>' },
+                { name: 'Kits, favourites, patterns', from: 'bus shared state (Gui/DrumSets, Gui/SoundFavorites, Gui/Sequencer/<label>/pattern)', kind: 'bus' },
+            ],
+            outputs: [
+                { name: 'Audio', to: "the browser's audio output, through the mixer and master buss", kind: 'audio' },
+                { name: 'Pad assignments', to: 'bus (retained)', kind: 'bus', topic: 'APK.audio/Gui/DrumKit/<pad>/sample' },
+                { name: 'Song', to: '⭳ Export: a song file download' },
+                { name: 'Stems', to: 'render stems: a .zip of one WAV per track' },
+                { name: 'Recorded takes', to: 'the sound browser recorder: save a take' },
+            ],
+            controls: [
+                { name: 'Pads', how: 'click / touch, or MIDI notes; velocity from the hit' },
+                { name: 'Tabs', how: 'PADS, EDITOR, MIXER: two open at once' },
+                { name: 'Sequencer and song', how: 'the step grid, BPM, steps, swing; the arranger with ⭳ Export / ⭱ Import' },
+                { name: 'Mixer and effects', how: 'per-channel faders, mutes, solos; EQ, gate, compressor, drive, chorus, delay, reverb faceplates; pop a panel out to its own window' },
+                { name: 'Deep links', how: 'index.html#/<view> opens one faceplate (e.g. #/compressor)' },
+            ],
+            problems: ['file_unreadable', 'bad_json', 'bad_input', 'permission_denied', 'device_busy', 'unsupported_browser'],
+        });
+    </script>
     <script src="./vendor/apk-table/apk-table.js"></script>
     <script src="./dist/app.js"></script>
 </body>

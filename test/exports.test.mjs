@@ -17,13 +17,14 @@
  *   the sources.
  *
  *   Also: fx registers every plugin OS expects; every bundle announces the
- *   contract's version as its apiGlobal; that version is package.json's; and
+ *   contract's version as its apiGlobal; that version stays on the API major
+ *   the OS mixer accepts (it is NOT package.json's release version); and
  *   the one file this page takes from APK:OS (exports.json `consumes`) is the
  *   one index.html actually loads, so the dependency cannot move unrecorded.
  */
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -34,6 +35,17 @@ const read = (rel) => readFileSync(join(ROOT, rel), 'utf8');
 const EXPORTS = JSON.parse(read('exports.json'));
 const PKG = JSON.parse(read('package.json'));
 
+// The API major APK:OS accepts, read from the OS when this repo sits in the
+// APK.audio tree (as test/pumpclock.test.mjs reads the OS clock), else the
+// value that file has held since the contract was written.
+const OS_SAMPLER_PACKAGE = join(ROOT, '../../../OS/Mixer/dsp/sampler-package.js');
+const OS_API_MAJOR = (() => {
+    if (!existsSync(OS_SAMPLER_PACKAGE)) return 1;
+    const m = readFileSync(OS_SAMPLER_PACKAGE, 'utf8').match(/SAMPLER_API_MAJOR\s*=\s*(\d+)/);
+    assert.ok(m, `${OS_SAMPLER_PACKAGE} no longer declares SAMPLER_API_MAJOR`);
+    return Number(m[1]);
+})();
+
 /** Every name a bundle must define: its own plus those of what it includes. */
 const required = (name) => {
     const b = EXPORTS.bundles[name];
@@ -41,10 +53,26 @@ const required = (name) => {
 };
 
 describe('the bundle contract (exports.json)', () => {
-    test('its version is package.json\'s, and a semver', () => {
+    // TWO VERSIONS, NOT ONE. This used to assert exports.version === package
+    // version, and the repo-wide V2 release (package.json 2.0.0) broke it. They
+    // are different things: package.json versions the RELEASE of this app;
+    // exports.json versions the BUNDLE API that dist/*.js announce as
+    // window.OA_*_API, and that one is pinned by a consumer —
+    // OS/Mixer/dsp/sampler-package.js refuses any bundle whose API major is not
+    // OS.SAMPLER_API_MAJOR (1). Bumping the API major to follow the release
+    // would make the OS desk refuse every bundle with nothing actually broken.
+    // So: the API stays on the major the OS accepts (a real breaking change to
+    // a name in exports.json means changing BOTH, together), and the package
+    // version is held separately, to being a semver.
+    test('its API version is a semver on the major the OS mixer accepts', () => {
         assert.match(EXPORTS.version, /^\d+\.\d+\.\d+$/);
-        assert.equal(EXPORTS.version, PKG.version,
-            'exports.json and package.json disagree about the API version');
+        assert.equal(Number(EXPORTS.version.split('.')[0]), OS_API_MAJOR,
+            `exports.json API ${EXPORTS.version} is not on major ${OS_API_MAJOR}, `
+            + 'which OS/Mixer/dsp/sampler-package.js requires — the OS would refuse every bundle');
+    });
+
+    test('the package (release) version is a semver of its own', () => {
+        assert.match(PKG.version, /^\d+\.\d+\.\d+$/);
     });
 
     for (const [name, bundle] of Object.entries(EXPORTS.bundles)) {

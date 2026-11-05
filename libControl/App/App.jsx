@@ -68,6 +68,10 @@
                             console.log(`[+] Loaded .PEAK sidecar metadata: ${peakFiles[0].name}`, peakData);
                         } catch (err) {
                             console.error("Could not parse .PEAK sidecar:", err);
+                            // The audio still loads; say the sidecar did not (APKSoftapp card).
+                            if (window.APKSoftapp) window.APKSoftapp.showProblem('bad_json', {
+                                subject: peakFiles[0].name, detail: String((err && err.message) || err),
+                                fix: ['The audio was loaded without it; drop a .PEAK the analyzer wrote (or none, and the Sampler scans the file itself).'] });
                         }
                     }
 
@@ -115,6 +119,10 @@
                             setActiveTabs(['PADS', 'MIXER']);
                         } catch (err) {
                             console.error("Global drop audio decode error:", err);
+                            if (window.APKSoftapp) window.APKSoftapp.showProblem('file_unreadable', {
+                                subject: file.name, detail: 'could not decode it as audio: ' + String((err && err.message) || err),
+                                fix: ['Drop a WAV, AIFF, FLAC, MP3, OGG or a video with an audio track the browser can play (a MIDI file or a DRM-locked file will not decode).',
+                                      'If it plays elsewhere, re-export it as 16- or 24-bit WAV and drop that.'] });
                         }
                     } else if (peakData && window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[0]) {
                         // Sidecar dropped alone: attach to active pad 0

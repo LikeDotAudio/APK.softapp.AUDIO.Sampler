@@ -184,7 +184,12 @@ window.useSoundBrowseState = () => {
             window.OA_SOUND_DIR = h; setRootHandle(h);
             if (window.oaIdbSet) window.oaIdbSet('oaRootDir', h).catch(() => {});
             selectFolder(h, h.name || 'root');
-        } catch (e) { /* cancelled */ }
+        } catch (e) {
+            // Cancelled (AbortError) is a choice, not a fault; anything else is said.
+            if (e && e.name === 'AbortError') return;
+            if (window.APKSoftapp) window.APKSoftapp.showProblem(e, { subject: 'Sound folder', onRetry: pickFolder });
+            else setErr('Could not open that folder: ' + ((e && e.message) || e));
+        }
     };
 
     const selectFolder = async (handle, path) => {
@@ -193,7 +198,7 @@ window.useSoundBrowseState = () => {
         const items = [], names = [], builder = window.makeChipBuilder();
         const onEmit = () => setChips(builder.top());
         try { await window.gatherAll(handle, '', items, names, builder, onEmit, 0); }
-        catch (e) { setErr('Could not read folder.'); }
+        catch (e) { setErr('Could not read folder' + (e && e.message ? ` (${e.message})` : '') + '. Choose it again; the browser may have lost its permission.'); }
         items.sort((a, b) => (a.sub === b.sub ? a.name.localeCompare(b.name) : (a.sub || '').localeCompare(b.sub || '')));
         setFolderFiles(items);
         setChips(builder.top());

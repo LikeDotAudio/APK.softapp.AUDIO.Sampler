@@ -117,7 +117,18 @@ window.useMidiPads = (midiBase, toneRootRef, padButtons, triggerPadAt, setVeloci
             }
         };
         const attach = (a) => { const names = []; a.inputs.forEach((inp) => { inp.onmidimessage = onMsg; names.push(inp.name); }); setMidiStatus(names.length ? names.join(', ') : 'No MIDI inputs'); };
-        navigator.requestMIDIAccess().then((a) => { access = a; attach(a); a.onstatechange = () => attach(a); }).catch(() => setMidiStatus('MIDI access denied'));
+        // A refusal is a card with Retry (APKSoftapp), not only the red status word.
+        const request = () => navigator.requestMIDIAccess().then((a) => { access = a; attach(a); a.onstatechange = () => attach(a); }).catch((err) => {
+            setMidiStatus('MIDI access denied');
+            const sdk = window.APKSoftapp;
+            if (!sdk) return;
+            const p = sdk.explain(err, { subject: 'MIDI' });
+            sdk.showProblem(p.code, { subject: 'MIDI', detail: p.detail,
+                fix: ['Allow MIDI devices for this page (the icon at the left of the address bar), then press Retry.',
+                      'The pads still play by click and touch without MIDI.'],
+                onRetry: request });
+        });
+        request();
         return () => { if (access) access.inputs.forEach((inp) => { inp.onmidimessage = null; }); };
     }, [midiBase, toneRootRef, setVelocities]);
 

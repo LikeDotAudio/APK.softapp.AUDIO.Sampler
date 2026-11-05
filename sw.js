@@ -13,16 +13,19 @@
 /**
  * Service worker. build.mjs writes ./dist/precache.json — the whole machine —
  * but that file is a DECLARED DROP and never published, so on apk.audio the
- * fetch below 404s and the four-entry shell list stands in: the site WARMS UP
- * as samples are played. test/manifests.test.mjs holds the shell list to files
+ * fetch below 404s and the shell list stands in: the site WARMS UP as samples
+ * are played. The shell list carries the vendored APK SDK (apk-softapp,
+ * apk-contracts, apk-table) as well as the page: without them an offline start
+ * loads a page whose APKSoftapp.showProblem is missing, and every problem falls
+ * back to a bare alert(). test/manifests.test.mjs holds the shell list to files
  * git tracks; nothing in this repo registers the worker in a real browser.
  */
-const CACHE = 'sampler-v4';
+const CACHE = 'sampler-v5';
 
 self.addEventListener('install', (e) => {
   e.waitUntil((async () => {
     const cache = await caches.open(CACHE);
-    let list = ['./', './index.html', './manifest.json', './dist/app.js'];
+    let list = ['./', './index.html', './manifest.json', './dist/app.js', './vendor/apk-softapp/apk-softapp.js', './vendor/apk-contracts/apk-contracts.global.js', './vendor/apk-contracts/apk-tokens.css', './vendor/apk-table/apk-table.js', './vendor/apk-table/apk-table.css'];
     try {
       const res = await fetch('./dist/precache.json', { cache: 'no-cache' });
       if (res.ok) list = await res.json();

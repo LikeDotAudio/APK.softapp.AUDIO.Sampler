@@ -223,9 +223,13 @@ window.SoundRecorder = ({ onSaved }) => {
             setOpen(true);
             listDevices();
         } catch (e) {
+            // The SDK names the cause (busy, unplugged, refused…) and its first step.
+            const p = window.APKSoftapp && window.APKSoftapp.explain(e, { subject: 'Input' });
             setErr(e && e.name === 'NotAllowedError'
                 ? 'Microphone permission was refused. Allow it for this page and open the input again.'
-                : `Could not open the input: ${(e && e.message) || e}`);
+                : p && p.code !== 'script_error'
+                    ? `${p.title}: ${(e && e.message) || e}. ${p.fix[0] || ''}`
+                    : `Could not open the input: ${(e && e.message) || e}`);
             teardown();
         }
     };

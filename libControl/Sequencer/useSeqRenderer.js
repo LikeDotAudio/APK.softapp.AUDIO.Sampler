@@ -220,7 +220,10 @@ window.useSeqRenderer = (pattern, steps, mutes, bpm, safeLabel) => {
             }
 
             if (zipFiles.length === 0) {
-                window.alert('No active tracks with notes to render stems for.');
+                if (window.APKSoftapp) window.APKSoftapp.showProblem('bad_input', {
+                    subject: 'Render stems', detail: 'no active tracks with notes to render stems for',
+                    fix: ['Put notes on at least one track (and unmute it), then render again.'] });
+                else window.alert('No active tracks with notes to render stems for.');
                 setRendering(false);
                 return;
             }

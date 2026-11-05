@@ -437,7 +437,10 @@ window.LensesView = ({ audioBuffer, filename, padIdx }) => {
     const startDictation = (onResult) => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            alert("Speech recognition is not supported in this browser. Please type directly.");
+            if (window.APKSoftapp) window.APKSoftapp.showProblem('unsupported_browser', {
+                subject: 'Talk to Type', detail: 'this browser has no speech recognition',
+                fix: ['Type the text directly, or use Chrome / Edge, which have speech recognition.'] });
+            else alert("Speech recognition is not supported in this browser. Please type directly.");
             return;
         }
         const recognition = new SpeechRecognition();
@@ -451,7 +454,16 @@ window.LensesView = ({ audioBuffer, filename, padIdx }) => {
             setIsDictating(false);
             if (onResult) onResult(transcript);
         };
-        recognition.onerror = () => setIsDictating(false);
+        recognition.onerror = (ev) => {
+            setIsDictating(false);
+            // 'no-speech' and 'aborted' are a quiet room or a second press, not a fault.
+            const why = ev && ev.error;
+            if (!window.APKSoftapp || why === 'no-speech' || why === 'aborted') return;
+            window.APKSoftapp.showProblem(why === 'not-allowed' || why === 'service-not-allowed' ? 'permission_denied'
+                : why === 'audio-capture' ? 'device_busy' : why === 'network' ? 'fetch_failed' : 'script_error', {
+                subject: 'Talk to Type', detail: `speech recognition error '${why}'`,
+                fix: ['Allow the microphone for this page, check the input is plugged in, then press the mic button again.'] });
+        };
         recognition.onend = () => setIsDictating(false);
         recognition.start();
     };
@@ -540,7 +552,10 @@ window.LensesView = ({ audioBuffer, filename, padIdx }) => {
                 }
             } catch (err) {
                 console.error("Metadata import failed:", err);
-                alert("Could not parse imported metadata file.");
+                if (window.APKSoftapp) window.APKSoftapp.showProblem('bad_json', {
+                    subject: file.name, detail: 'could not parse it: ' + String((err && err.message) || err),
+                    fix: ['Import a .PEAK or .json sidecar the analyzer wrote, or an .lrc lyric file.'] });
+                else alert("Could not parse imported metadata file.");
             }
         };
         reader.readAsText(file);

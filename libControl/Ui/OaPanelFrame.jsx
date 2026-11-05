@@ -146,7 +146,11 @@ window.useOaPanel = function (opts) {
         // Blocked, almost always by a pop-up blocker. Say so — a button that
         // does nothing at all reads as broken rather than as refused.
         if (!w) {
-            window.alert('The browser blocked the pop-out window.\n\nAllow pop-ups for this site and try again.');
+            if (window.APKSoftapp) window.APKSoftapp.showProblem('permission_denied', {
+                subject: 'Pop-out window', detail: 'the browser blocked the pop-out window',
+                fix: ['Allow pop-ups for this site (the blocked-pop-up icon in the address bar), then press Retry.'],
+                onRetry: openPop });
+            else window.alert('The browser blocked the pop-out window.\n\nAllow pop-ups for this site and try again.');
             return;
         }
 
