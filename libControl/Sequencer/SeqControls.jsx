@@ -10,6 +10,14 @@
 // interfaces, and every name they are known by remains the property of its owner.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// The groove guide's rows; `lit` says whether the swing knob is in that row's range.
+const SWING_GUIDE = [
+    { pct: '50%', feel: 'Straight Grid', ratio: 'Equal length downbeat & upbeat (1:1)', lit: (s) => s === 50 },
+    { pct: '54-62%', feel: 'Light / MPC Swing', ratio: 'Subtle upbeat delay (House & Hip-Hop bounce)', lit: (s) => s >= 54 && s <= 62 },
+    { pct: '66%', feel: 'Perfect Triplet', ratio: '2/3 downbeat : 1/3 upbeat (Blues Shuffle)', lit: (s) => s === 66 },
+    { pct: '75%', feel: 'Hard Swing', ratio: '3/4 downbeat : 1/4 upbeat (Dotted note timing)', lit: (s) => s >= 75 },
+];
+
 // A few one-click hues beside the picker. A colour well takes two taps and a
 // system dialog on a phone, which is a lot of ceremony for "try it in blue".
 const THEME_SWATCHES = [
@@ -37,6 +45,28 @@ window.SeqControls = ({
     const [footerNode, setFooterNode] = React.useState(null);
     const [configBtnNode, setConfigBtnNode] = React.useState(null);
     const [showSwingGuide, setShowSwingGuide] = React.useState(false);
+    // THE ONE TABLE (ROAD-3494): the groove guide is APKTable 'sampler-swing-guide'
+    // (vendor/apk-table, held to /FrontEnd/shared by check.sh webshared); the row
+    // the swing knob sits in is lit, as before.
+    const swingTableRef = React.useRef(null);
+    React.useEffect(() => {
+        const host = swingTableRef.current;
+        if (!showSwingGuide || !host || !window.APKTable) return undefined;
+        const t = window.APKTable.create(host, {
+            id: 'sampler-swing-guide',
+            editable: false,
+            sortable: false,
+            toolbar: false,
+            columns: [
+                { key: 'pct', label: 'Swing %', cellClass: () => 'seq-swing-pct' },
+                { key: 'feel', label: 'Rhythmic Feel' },
+                { key: 'ratio', label: 'Grid Offset Ratio' },
+            ],
+            rows: SWING_GUIDE,
+            rowClass: (r) => (r.lit(swing) ? 'seq-swing-on' : ''),
+        });
+        return () => t.destroy();
+    }, [showSwingGuide, swing]);
     // The grid size is a plain global, so read it back through the hook that
     // re-renders on a change rather than holding a second copy of it.
     const padLayout = window.useOaPadGrid() && window.OA_PAD_LAYOUT;
@@ -264,37 +294,7 @@ window.SeqControls = ({
                         <div style={{ fontWeight: 'bold', color: 'var(--accent)', marginBottom: '6px' }}>
                             The Math Behind the Groove ({getSwingFeel(swing)})
                         </div>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px', textAlign: 'left' }}>
-                            <thead>
-                                <tr style={{ borderBottom: '1px solid #444', color: '#888' }}>
-                                    <th style={{ padding: '4px' }}>Swing %</th>
-                                    <th style={{ padding: '4px' }}>Rhythmic Feel</th>
-                                    <th style={{ padding: '4px' }}>Grid Offset Ratio</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr style={{ background: swing === 50 ? window.oaAccentRgba(0, 0.15) : 'transparent', borderBottom: '1px solid #282828' }}>
-                                    <td style={{ padding: '4px', fontWeight: 'bold' }}>50%</td>
-                                    <td style={{ padding: '4px' }}>Straight Grid</td>
-                                    <td style={{ padding: '4px' }}>Equal length downbeat & upbeat (1:1)</td>
-                                </tr>
-                                <tr style={{ background: swing >= 54 && swing <= 62 ? window.oaAccentRgba(0, 0.15) : 'transparent', borderBottom: '1px solid #282828' }}>
-                                    <td style={{ padding: '4px', fontWeight: 'bold' }}>54-62%</td>
-                                    <td style={{ padding: '4px' }}>Light / MPC Swing</td>
-                                    <td style={{ padding: '4px' }}>Subtle upbeat delay (House & Hip-Hop bounce)</td>
-                                </tr>
-                                <tr style={{ background: swing === 66 ? window.oaAccentRgba(0, 0.15) : 'transparent', borderBottom: '1px solid #282828' }}>
-                                    <td style={{ padding: '4px', fontWeight: 'bold' }}>66%</td>
-                                    <td style={{ padding: '4px' }}>Perfect Triplet</td>
-                                    <td style={{ padding: '4px' }}>2/3 downbeat : 1/3 upbeat (Blues Shuffle)</td>
-                                </tr>
-                                <tr style={{ background: swing >= 75 ? window.oaAccentRgba(0, 0.15) : 'transparent' }}>
-                                    <td style={{ padding: '4px', fontWeight: 'bold' }}>75%</td>
-                                    <td style={{ padding: '4px' }}>Hard Swing</td>
-                                    <td style={{ padding: '4px' }}>3/4 downbeat : 1/4 upbeat (Dotted note timing)</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div ref={swingTableRef} className="apk-table-host seq-swing-table" />
                     </div>
                 )}
             </div>

@@ -38,6 +38,14 @@
          .apk.scripts/vendor_contract_web.py and held to it by check.sh webtokens):
          --accent below is --apk-accent, never spelled here. -->
     <link rel="stylesheet" href="./vendor/apk-contracts/apk-tokens.css">
+    <!-- THE ONE TABLE (FrontEnd/shared/apk-table.*, vendored; check.sh webshared) -->
+    <link rel="stylesheet" href="./vendor/apk-table/apk-table.css">
+    <style>
+      .seq-swing-table table.apk-table { font-size: 10px; color: #ccc; }
+      .seq-swing-table .apk-table-scroll { border: 0; }
+      .seq-swing-table tr.seq-swing-on { background: color-mix(in srgb, var(--accent) 15%, transparent); }
+      .seq-swing-table td.seq-swing-pct { font-weight: bold; }
+    </style>
     <!-- The OS reads this meta, not the page's CSS, so it is filled from the token
          as soon as the stylesheet above has applied (a script waits for it). -->
     <meta name="theme-color" content="">
@@ -170,6 +178,7 @@
 
     <!-- Mount App -->
     <!-- Everything: the sources in sources.json, compiled ahead of time by build.mjs -->
+    <script src="./vendor/apk-table/apk-table.js"></script>
     <script src="./dist/app.js"></script>
 </body>
 </html>
