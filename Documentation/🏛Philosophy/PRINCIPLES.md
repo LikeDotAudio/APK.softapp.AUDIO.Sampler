@@ -47,3 +47,7 @@ this page says which the Sampler keeps, where the code keeps it, and where it do
   suite went red with no code change.
 
 Measured against the code on 2026-10-30.
+
+## IFC and this app
+
+IFC (ISO 16739-1:2024, IFC4X3_ADD2) is the model interchange of the site: every page that saves a **model** of a building or a system writes its native JSON and an `.ifc` twin through `APKSoftapp.saveModel`. The Sampler saves no such model, so it has **no `.ifc` twin, by design**. What it writes is music and measurements of sound: the song file (`libControl/Sequencer/oaSongFile.js`, patterns, arrangement, the kit's sample names, mixer levels, synth and effect parameters), a scan's `.PEAK` sidecar and its `.PERF.json` performance cues (`libControl/MusicChart/LensesView.jsx`). IFC models built things, their ports and the systems that join them; it has no word for a pattern, a step, a peak or a lyric. The BIM repository's model-page census (`DATABASE.server.BIM SRC/tools/ifc/editors_census.py --pages`, `NATIVE_BY_DESIGN`) holds this app to that reason: if it ever saves a model (a rig, a studio), it must call `saveModel` and leave that list.
