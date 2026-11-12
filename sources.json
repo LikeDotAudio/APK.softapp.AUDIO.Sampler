@@ -110,6 +110,8 @@
   "libControl/MusicChart/oaScanMeasure.js",
   "libControl/MusicChart/oaDeepScanner.js",
   "libControl/MusicChart/MusicChartOverlay.jsx",
+  "libControl/MusicChart/oaPeakDocument.js",
+  "libControl/MusicChart/LensesPanels.jsx",
   "libControl/MusicChart/LensesView.jsx",
   "libControl/App/App.jsx"
 ]

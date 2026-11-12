@@ -5,192 +5,12 @@
 // MIT Licence. Free, for everyone, for ever. Full text in LICENSE at the root.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// The container, and only the container — and the list lives in ONE place.
-//
-// Every name this view writes to disk is `<name minus container> + <its own
-// suffix>`. The list and the reasoning are in
-// `libControl/MusicChart/oaWithoutContainer.js`, which `sources.json` loads
-// before this file; this is a call into it, not a second copy. A second copy is
-// how `oaDeepScanner.js` kept the old `/\.[^/.]+$/` for a day after this file
-// stopped using it, labelling `Kick 90.5 Loop` as `Kick 90` on sixteen pads
-// (PLAN-602.01).
-//
-// Called through `window` at call time rather than aliased at load time, so
-// load order can move without this going undefined. Tier three of the fallback
-// below is bare `sample`, so nothing here has to strip an extension the code
-// invented (PLAN-491.01).
-const withoutContainer = (name) => window.oaWithoutContainer(name);
-
-// REFUSAL OVER FABRICATION, on the screen and in the two files this view
-// writes. `oaDeepScanAudio` returns `null` for anything it could not measure —
-// silence has no key, a 200 ms buffer has no 400 ms loudness block — and the
-// contract is in `oaDeepScanner.js`'s header. Every scalar the six lenses draw
-// goes through here, so an absence is drawn as an absence.
-//
-// THIS REPLACED TWENTY-ODD BARE READS OF KEYS THE SCANNER HAS NEVER RETURNED.
-// `scanData.musicality.key`, `scanData.loudness.integratedLUFS` and
-// `scanData.chunks.length` each threw the moment their tab was opened, because
-// `musicality`, `loudness` and `chunks` were undefined on the value the scan
-// actually handed back — two of six lens tabs were a white screen, one of three
-// exports an uncaught exception, and the third a button that did nothing
-// (PLAN-601.01). The adapter is the scan; this is the reader of it.
-const NOT_MEASURED = '—';
-const measured = (v) => typeof v === 'number' && Number.isFinite(v);
-const num = (v, digits) => (measured(v)
-    ? (digits == null ? String(v) : v.toFixed(digits))
-    : NOT_MEASURED);
-
-// ONE TABLE PER GROUP, READ IN BOTH DIRECTIONS — the disk spelling on the left,
-// the spelling `oaScanMeasure.js` hands back in memory on the right.
-//
-// camelCase is correct for a JavaScript object and wrong for a document whose
-// other twenty keys are snake_case, and for two releases this file resolved that
-// contradiction by writing the memory spelling to disk: `musicality` and
-// `loudness_ebu_r128` were handed through VERBATIM, so a `.PEAK` and the
-// `.PERF.json` written by the button beside it spelled eight of the same nine
-// measurements two different ways in two files a visitor downloads together
-// (PLAN-1067.01). `exportPERFData` below already writes the snake_case set, and
-// `lensPerfExportSchema.json` has pinned it since PLAN-802.01 — so the sidecar
-// was the outlier, not the vocabulary.
-//
-// THE ANALYZER'S NAMES WERE NOT ADOPTED, and that was the open decision. Its
-// `musicality` is `{pitch_hz, root_note_name, root_frequency_hz,
-// root_cents_offset, beats_per_minute, root_midi_note, chromagram}` — the same
-// measurements under a different set of words, plus four this scan does not
-// take and minus the `keyConfidence` it does. Taking them would have made this
-// app write one measurement as `root_note_name` in a `.PEAK` and as `key` in the
-// `.PERF.json` beside it. The two formats now share exactly ONE field name,
-// `pitch_hz`, and it means the same thing in both;
-// `.apk.scripts/check_peak_formats.py` holds that at exactly one.
-//
-// `'text'` in the third column marks the one value that is a string. A key name
-// has no `Number.isFinite`.
-const PEAK_MUSICALITY_KEYS = [
-    ['key', 'key', 'text'],
-    ['key_confidence', 'keyConfidence'],
-    ['pitch_hz', 'pitchHz'],
-    ['cents_offset', 'centsOffset'],
-    ['bpm', 'bpm'],
-];
-const PEAK_LOUDNESS_KEYS = [
-    ['integrated_lufs', 'integratedLUFS'],
-    ['max_true_peak_dbtp', 'maxTruePeakdBTP'],
-    ['lra_lu', 'lraLU'],
-    ['gating_threshold_lufs', 'gatingThresholdLUFS'],
-];
-
-// Memory -> disk. Every key in the table gets a slot and an unmeasurable one
-// gets an explicit `null`, never a gap: `JSON.stringify` DROPS an `undefined`,
-// and that is exactly how a sidecar missing its three valuable sections came to
-// look like a complete one (PLAN-601.01). `null` for the whole group only when
-// the scan carried no group at all, which is what the schema's
-// `["object", "null"]` describes.
-const toSidecarGroup = (table, source) => {
-    if (!source || typeof source !== 'object') return null;
-    const out = {};
-    table.forEach(([disk, memory, kind]) => {
-        const value = source[memory];
-        out[disk] = kind === 'text' ? (value || null) : (measured(value) ? value : null);
-    });
-    return out;
-};
-
-// Disk -> memory, AND IT READS BOTH SPELLINGS. A `.PEAK` already on somebody's
-// disk is version 1.0.0 and carries the camelCase, because 1.0.0 is what wrote
-// it; the bump to 1.1.0 is only honest if the file written before it still
-// imports. A version bump with no migration is the omission `peakSchema.ts` is
-// 115 lines of aftermath from, and this is the migration.
-//
-// The source is SPREAD first so nothing unknown is dropped. An analyzer `.PEAK`
-// dropped on this view keeps its `note_root_key_beat_marker_map` and its
-// `root_note_name` in memory exactly as it did before, and now also lands its
-// `pitch_hz` on the pitch lens — the one field the two vocabularies share.
-const fromSidecarGroup = (table, source) => {
-    if (!source || typeof source !== 'object') return null;
-    const out = { ...source };
-    table.forEach(([disk, memory]) => {
-        if (source[disk] !== undefined) out[memory] = source[disk];
-        else if (source[memory] === undefined) out[memory] = null;
-    });
-    return out;
-};
-
-// ── Which document is this? ─────────────────────────────────────────────────
-// `lensPeakSidecarSchema.json` types what the export WRITES. Until PLAN-1067.02
-// nothing typed what the import READS: the whole gate was
-// `if (parsed.musicality || parsed.beat_markers)`, and three things followed
-// from that.
-//
-// THE EXTENSION `.PEAK` NAMES FOUR DOCUMENTS IN THIS REPOSITORY and the
-// analyzer's per-file sidecar has a `musicality` too — so it passed that guard,
-// landed in `scanData`, drew em dashes off `root_note_name` and
-// `beats_per_minute` (names no lens here reads) and reported "Imported metadata
-// sidecar successfully". PLAN-907.01's argument is that a reader must not branch
-// on a group NAME, and that guard was doing exactly that. `format` and
-// `metadata.analyzer_version` are the only two things anything may branch on.
-//
-// `schema_version` WAS WRITTEN AND NEVER READ. PLAN-1067.01 bumped it to 1.1.0
-// and taught the importer both spellings of nine keys — by trying both names,
-// not by reading the version — so the field the migration exists for was inert
-// on the only path that could have used it.
-//
-// AN UNKNOWN MAJOR REFUSES; AN UNKNOWN MINOR IMPORTS. That is the decision, and
-// this is where it is written down. A minor is additive by construction, and
-// 1.0.0 → 1.1.0 is the proof it is worth importing anyway: a file on a visitor's
-// disk must not be orphaned by a rename. A MAJOR is the announcement that it
-// would be, and reading one as though the keys still mean what they meant is how
-// `peakSchema.ts` came to be 115 lines of migration for a format that changed
-// shape and broke its reader in silence. A version-less file predates 1.0.0,
-// cannot say which it is, and is still read on its keys — that is what it was
-// always read on, and refusing it now would orphan the oldest files rather than
-// the newest.
-const SIDECAR_FORMAT = 'peak-lens-sidecar';
-const SIDECAR_MAJOR = 1;
-
-/**
- * Names the document, and says whether this view may read it.
- * Returns `{ read: boolean, message: string }` — `message` is what the operator
- * is told either way, so a refusal names what was dropped rather than failing
- * silently or, worse, succeeding.
- */
-const identifyPeakDocument = (parsed, name) => {
-    if (Array.isArray(parsed)) {
-        return { read: false, message: `${name} is the analyzer's AGGREGATE .PEAK — an array of `
-            + `per-file records (sample_cloud_data.PEAK). This view reads one lens sidecar.` };
-    }
-    if (!parsed || typeof parsed !== 'object') {
-        return { read: false, message: `${name} is not a JSON object.` };
-    }
-    if (parsed.metadata && parsed.metadata.analyzer_version) {
-        return { read: false, message: `${name} is the ANALYZER's .PEAK `
-            + `(analyzer ${parsed.metadata.analyzer_version}), not this view's lens sidecar. `
-            + `Its musicality says root_note_name and beats_per_minute; the lenses here read `
-            + `key and bpm, so importing it would draw em dashes and call it a success.` };
-    }
-    if (parsed.format !== undefined && parsed.format !== SIDECAR_FORMAT) {
-        return { read: false, message: `${name} says format "${parsed.format}", not `
-            + `"${SIDECAR_FORMAT}".` };
-    }
-    const version = parsed.schema_version;
-    if (typeof version === 'string') {
-        const major = Number(version.split('.')[0]);
-        if (!Number.isFinite(major)) {
-            return { read: false, message: `${name} has an unreadable schema_version `
-                + `"${version}".` };
-        }
-        if (major !== SIDECAR_MAJOR) {
-            return { read: false, message: `${name} is schema_version ${version}. This view reads `
-                + `${SIDECAR_MAJOR}.x — a major bump means its keys no longer mean what they mean `
-                + `here, so it is refused rather than read wrongly.` };
-        }
-    }
-    return { read: true, message: version
-        ? `Imported metadata sidecar successfully from ${name} (schema_version ${version})`
-        : `Imported metadata sidecar successfully from ${name} (no schema_version — pre-1.0.0, `
-          + `read on its keys)` };
-};
-
 window.LensesView = ({ audioBuffer, filename, padIdx }) => {
+    // The PEAK document reader lives in oaPeakDocument.js; read at render time.
+    const {
+        NOT_MEASURED, PEAK_LOUDNESS_KEYS, PEAK_MUSICALITY_KEYS, fromSidecarGroup,
+        identifyPeakDocument, measured, num, toSidecarGroup, withoutContainer,
+    } = window.oaPeakDocument;
     const [activeLens, setActiveLens] = React.useState('taxonomy');
     const [scanData, setScanData] = React.useState(null);
     const [scanning, setScanning] = React.useState(false);
@@ -731,6 +551,14 @@ window.LensesView = ({ audioBuffer, filename, padIdx }) => {
         );
     }
 
+    // What the six lens bodies in LensesPanels.jsx read, handed over as one
+    // object. They are plain functions called where their markup sits.
+    const lv = {
+        NOT_MEASURED, beatMarkers, creatorId, filename, fname, isDictating, loudness, lyricWords,
+        measured, musicality, num, scanData, sections, setCreatorId, setScanData, setSourceId,
+        setUcsCatKey, sourceId, speakText, startDictation, ucsCatKey, withoutContainer,
+    };
+
     return (
         <div style={{ background: '#121418', border: '1px solid var(--accent)', borderRadius: '6px', padding: '12px', color: '#ccc', fontFamily: 'monospace' }}>
             {/* Header */}
@@ -844,178 +672,22 @@ window.LensesView = ({ audioBuffer, filename, padIdx }) => {
             {scanData && (
                 <div>
                     {/* Lens 1: UCS Taxonomy */}
-                    {activeLens === 'taxonomy' && (
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '11px' }}>
-                            <div style={{ background: '#181b22', padding: '10px', borderRadius: '4px', border: '1px solid #2a2f38' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                                    <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>UCS CATEGORY CONFIGURATION</span>
-                                    <button onClick={() => startDictation(txt => setUcsCatKey(txt.toUpperCase().replace(/\s+/g, '-')))}
-                                        style={{ background: isDictating ? '#ff5252' : '#333', color: '#fff', border: '1px solid #555', borderRadius: '3px', padding: '2px 6px', fontSize: '9px', cursor: 'pointer' }}>
-                                        {isDictating ? '🎙️ Listening…' : '🎤 Dictate CatKey'}
-                                    </button>
-                                </div>
-                                <label style={{ display: 'block', marginBottom: '4px' }}>CatKey (6-Part Schema):</label>
-                                <input value={ucsCatKey} onChange={e => setUcsCatKey(e.target.value)}
-                                    style={{ width: '100%', background: '#0d0e12', border: '1px solid #444', color: '#fff', padding: '4px', borderRadius: '3px', marginBottom: '8px' }} />
-                                
-                                <label style={{ display: 'block', marginBottom: '4px' }}>Creator ID:</label>
-                                <input value={creatorId} onChange={e => setCreatorId(e.target.value)}
-                                    style={{ width: '100%', background: '#0d0e12', border: '1px solid #444', color: '#fff', padding: '4px', borderRadius: '3px', marginBottom: '8px' }} />
-
-                                <label style={{ display: 'block', marginBottom: '4px' }}>Source ID:</label>
-                                <input value={sourceId} onChange={e => setSourceId(e.target.value)}
-                                    style={{ width: '100%', background: '#0d0e12', border: '1px solid #444', color: '#fff', padding: '4px', borderRadius: '3px' }} />
-                            </div>
-                            <div style={{ background: '#181b22', padding: '10px', borderRadius: '4px', border: '1px solid #2a2f38' }}>
-                                <div style={{ color: 'var(--accent)', fontWeight: 'bold', marginBottom: '6px' }}>COMPOSED UCS BASENAME</div>
-                                <div style={{ fontSize: '12px', color: '#7dff4a', background: '#0d0e12', padding: '8px', borderRadius: '3px', wordBreak: 'break-all' }}>
-                                    {`${ucsCatKey}_${withoutContainer(fname)}_${creatorId}_${sourceId}.wav`}
-                                </div>
-                                <button onClick={() => speakText(`UCS Category Key: ${ucsCatKey}. Composed filename: ${ucsCatKey}_${withoutContainer(fname)}_${creatorId}_${sourceId}.wav`)}
-                                    style={{ marginTop: '8px', background: '#2a2f38', color: '#7dff4a', border: '1px solid #444', borderRadius: '3px', padding: '3px 8px', fontSize: '9px', cursor: 'pointer' }}>
-                                    🔊 Read Aloud UCS Basename
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                    {activeLens === 'taxonomy' && window.oaLensTaxonomy(lv)}
 
                     {/* Lens 2: Pitch & Beats */}
-                    {activeLens === 'musicality' && (
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', fontSize: '11px' }}>
-                            <div style={{ background: '#181b22', padding: '10px', borderRadius: '4px' }}>
-                                <div style={{ color: '#aaa' }}>DETECTED KEY & PITCH</div>
-                                <div style={{ fontSize: '20px', color: musicality.key ? 'var(--accent)' : '#666', fontWeight: 'bold' }}>{musicality.key || NOT_MEASURED}</div>
-                                <div>{num(musicality.pitchHz, 2)} Hz ({num(musicality.centsOffset)} cents)</div>
-                                {!musicality.key && <div style={{ color: '#777', marginTop: '4px' }}>No frame cleared the scanner's noise floor, so this buffer has no key to report.</div>}
-                                <button onClick={() => speakText(musicality.key
-                                    ? `Key: ${musicality.key}, ${num(musicality.pitchHz, 1)} Hertz`
-                                    : 'No key or pitch was measured in this buffer.')}
-                                    style={{ marginTop: '6px', background: '#2a2f38', color: '#ccc', border: 'none', padding: '2px 5px', fontSize: '9px', borderRadius: '2px', cursor: 'pointer' }}>
-                                    🔊 Speak Pitch
-                                </button>
-                            </div>
-                            <div style={{ background: '#181b22', padding: '10px', borderRadius: '4px' }}>
-                                <div style={{ color: '#aaa' }}>ESTIMATED TEMPO</div>
-                                <div style={{ fontSize: '20px', color: measured(musicality.bpm) ? '#7dff4a' : '#666', fontWeight: 'bold' }}>{num(musicality.bpm, 1)} BPM</div>
-                                <div>{beatMarkers.length} Energy Onsets Detected</div>
-                                {!measured(musicality.bpm) && <div style={{ color: '#777', marginTop: '4px' }}>A tempo needs several bars of onsets to autocorrelate; this buffer has none.</div>}
-                            </div>
-                            <div style={{ background: '#181b22', padding: '10px', borderRadius: '4px' }}>
-                                <div style={{ color: '#aaa' }}>SOUNDING CHUNKS</div>
-                                <div style={{ fontSize: '20px', color: '#42a5f5', fontWeight: 'bold' }}>{sections.length} Chunks</div>
-                                <div>Ready for 16-Pad Slicing</div>
-                            </div>
-                        </div>
-                    )}
+                    {activeLens === 'musicality' && window.oaLensMusicality(lv)}
 
                     {/* Lens 3: Lyric Dictation */}
-                    {activeLens === 'lyrics' && (
-                        <div style={{ background: '#181b22', padding: '10px', borderRadius: '4px', fontSize: '11px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                                <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>VOICE ACTIVITY & SUBTITLE ALIGNMENT</span>
-                                <div style={{ display: 'flex', gap: '4px' }}>
-                                    <button onClick={() => startDictation(txt => {
-                                        const nowSec = 0.0;
-                                        setScanData(prev => ({
-                                            ...prev,
-                                            lyrics: {
-                                                words: [...((prev && prev.lyrics && prev.lyrics.words) || []), { start: nowSec, text: txt }]
-                                            }
-                                        }));
-                                    })} style={{ background: isDictating ? '#ff5252' : '#333', color: '#fff', border: '1px solid #555', borderRadius: '3px', padding: '2px 6px', fontSize: '9px', cursor: 'pointer' }}>
-                                        {isDictating ? '🎙️ Listening…' : '🎤 Dictate Lyric Line'}
-                                    </button>
-                                    <button onClick={() => {
-                                        if (lyricWords.length) speakText(lyricWords.map(w => w.text).join(' '));
-                                    }} style={{ background: '#2a2f38', color: '#7dff4a', border: '1px solid #444', borderRadius: '3px', padding: '2px 6px', fontSize: '9px', cursor: 'pointer' }}>
-                                        🔊 Read Aloud Lyrics
-                                    </button>
-                                </div>
-                            </div>
-                            <div>Vocal Phrasing Detected: {lyricWords.length} Word Timestamps</div>
-                            <div style={{ maxHeight: '100px', overflowY: 'auto', marginTop: '6px', background: '#0d0e12', padding: '6px', borderRadius: '3px' }}>
-                                {lyricWords.length === 0
-                                    ? <span style={{ color: '#777' }}>Nothing has transcribed this file — the deep scanner runs no recogniser. Dictate a line, or import an .LRC.</span>
-                                    : lyricWords.map((w, i) => (
-                                        <span key={i} style={{ display: 'inline-block', marginRight: '8px', color: '#cde' }}>
-                                            [{w.start.toFixed(2)}s] {w.text}
-                                        </span>
-                                    ))}
-                            </div>
-                        </div>
-                    )}
+                    {activeLens === 'lyrics' && window.oaLensLyrics(lv)}
 
                     {/* Lens 4: EBU R128 Loudness */}
-                    {activeLens === 'loudness' && (
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', fontSize: '11px' }}>
-                            <div style={{ background: '#181b22', padding: '10px', borderRadius: '4px' }}>
-                                <div style={{ color: '#aaa' }}>INTEGRATED LOUDNESS</div>
-                                <div style={{ fontSize: '20px', color: !measured(loudness.integratedLUFS) ? '#666' : (loudness.integratedLUFS > -14 ? '#ff5252' : '#7dff4a'), fontWeight: 'bold' }}>
-                                    {num(loudness.integratedLUFS, 2)} LUFS
-                                </div>
-                                <div>EBU R128 Target: -23 LUFS</div>
-                                {!measured(loudness.integratedLUFS) && <div style={{ color: '#777', marginTop: '4px' }}>No 400 ms block cleared the −70 LUFS absolute gate.</div>}
-                            </div>
-                            <div style={{ background: '#181b22', padding: '10px', borderRadius: '4px' }}>
-                                <div style={{ color: '#aaa' }}>MAX TRUE PEAK</div>
-                                <div style={{ fontSize: '20px', color: measured(loudness.maxTruePeakdBTP) ? '#ffb74d' : '#666', fontWeight: 'bold' }}>{num(loudness.maxTruePeakdBTP, 2)} dBTP</div>
-                                <div>Ceiling: -1.0 dBTP</div>
-                                {!measured(loudness.maxTruePeakdBTP) && <div style={{ color: '#777', marginTop: '4px' }}>Digital silence — its true peak is −∞ dB, which is not a reading.</div>}
-                            </div>
-                            <div style={{ background: '#181b22', padding: '10px', borderRadius: '4px' }}>
-                                <div style={{ color: '#aaa' }}>LOUDNESS RANGE (LRA)</div>
-                                <div style={{ fontSize: '20px', color: measured(loudness.lraLU) ? '#42a5f5' : '#666', fontWeight: 'bold' }}>{num(loudness.lraLU, 2)} LU</div>
-                                <div>Dynamic Range Window</div>
-                                {!measured(loudness.lraLU) && <div style={{ color: '#777', marginTop: '4px' }}>A range needs 3 s of gated short-term blocks; this buffer has none.</div>}
-                            </div>
-                        </div>
-                    )}
+                    {activeLens === 'loudness' && window.oaLensLoudness(lv)}
 
                     {/* Lens 5: AES Preservation */}
-                    {activeLens === 'archival' && (
-                        <div style={{ background: '#181b22', padding: '10px', borderRadius: '4px', fontSize: '11px' }}>
-                            <div style={{ color: 'var(--accent)', fontWeight: 'bold', marginBottom: '6px' }}>AES SC-03-06 ARCHIVAL PRESERVATION METADATA</div>
-                            <div>BWF bext Version: 2 (EBU Tech 3285)</div>
-                            <div style={{ wordBreak: 'break-all' }}>
-                                SHA-256 of the decoded PCM:{' '}
-                                <span style={{ color: scanData.pcm_sha256 ? '#7dff4a' : '#777' }}>
-                                    {scanData.pcm_sha256 || NOT_MEASURED}
-                                </span>
-                            </div>
-                            {/* The constant that used to stand here — e3b0c442…b855 — is the
-                                SHA-256 of the EMPTY STRING, printed under a preservation
-                                heading as though it were this file's checksum (PLAN-601.01).
-                                This page holds an AudioBuffer and not the bytes it was decoded
-                                from, so the file's own digest is a thing it cannot compute;
-                                what it can hash is the samples, and the label says which. */}
-                            <div style={{ color: '#777', marginTop: '4px' }}>
-                                This identifies the AUDIO, not the container — two encodes of one take agree here and differ on disk.
-                                {!scanData.pcm_sha256 && ' Unavailable: crypto.subtle is absent on an insecure origin.'}
-                            </div>
-                            <div>Sample-Accurate Time Reference: 0 samples since midnight</div>
-                        </div>
-                    )}
+                    {activeLens === 'archival' && window.oaLensArchival(lv)}
 
                     {/* Lens 6: AES69 3D Spatial */}
-                    {activeLens === 'spatial' && (
-                        <div style={{ background: '#181b22', padding: '10px', borderRadius: '4px', fontSize: '11px' }}>
-                            <div style={{ color: 'var(--accent)', fontWeight: 'bold', marginBottom: '6px' }}>AES69 / SOFA 3D SPATIAL AUDIO METADATA</div>
-                            {/* EM DASHES, NOT `0.0° | 0.0° | 1.0 m`. This lens
-                                drew three literals typed into the JSX — not
-                                even read back from the export — so it presented
-                                a placement as though it had come off the file.
-                                It says which gate was not cleared instead, the
-                                way every unmeasured scalar in this view does.
-                                PLAN-908.01. */}
-                            <div>Azimuth (Φ): — | Elevation (Θ): — | Distance (r): —</div>
-                            <div style={{ color: '#7a8494', marginTop: '4px' }}>
-                                No placement was measured: nothing in this view offers a position
-                                control, and a decoded AudioBuffer carries no SOFA source. The
-                                sidecar writes these three as <code>null</code>.
-                            </div>
-                            <div style={{ marginTop: '4px' }}>Spatial Format: AES69 SOFA HRTF / EBU ADM (Tech 3364)</div>
-                        </div>
-                    )}
+                    {activeLens === 'spatial' && window.oaLensSpatial(lv)}
                 </div>
             )}
         </div>
