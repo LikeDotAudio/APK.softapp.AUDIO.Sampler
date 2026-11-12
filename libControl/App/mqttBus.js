@@ -191,6 +191,37 @@ function applyInbound(topic, text) {
     }
 }
 
+// ANOTHER WINDOW OF THIS ORIGIN MOVED SOMETHING (ROAD-3699).
+//
+// APK:OS opens every MIDI instrument as its own page — Pads, Sequencer and the
+// rest each carry this bundle — and a pattern drawn in one was not in the
+// other: with no broker (or before it answers) the store is localStorage, and
+// a page only reads that at first bind. The browser already says when another
+// page of the origin writes it: the `storage` event. A `mqtt_cache_<topic>`
+// write lands here exactly as a broker write does — through the inbound gate,
+// so nothing is published back and two windows agree rather than shout.
+const CACHE_PREFIX = 'mqtt_cache_';
+window.oaApplyStorageEvent = function (key, text) {
+    if (typeof key !== 'string' || key.indexOf(CACHE_PREFIX) !== 0 || text == null) return false;
+    const topic = key.slice(CACHE_PREFIX.length);
+    if (!(topic in globalStore)) return false; // nothing here is bound to it; first bind reads the cache
+    let value;
+    try { value = JSON.parse(text); } catch (e) { return false; }
+    inboundTopics.add(topic);
+    try {
+        globalStore[topic] = value;
+        if (globalListeners[topic]) globalListeners[topic].forEach(l => l(value));
+    } finally {
+        inboundTopics.delete(topic);
+    }
+    return true;
+};
+if (typeof window.addEventListener === 'function') {
+    window.addEventListener('storage', (e) => {
+        try { window.oaApplyStorageEvent(e && e.key, e && e.newValue); } catch (err) { /* not ours */ }
+    });
+}
+
 // THE SHARED HELPER IS THE ONLY WAY ONTO A BROKER (2026-10-30 SDK audit, WS-05).
 // Under the APK portal and on apk.audio, WEB.Frontend-Assets serves the one
 // softapp bus helper at `/FrontEnd/shared/apk-bus.js` (window.APKBus). It owns

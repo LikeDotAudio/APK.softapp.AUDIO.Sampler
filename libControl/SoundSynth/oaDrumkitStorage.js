@@ -124,6 +124,83 @@ const writeKeep = function (idx, entry) {
     })).then(() => true).catch(() => false);
 };
 
+// ---------------------------------------------------------------------------
+// THE KIT, SHARED BETWEEN WINDOWS (ROAD-3699).
+//
+// APK:OS opens every MIDI instrument as a page of its own, and every one of
+// them carries this kit: a sound dropped on a pad in the Pads window was not on
+// that pad in the Sequencer window until a reload rehydrated it. The audio was
+// already in the one store both pages read; what was missing was the word.
+// So a write here says which pad changed on a BroadcastChannel — the pad's
+// number and a few fields, never the audio — and a page whose kit is resident
+// (it has rehydrated) takes that one pad back out of the store. One kept copy
+// for the origin; one AudioBuffer per page that plays the kit; nothing copied
+// for a page that never warmed one.
+// ---------------------------------------------------------------------------
+const OA_KIT_CHANNEL = 'oaKitAudio';
+const kitPeer = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+let kitResident = false;
+let kitChannel;
+
+const kitBus = () => {
+    if (kitChannel !== undefined) return kitChannel;
+    kitChannel = null;
+    try {
+        if (typeof BroadcastChannel === 'function') {
+            kitChannel = new BroadcastChannel(OA_KIT_CHANNEL);
+            kitChannel.onmessage = (e) => window.oaKitHeard(e.data);
+            // Node (the test harness) keeps a process alive for an open
+            // channel; a page does not care. Opened only by a page that holds
+            // the kit or writes one, never at load.
+            if (typeof kitChannel.unref === 'function') kitChannel.unref();
+        }
+    } catch (e) { kitChannel = null; }
+    return kitChannel;
+};
+
+const kitSay = (msg) => {
+    const bc = kitBus();
+    if (!bc) return;
+    try { bc.postMessage(Object.assign({ from: kitPeer }, msg)); } catch (e) { /* closed */ }
+};
+
+// A row out of the store, back onto its pad. A row whose audio is the audio
+// this page already holds (same name, same length, same rate) only moves the
+// chop and the tuning: a pitch slider in one window must not copy the pad's
+// channel data into every other window on every rest.
+const rowOntoPad = (row) => {
+    const ctx = window.oaAudioCtx();
+    const chans = row.channels || [];
+    if (!chans.length || !chans[0] || !chans[0].length) return false;
+    const opts = {
+        name: row.name, folder: row.folder,
+        pitch: row.pitch, offset: row.offset, end: row.end,
+        fadeIn: row.fadeIn, fadeOut: row.fadeOut, fade: row.fade, loop: row.loop,
+        fromStore: true,
+    };
+    const have = window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[row.idx];
+    const hb = have && have.buffer;
+    const same = hb && have.name === row.name && hb.length === chans[0].length
+        && hb.numberOfChannels === chans.length && hb.sampleRate === (row.rate || ctx.sampleRate);
+    let buffer = hb;
+    if (!same) {
+        buffer = ctx.createBuffer(chans.length, chans[0].length, row.rate || ctx.sampleRate);
+        for (let c = 0; c < chans.length; c++) buffer.copyToChannel(chans[c], c);
+    }
+    window.oaSetDrumSample(row.idx, buffer, opts);
+    return true;
+};
+
+/** Another window kept a pad: take that pad back out of the store. */
+window.oaKitHeard = async function (msg) {
+    if (!msg || msg.from === kitPeer || !kitResident || window.OA_KIT_SHARE === false) return false;
+    if (msg.op !== 'kept' || msg.idx == null || msg.idx >= window.OA_PAD_MAX) return false;
+    let row = null;
+    try { row = await oaKitTx('readonly', (s) => s.get(Number(msg.idx))); } catch (e) { return false; }
+    if (!row) return false;
+    try { return rowOntoPad(row); } catch (e) { return false; }
+};
+
 window.oaKeepSample = function (idx, entry) {
     if (!window.OA_KIT_KEEP || !entry || !entry.buffer) return Promise.resolve(false);
     // Coalesced per pad. A pitch or chop edit arrives on every tick of a
@@ -133,7 +210,10 @@ window.oaKeepSample = function (idx, entry) {
     return new Promise((resolve) => {
         keepTimers[idx] = setTimeout(() => {
             keepTimers[idx] = null;
-            resolve(writeKeep(idx, entry));
+            resolve(writeKeep(idx, entry).then((kept) => {
+                if (kept) kitSay({ op: 'kept', idx: Number(idx) });
+                return kept;
+            }));
         }, 400);
     });
 };
@@ -150,33 +230,27 @@ window.oaForgetSample = function (idx) {
  */
 window.oaRehydrateKit = async function () {
     if (!window.OA_KIT_KEEP) return 0;
+    // From here on this page holds the kit, so it follows the other windows'
+    // pads (oaKitHeard) — set before the read, so a pad kept while this one
+    // is rehydrating is not missed.
+    kitResident = true;
+    kitBus();
     let rows = [];
     try { rows = (await oaKitTx('readonly', (s) => s.getAll())) || []; } catch (e) { return 0; }
     if (!rows.length) return 0;
 
-    const ctx = window.oaAudioCtx();
     let restored = 0;
     for (const row of rows) {
         try {
             if (row.idx >= window.OA_PAD_MAX) continue;
             const existing = window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[row.idx];
             if (existing && existing.buffer) continue;
-            const chans = row.channels || [];
-            if (!chans.length || !chans[0] || !chans[0].length) continue;
             // Built at the rate it was recorded at, not the context's: a buffer
             // whose rate differs is resampled on playback and keeps its pitch,
             // whereas relabelling 44.1k data as 48k transposes the whole kit.
-            const buffer = ctx.createBuffer(chans.length, chans[0].length, row.rate || ctx.sampleRate);
-            for (let c = 0; c < chans.length; c++) buffer.copyToChannel(chans[c], c);
-            window.oaSetDrumSample(row.idx, buffer, {
-                name: row.name, folder: row.folder,
-                pitch: row.pitch, offset: row.offset, end: row.end,
-                fadeIn: row.fadeIn, fadeOut: row.fadeOut, fade: row.fade, loop: row.loop,
-                // Straight back out of the store it came from would be a write
-                // per pad for no change at all.
-                fromStore: true,
-            });
-            restored++;
+            // Straight back out of the store it came from (fromStore) would be
+            // a write per pad for no change at all.
+            if (rowOntoPad(row)) restored++;
         } catch (e) { /* one unreadable row must not cost the other twenty-four */ }
     }
     if (restored) window.dispatchEvent(new CustomEvent('oa-kit-rehydrated', { detail: { restored: restored } }));
