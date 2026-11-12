@@ -20,5 +20,7 @@
  "libControl/Effects/Compressor/oaCompressorPresets.js",
  "libControl/Effects/Compressor/oaCompressor.js",
  "libControl/Effects/BussCompressor/oaBussCompPresets.js",
+ "libControl/Effects/BussCompressor/oaBussCompWorklet.js",
+ "libControl/Effects/BussCompressor/oaBussCompEngine.js",
  "libControl/Effects/BussCompressor/oaBussComp.js"
 ]
