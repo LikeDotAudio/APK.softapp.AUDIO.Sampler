@@ -59,6 +59,14 @@ From this repository's own commits (the commit message is the record):
 - ROAD-3699: the kit and every bound state follow the other windows of this origin (`03d9dcb`)
 - vendor: apk-contracts web bundle refreshed from contracts/generated/web (five report codes, ROAD-3695; unit-gate, ROAD-3684) (`54932e8`)
 - re-vendor apk-contracts web bundle: contracts 2.4.0 retires APK.audio/Tests/{suite} (ROAD-3729) (`116fd4e`)
+- vendor: apk-contracts re-vendored (contracts gained the youtube_audio problem codes, root f013ba68a) (`15da006`)
+- vendor/apk-contracts: refresh to contracts/generated/web after ROAD-3759 (contracts split; CHAT_TOPIC origin note) (`a0ae4ff`)
+- vendor: apk-softapp / apk-table re-joined from their parts (one GENERATED banner line; ROAD-3762) (`ef8bcad`)
+- ROAD-3768: test/plugins.test.mjs split by plugin (`b7a0916`)
+- ROAD-3768: oaBussComp.js split — the worklet and the two engines in their own files (`0d23c7d`)
+- ROAD-3768: Mixer.jsx split — the strips drawn from their own files (`832b14e`)
+- ROAD-3768: LensesView.jsx split — the PEAK document reader and the six lens bodies out of the view (`a77a333`)
+- test floor: 29 files / 64 suites / 354 cases — record test/crosswindow.test.mjs (ROAD-3784) (`2405bbb`)
 
 ## Releases
 - **Released `2.0.0`, tag `v2.0.0`** (2026-11-01, ROAD-3452, the owner's V2) — no SDK pin; every manifest says 2.0.0; GitHub release `v2.0.0`.
